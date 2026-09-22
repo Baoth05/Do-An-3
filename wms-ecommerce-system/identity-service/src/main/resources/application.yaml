@@ -1,0 +1,25 @@
+server:
+  port: 8084 # Cổng của Identity Service[cite: 2]
+
+spring:
+  application:
+    name: identity-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/identity_db # Database riêng[cite: 2]
+    username: postgres
+    password: 123456 # Đổi lại nếu máy cậu dùng pass khác
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update # Tự động tạo bảng dựa trên Entity
+    show-sql: true
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+jwt:
+  secret: 7f3a9c2e8b1d4f6a0c5e9b7d2a8f3c1e6d4b9a0c7f2e5d8

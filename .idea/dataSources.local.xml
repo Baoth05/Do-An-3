@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="dataSourceStorageLocal" created-in="IU-262.10315.125">
+    <data-source name="wms_core_db@localhost" uuid="8b2ed7ae-5631-4d6c-9d6b-67fbf9a9f365">
+      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="POSTGRES" />
+      <user-name>postgres</user-name>
+      <schema-mapping />
+    </data-source>
+    <data-source name="0@localhost" uuid="6e9bfcb5-767e-476b-a0c1-62d5549a049e">
+      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="REDIS" />
+      <schema-mapping />
+    </data-source>
+    <data-source name="0@localhost" uuid="a899af46-264e-4320-9226-8e4fe08ebe14">
+      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="REDIS" />
+      <schema-mapping />
+    </data-source>
+    <data-source name="inter_db@localhost" uuid="5067a361-4726-446a-84ab-66b74c9bea69">
+      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="POSTGRES" />
+      <user-name>postgres</user-name>
+      <schema-mapping />
+    </data-source>
+    <data-source name="identity_db@localhost" uuid="546de375-36b1-4611-bf76-75ce18e4233e">
+      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="POSTGRES" />
+      <user-name>postgres</user-name>
+      <schema-mapping />
+    </data-source>
+    <data-source name="payment_db@localhost" uuid="04ef682a-ae39-4aa7-9b1e-d4aae22063c0">
+      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="POSTGRES" />
+      <user-name>postgres</user-name>
+      <schema-mapping />
+    </data-source>
+    <data-source name="order_db@localhost" uuid="ab54cae4-f496-4445-b73d-72c895d835f8">
+      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="POSTGRES" />
+      <user-name>postgres</user-name>
+      <schema-mapping />
+    </data-source>
+  </component>
+</project>

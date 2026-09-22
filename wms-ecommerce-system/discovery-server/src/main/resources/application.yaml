@@ -1,0 +1,15 @@
+server:
+  port: 8761 # Cổng của Trạm Danh Bạ
+
+spring:
+  application:
+    name: discovery-server
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    register-with-eureka: false # Không tự đăng ký chính mình
+    fetch-registry: false # Không cần tải danh bạ từ máy chủ khác
+  server:
+    wait-time-in-ms-when-sync-empty: 0

@@ -1,0 +1,35 @@
+server:
+  port: 8081 # Cổng của WMS Core[cite: 2]
+
+spring:
+  application:
+    name: wms-core-service
+
+  # Cấu hình Database[cite: 2]
+  datasource:
+    url: jdbc:postgresql://localhost:5432/wms_core_db
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  # Cấu hình Redis Cache[cite: 2]
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  # Cấu hình Message Broker (RabbitMQ)[cite: 2]
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

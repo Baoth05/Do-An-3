@@ -1,0 +1,21 @@
+server:
+  port: 8083 # Cổng của Interaction Service[cite: 2]
+
+spring:
+  application:
+    name: interaction-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/inter_db # Database riêng[cite: 2]
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

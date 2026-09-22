@@ -1,0 +1,28 @@
+server:
+  port: 8085 # Cổng của Payment Service[cite: 2]
+
+spring:
+  application:
+    name: payment-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/payment_db # Database riêng[cite: 2]
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  # Cấu hình Message Broker (RabbitMQ)[cite: 2]
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

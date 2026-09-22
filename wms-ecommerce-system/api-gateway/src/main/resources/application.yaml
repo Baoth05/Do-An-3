@@ -1,0 +1,43 @@
+server:
+  port: 8080 # Cổng của Gateway
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true # Cho phép tự động dò đường qua Eureka
+      routes:
+        - id: identity-service
+          uri: lb://identity-service # lb = load balancer, trỏ tới service trong Eureka
+          predicates:
+            - Path=/auth/** # Mọi request bắt đầu bằng /auth sẽ vào đây
+
+        - id: wms-core-service
+          uri: lb://wms-core-service
+          predicates:
+            - Path=/wms/** # Route cho quản lý kho
+
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/orders/** # Route cho đơn hàng
+
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/payments/** # Route cho thanh toán[cite: 2]
+
+        - id: interaction-service
+          uri: lb://interaction-service
+          predicates:
+            - Path=/interactions/** # Route cho đánh giá/bình luận[cite: 2]
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/ # Khai báo vị trí của Discovery Server
