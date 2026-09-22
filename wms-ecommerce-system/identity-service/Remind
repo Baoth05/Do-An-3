@@ -1,0 +1,29 @@
+identity-service (Phân hệ Định danh & Phân quyền)
+├── src/main/java/com/ctut/wms/identityservice/ (Thư mục mã nguồn chính)
+│   ├── config/ (Thư mục cấu hình hệ thống)
+│   │   └── SecurityConfig.java: Khởi tạo "cỗ máy xay" mã hóa mật khẩu Bcrypt để dùng chung cho toàn dự án.
+│   ├── controller/ (Cửa ngõ tiếp nhận yêu cầu từ bên ngoài)
+│   │   └── AuthController.java: Nơi chứa các API (/register, /login, /profile...). Đã được tối ưu bằng @RestController và gắn @Valid để tự động chặn các dữ liệu sai định dạng ngay từ cửa ngõ.
+│   ├── dto/ (Data Transfer Object - Hộp chứa dữ liệu giao tiếp)
+│   │   ├── AuthResponse.java: Trả về chìa khóa Token và thông báo khi đăng nhập thành công.
+│   │   ├── ChangePasswordRequest.java: Hứng mật khẩu cũ và mới từ khách hàng gửi lên.
+│   │   ├── LoginRequest.java: Hứng thông tin tài khoản và mật khẩu.
+│   │   ├── RegisterRequest.java: Hứng toàn bộ thông tin đăng ký (đã được gắn các nhãn bảo vệ Validation như @NotBlank, @Email).
+│   │   ├── UpdateProfileRequest.java: Hứng những trường dữ liệu được phép sửa (Họ tên, SĐT, Địa chỉ...).
+│   │   └── UserProfileResponse.java: Đóng gói toàn bộ hồ sơ từ 2 bảng khác nhau để gửi về cho giao diện hiển thị.
+│   ├── entity/ (Bản thiết kế cấu trúc bảng trong CSDL)
+│   │   ├── User.java: Tương ứng với bảng nguoi_dung, lưu thông tin cốt lõi (Tài khoản, Mật khẩu mã hóa Bcrypt, Email, Vai trò).
+│   │   └── UserInfo.java: Tương ứng với bảng thong_tin_nguoi_dung, lưu chi tiết hồ sơ cá nhân và có liên kết khóa ngoại với bảng User.
+│   ├── exception/ (Trạm thu gom xử lý lỗi)
+│   │   └── GlobalExceptionHandler.java: Sử dụng @RestControllerAdvice để tự động bắt tất cả các lỗi logic hoặc lỗi Validation, sau đó gói thành một phản hồi JSON gọn gàng thay vì để hệ thống báo lỗi sập màn hình.
+│   ├── repository/ (Lớp giao tiếp trực tiếp với Database)
+│   │   ├── UserInfoRepository.java: Cung cấp các lệnh tìm kiếm/xóa thông tin phụ (ví dụ: findByUser).
+│   │   └── UserRepository.java: Cung cấp các lệnh truy vấn thông tin tài khoản chính (ví dụ: findByTaiKhoan, existsByEmail).
+│   ├── security/ (Lớp bảo mật chuyên sâu)
+│   │   └── JwtService.java: Đảm nhận việc chế tạo (generate) và xác thực (validate) chuỗi Token dựa trên mã bí mật cấu hình.
+│   ├── service/ (Bộ não xử lý logic kinh doanh)
+│   │   └── AuthService.java: Chứa toàn bộ nghiệp vụ thực tế như so sánh mật khẩu, kiểm tra tồn tại, lưu/xóa dữ liệu. Các thao tác ghi CSDL ở đây đều được bọc bởi @Transactional để đảm bảo an toàn, không bị lỗi nửa vời.
+│   └── IdentityServiceApplication.java: File kích hoạt ứng dụng Spring Boot.
+├── src/main/resources/
+│   └── application.yml: File thiết lập các chỉ số sống còn của module (chạy cổng 8084, kết nối CSDL identity_db, báo cáo địa chỉ IP về trạm Eureka, và lưu trữ chuỗi bí mật jwt.secret).
+└── pom.xml: Nơi khai báo để tải các thư viện cần thiết (Spring Web, Spring Data JPA, PostgreSQL Driver, Eureka Client, Validation, JJWT).
