@@ -1,4 +1,4 @@
-package com.ctut.wms.wmscoreservice.entity;
+package com.ctut.wms.wmscoreservice.entity.category;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,8 +1,8 @@
-package com.ctut.wms.wmscoreservice.repository;
+package com.ctut.wms.wmscoreservice.repository.inventory;
 
-import com.ctut.wms.wmscoreservice.entity.Inventory;
-import com.ctut.wms.wmscoreservice.entity.Product;
-import com.ctut.wms.wmscoreservice.entity.Warehouse;
+import com.ctut.wms.wmscoreservice.entity.inventory.Inventory;
+import com.ctut.wms.wmscoreservice.entity.product.Product;
+import com.ctut.wms.wmscoreservice.entity.warehouse.Warehouse;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

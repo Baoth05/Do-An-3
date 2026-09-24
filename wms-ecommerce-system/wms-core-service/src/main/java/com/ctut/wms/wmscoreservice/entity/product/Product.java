@@ -1,9 +1,9 @@
-package com.ctut.wms.wmscoreservice.entity;
+package com.ctut.wms.wmscoreservice.entity.product;
+import com.ctut.wms.wmscoreservice.entity.category.Category;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.math.BigDecimal;
 
 @Entity
 @Table(name = "san_pham")
@@ -20,9 +20,9 @@ public class Product {
 
     @Column(name = "ten_san_pham", nullable = false)
     private String tenSanPham;
+    @Column(name = "don_vi_tinh", nullable = false)
+    private String donViTinh;
 
-    @Column(nullable = false)
-    private BigDecimal gia;
 
     // Mối quan hệ: Nhiều Sản phẩm thuộc về 1 Danh mục
     @ManyToOne(fetch = FetchType.LAZY)

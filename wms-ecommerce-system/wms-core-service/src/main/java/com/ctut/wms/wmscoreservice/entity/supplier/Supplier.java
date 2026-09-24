@@ -1,24 +1,25 @@
-package com.ctut.wms.wmscoreservice.entity;
+package com.ctut.wms.wmscoreservice.entity.supplier;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "kho_hang")
+@Table(name = "nha_cung_cap")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Warehouse {
+public class Supplier {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "ma_kho", nullable = false, unique = true)
-    private String maKho;
+    @Column(name = "ten_nha_cung_cap", nullable = false)
+    private String tenNhaCungCap;
 
-    @Column(name = "ten_kho", nullable = false)
-    private String tenKho;
+    @Column(name = "so_dien_thoai")
+    private String soDienThoai;
 
     @Column(name = "dia_chi")
     private String diaChi;
