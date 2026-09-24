@@ -1,122 +1,62 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import React, { useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, AuthContext } from './context/AuthContext';
+
+import AdminLayout from './components/AdminLayout';
+import Login from './pages/Login';
+
+// Import các trang chính đã được gom nhóm và xây dựng
+import UserManagementDashboard from './pages/UserManagementDashboard';
+import StrategicReport from './pages/StrategicReport';
+import FinancialManagement from './pages/FinancialManagement'; // Đã thêm import trang Tài chính
+
+import './App.css'; // CSS chung toàn cục
+
+// Component bảo vệ tuyến đường (Chưa đăng nhập -> Đẩy về /login)
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated } = useContext(AuthContext);
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return children;
+};
+
+const AppRoutes = () => {
+  return (
+    <Routes>
+      {/* 1. Khai báo Route cho Trang Đăng nhập */}
+      <Route path="/login" element={<Login />} />
+
+      {/* 2. Các tuyến đường Admin (Bắt buộc phải đăng nhập) */}
+      <Route 
+        path="/" 
+        element={
+          <ProtectedRoute>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        {/* Mặc định khi vào "/" sẽ tự chuyển hướng vào trang Báo cáo chiến lược */}
+        <Route index element={<Navigate to="/strategic-report" replace />} />
+        
+        {/* Các trang con hiển thị bên trong AdminLayout */}
+        <Route path="strategic-report" element={<StrategicReport />} />
+        <Route path="user-management" element={<UserManagementDashboard />} />
+        <Route path="finance" element={<FinancialManagement />} /> {/* Đã thêm Route Tài chính */}
+      </Route>
+
+      {/* 3. Tất cả các đường dẫn sai khác đều đẩy về /login */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
+  );
+};
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <AuthProvider>
+      <Router>
+        <AppRoutes />
+      </Router>
+    </AuthProvider>
+  );
 }
 
-export default App
+export default App;

@@ -1,0 +1,263 @@
+/* src/components/AdminLayout.css */
+.admin-layout {
+  display: flex;
+  height: 100vh;
+  background-color: #f8f9fa;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Sidebar Styling */
+.sidebar {
+  width: 260px;
+  background-color: #1a1515;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.sidebar-logo {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #2a2424;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  background-color: #e63946;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.logo-text h2 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.logo-text span {
+  font-size: 11px;
+  color: #888;
+  font-weight: 500;
+}
+
+.sidebar-menu {
+  padding: 20px 12px;
+  flex: 1;
+}
+
+.menu-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #666;
+  padding: 0 12px 10px 12px;
+  letter-spacing: 0.5px;
+}
+
+/* Tùy chỉnh Menu Item & Animation Hover */
+.menu-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  color: #a0a0a0;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Thanh chỉ báo đỏ mượt xuất hiện bên trái khi hover */
+.menu-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0;
+  background-color: #e63946;
+  border-radius: 8px 0 0 8px;
+  transition: width 0.25s ease;
+  z-index: 0;
+}
+
+.menu-item svg,
+.menu-item span {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+
+/* Animation khi di chuột qua (Hover Highlight Red) */
+.menu-item:hover {
+  color: #ffffff;
+  background-color: rgba(230, 57, 70, 0.12); /* Nền đỏ mờ sang trọng */
+  transform: translateX(4px);                  /* Dịch chuyển nhẹ 4px sang phải */
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.18);
+}
+
+.menu-item:hover::before {
+  width: 4px; /* Hiện vạch dọc đỏ bên trái */
+}
+
+.menu-item:hover svg {
+  color: #e63946;       /* Icon đổi sang màu đỏ */
+  transform: scale(1.12); /* Phóng to nhẹ icon */
+}
+
+/* Trạng thái Tab đang chọn (Active) */
+.menu-item.active {
+  background-color: #e63946;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.35);
+}
+
+.menu-item.active svg {
+  color: #ffffff;
+}
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid #2a2424;
+}
+
+.system-status {
+  background-color: #241e1e;
+  padding: 12px;
+  border-radius: 8px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.system-status .dot {
+  width: 8px;
+  height: 8px;
+  background-color: #2ecc71;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.system-status strong {
+  display: block;
+  font-size: 11px;
+  color: #ffffff;
+}
+
+.system-status p, .system-status small {
+  margin: 2px 0 0 0;
+  font-size: 11px;
+  color: #888;
+  display: block;
+}
+
+/* Main Area & Header */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.top-header {
+  background-color: #ffffff;
+  padding: 14px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.breadcrumb {
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.breadcrumb span {
+  color: #e63946;
+  font-weight: 600;
+}
+
+.user-profile-section {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.status-badge {
+  background-color: #e8f8f0;
+  color: #2ecc71;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.user-info {
+  text-align: right;
+}
+
+.user-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #212529;
+  margin: 0;
+}
+
+.user-role {
+  font-size: 11px;
+  color: #6c757d;
+  margin: 0;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  background-color: #e63946;
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.logout-btn {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: #e63946;
+  color: #ffffff;
+  border-color: #e63946;
+}
+
+.content-area {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
