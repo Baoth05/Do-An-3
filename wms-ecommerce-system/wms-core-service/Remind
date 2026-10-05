@@ -1,0 +1,14 @@
+wms-core-service/
+├── src/main/java/com/ctut/wms/wmscoreservice/
+│   ├── common/         # Chứa các lớp dùng chung
+│   ├── category/       # Tính năng Danh mục hàng hóa
+│   ├── product/        # Tính năng Sản phẩm
+│   ├── warehouse/      # Tính năng Quản lý thông tin Kho bãi vật lý
+│   ├── inventory/      # Tính năng Quản lý Tồn kho thực tế và Khả dụng
+│   ├── supplier/       # Tính năng Đối tác / Nhà cung cấp
+│   ├── shipping/       # Tính năng Đơn vị vận chuyển (GHTK, Viettel Post...)
+│   ├── importnote/     # Tính năng Lập phiếu nhập kho & Chi tiết nhập
+│   ├── exportnote/     # Tính năng Lập phiếu xuất kho & Chi tiết xuất
+│   └── transfer/       # Tính năng Điều chuyển hàng hóa nội bộ giữa các kho
+└── src/main/resources/
+    └── application.yml # Cấu hình cổng (8081) và Database (wms_core_db)
