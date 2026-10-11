@@ -1,122 +1,73 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import React, { useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, AuthContext } from './context/AuthContext';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Import Layout và trang Đăng nhập
+import WmsLayout from './components/Layout/WmsLayout';
+import Login from './pages/Auth/Login';
 
+// Import các trang nghiệp vụ từ cấu trúc thư mục của bạn
+import WmsDashboard from './pages/Dashboard/WmsDashboard';
+import InventoryStock from './pages/Inventory/InventoryStock';
+import ImportNoteList from './pages/ImportNote/ImportNoteList';
+import ExportNoteList from './pages/ExportNote/ExportNoteList';
+import ProductManagement from './pages/Product/ProductManagement';
+import SupplierManagement from './pages/Supplier/SupplierManagement';
+import ShippingManagement from './pages/Shipping/ShippingManagement';
+
+// Component bảo vệ Route: Kiểm tra trạng thái đăng nhập
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated } = useContext(AuthContext);
+  // Nếu chưa đăng nhập, tự động đẩy về trang /login
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return children;
+};
+
+// Cấu hình toàn bộ tuyến đường (Routes) của hệ thống
+const AppRoutes = () => {
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <Routes>
+      {/* Route công khai: Đăng nhập */}
+      <Route path="/login" element={<Login />} />
 
-      <div className="ticks"></div>
+      {/* Routes yêu cầu đăng nhập và có chứa Layout Sidebar + Header */}
+      <Route 
+        path="/" 
+        element={
+          <ProtectedRoute>
+            <WmsLayout />
+          </ProtectedRoute>
+        }
+      >
+        {/* Tự động chuyển hướng từ gốc "/" sang "/dashboard" */}
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        
+        <Route path="dashboard" element={<WmsDashboard />} />
+        
+        {/* Các route nghiệp vụ kho đã được gắn Component thực tế */}
+        <Route path="inventory" element={<InventoryStock />} />
+        <Route path="import-notes" element={<ImportNoteList />} />
+        <Route path="export-notes" element={<ExportNoteList />} />
+        <Route path="products" element={<ProductManagement />} />
+        <Route path="suppliers" element={<SupplierManagement />} />
+        <Route path="shipping" element={<ShippingManagement />} />
+      </Route>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      {/* Xử lý các đường dẫn không tồn tại (Lỗi 404) -> Đẩy về trang đăng nhập */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
+  );
+};
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+// Khởi tạo App với Context và Router
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppRoutes />
+      </Router>
+    </AuthProvider>
+  );
 }
 
-export default App
+export default App;

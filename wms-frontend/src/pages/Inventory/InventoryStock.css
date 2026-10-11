@@ -1,0 +1,200 @@
+/* src/pages/Inventory/InventoryStock.css */
+
+.inventory-stock-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 1. Phần Tiêu đề Trang */
+.inventory-header h2 {
+  font-size: 22px;
+  color: #0f172a !important; /* Đen xanh đậm - Nổi bật nét chữ */
+  margin-bottom: 4px;
+  font-weight: 800;
+}
+
+.inventory-header p {
+  font-size: 13px;
+  color: #475569 !important; /* Xám sẫm rõ ràng */
+}
+
+/* 2. Thanh công cụ tìm kiếm & Bộ lọc */
+.inventory-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.search-box {
+  flex: 1;
+  position: relative;
+  max-width: 420px;
+}
+
+.search-box .search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  z-index: 2;
+}
+
+/* SỬA LỖI Ô TÌM KIẾM BỊ ĐEN: Chuyển hoàn toàn sang nền trắng tinh khôi */
+.search-box input {
+  width: 100%;
+  padding: 10px 12px 10px 38px;
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px;
+  color: #0f172a !important; /* Chữ gõ vào màu đen sẫm sắc nét */
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+  font-family: inherit;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.search-box input::placeholder {
+  color: #94a3b8 !important; /* Màu chữ gợi ý dịu mắt */
+}
+
+.search-box input:focus {
+  border-color: #2563eb !important; /* Viền xanh dương khi click vào */
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+}
+
+/* Nút Lọc Dữ Liệu */
+.btn-filter {
+  background-color: #ffffff !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+  padding: 10px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-filter:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* 3. Khung & Bảng Dữ Liệu Tồn Kho */
+.inventory-table-wrapper {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.wms-data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* SỬA LỖI TIÊU ĐỀ BẢNG BỊ MỜ */
+.wms-data-table th {
+  text-align: left;
+  padding: 14px 16px;
+  background-color: #f8fafc !important; /* Nền tiêu đề xám cực nhạt */
+  border-bottom: 2px solid #e2e8f0 !important;
+  font-size: 12px;
+  font-weight: 800;
+  color: #334155 !important; /* Chữ xám xanh đậm, cực rõ */
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* SỬA LỖI NỘI DUNG DÒNG BỊ MỜ */
+.wms-data-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9 !important;
+  font-size: 13px;
+  color: #0f172a !important; /* Đổi sang màu đen đậm nét */
+  font-weight: 600;
+}
+
+.wms-data-table tr:hover td {
+  background-color: #f8fafc !important;
+}
+
+/* Định dạng Mã Hàng Hóa (HH-001, HH-002...) */
+.font-mono {
+  font-family: monospace;
+  font-weight: 800 !important;
+  color: #1e293b !important; /* Chữ mã hàng đen đậm nổi bật */
+}
+
+/* Con số Tồn Kho Thực Tế */
+.stock-level {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+/* SỬA LỖI DÒNG CẢNH BÁO BỊ NỀN ĐEN/TỐI */
+.row-warning td {
+  background-color: #fff1f2 !important; /* Nền đỏ hồng vô cùng dịu mắt */
+  color: #0f172a !important; /* Chữ bên trong giữ nguyên độ đậm đen */
+}
+
+/* 4. Huy Hiệu Trạng Thái (Badge) & Nút Thẻ Kho */
+.badge {
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge.warning {
+  background-color: #fee2e2 !important;
+  color: #dc2626 !important; /* Chữ cảnh báo đỏ đậm */
+  border: 1px solid #fca5a5 !important;
+}
+
+.badge.safe {
+  background-color: #dcfce7 !important;
+  color: #15803d !important; /* Chữ an toàn xanh lá đậm */
+  border: 1px solid #86efac !important;
+}
+
+/* Nút Thẻ Kho */
+.btn-action {
+  background: #ffffff !important;
+  color: #2563eb !important; /* Xanh dương đậm nét */
+  border: 1px solid #cbd5e1 !important;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-action:hover {
+  background-color: #eff6ff !important;
+  border-color: #93c5fd !important;
+  color: #1d4ed8 !important;
+}
+
+.text-center {
+  text-align: center;
+  color: #64748b !important;
+  padding: 24px !important;
+  font-weight: 500;
+}

@@ -1,0 +1,350 @@
+/* src/pages/Auth/Login.css */
+
+/* Khung Overlay căn giữa 100% màn hình, đè hoàn toàn thuộc tính thừa của root */
+.wms-login-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at center, #1e1313 0%, #0d0a0a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  overflow-y: auto;
+  padding: 20px;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.wms-login-container {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 1. Badge Máy Chủ */
+.wms-server-badge {
+  background-color: rgba(26, 20, 20, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 6px 16px;
+  border-radius: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #e2d8d8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #ef4444;
+  animation: wms-pulse 1.8s infinite;
+}
+
+@keyframes wms-pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* 2. Card Đăng Nhập Màu Trắng Sáng Rõ Ràng */
+.wms-auth-card {
+  background-color: #ffffff;
+  width: 100%;
+  border-radius: 16px;
+  padding: 32px 32px 28px 32px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  box-sizing: border-box;
+}
+
+.wms-auth-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+/* Brand Pill */
+.wms-brand-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+}
+
+.brand-pill-icon {
+  color: #dc2626;
+  font-size: 15px;
+}
+
+.brand-pill-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #991b1b;
+}
+
+.brand-pill-sub {
+  font-size: 9px;
+  font-weight: 700;
+  color: #b91c1c;
+  border-left: 1px solid #fca5a5;
+  padding-left: 6px;
+  margin-left: 2px;
+}
+
+.wms-auth-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.3px;
+}
+
+.wms-auth-desc {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 14px 0;
+  line-height: 1.4;
+}
+
+.wms-role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #fff1f2;
+  color: #be123c;
+  border: 1px solid #ffe4e6;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.role-pill-icon {
+  font-size: 14px;
+}
+
+/* Khung báo lỗi */
+.wms-auth-error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+/* Form & Input Fields */
+.wms-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wms-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.wms-field-group label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.wms-field-group label .req {
+  color: #dc2626;
+}
+
+/* Ô Nhập Căn Chỉnh Icon Cực Chuẩn */
+.wms-input-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.wms-field-icon {
+  position: absolute;
+  left: 14px;
+  color: #64748b;
+  font-size: 18px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.wms-input-box input {
+  width: 100%;
+  height: 44px;
+  padding: 0 40px 0 42px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.2s ease-in-out;
+  box-sizing: border-box;
+}
+
+.wms-input-box input:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.wms-input-box input::placeholder {
+  color: #94a3b8;
+}
+
+.wms-password-toggle {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  z-index: 2;
+}
+
+.wms-password-toggle:hover {
+  color: #0f172a;
+}
+
+/* Form Options */
+.wms-auth-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.wms-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: #475569;
+  user-select: none;
+}
+
+.wms-checkbox-label input {
+  accent-color: #dc2626;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.wms-forgot-link {
+  color: #b91c1c;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.wms-forgot-link:hover {
+  text-decoration: underline;
+}
+
+/* Nút Submit */
+.wms-btn-submit {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: #ffffff;
+  border: none;
+  height: 46px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  margin-top: 4px;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.wms-btn-submit:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+}
+
+.wms-btn-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Khung Bảo Mật */
+.wms-security-box {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.security-icon {
+  color: #dc2626;
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.wms-security-box p {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.45;
+  margin: 0;
+  text-align: left;
+}
+
+/* 3. Footer */
+.wms-auth-footer {
+  margin-top: 20px;
+  text-align: center;
+  color: #a1a1aa;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.f-line-1 strong {
+  color: #e4e4e7;
+}
+
+.f-line-3 {
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  color: #71717a;
+  margin-top: 2px;
+}

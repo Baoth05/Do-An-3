@@ -1,0 +1,57 @@
+/* src/components/Common/Button.css */
+.custom-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.custom-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Biến thể màu sắc Crimson Dark WMS */
+.btn-primary {
+  background-color: #d32f2f;
+  color: #ffffff;
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: #b71c1c;
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+}
+
+.btn-secondary {
+  background-color: #21262d;
+  color: #c9d1d9;
+  border-color: #30363d;
+}
+.btn-secondary:hover:not(:disabled) {
+  background-color: #30363d;
+  color: #ffffff;
+}
+
+.btn-danger {
+  background-color: #da3633;
+  color: #ffffff;
+}
+.btn-danger:hover:not(:disabled) {
+  background-color: #b82a28;
+}
+
+.btn-outline {
+  background-color: transparent;
+  border-color: #d32f2f;
+  color: #ff6b6b;
+}
+.btn-outline:hover:not(:disabled) {
+  background-color: rgba(211, 47, 47, 0.15);
+}

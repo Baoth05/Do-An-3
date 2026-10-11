@@ -1,0 +1,113 @@
+/* src/pages/ImportNote/ImportNoteList.css */
+
+/* Khung tổng thể trang Quản lý Nhập Kho */
+.import-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Phần Tiêu đề Trang & Nút Tạo Phiếu Nhập */
+.import-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.import-header h2 {
+  font-size: 22px;
+  color: #0f172a !important; /* Chữ xám đen đậm nổi bật */
+  margin-bottom: 4px;
+  font-weight: 800;
+}
+
+.import-header p {
+  font-size: 13px;
+  color: #475569 !important; /* Chữ mô tả xám sẫm rõ ràng */
+}
+
+/* Thanh Công Cụ (Tìm kiếm & Bộ lọc) */
+.import-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Ô Tìm Kiếm Nền Trắng */
+.import-search-box {
+  flex: 1;
+  position: relative;
+  max-width: 420px;
+}
+
+.import-search-box input {
+  width: 100%;
+  padding: 10px 12px 10px 38px;
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px;
+  color: #0f172a !important;
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.import-search-box input:focus {
+  border-color: #16a34a !important; /* Viền xanh lá khi focus cho Phiếu Nhập */
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15) !important;
+}
+
+/* Khung Bảng Danh Sách Phiếu Nhập Kho */
+.import-table-wrapper {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Quy tắc hiển thị chữ trong Bảng Phiếu Nhập */
+.import-table-wrapper th {
+  background-color: #f8fafc !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+  color: #334155 !important;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 14px 16px;
+  text-transform: uppercase;
+}
+
+.import-table-wrapper td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9 !important;
+  color: #0f172a !important;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.import-table-wrapper tr:hover td {
+  background-color: #f8fafc !important;
+}
+
+/* Huy hiệu trạng thái Nhập Kho */
+.badge-status-success {
+  background-color: #dcfce7 !important;
+  color: #15803d !important;
+  border: 1px solid #86efac !important;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.badge-status-pending {
+  background-color: #fef9c3 !important;
+  color: #a16207 !important;
+  border: 1px solid #fde047 !important;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}

@@ -4,7 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="05157197-5de5-4476-bd13-0b5f7d424e90" name="Changes" comment="" />
+    <list default="true" id="05157197-5de5-4476-bd13-0b5f7d424e90" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-ecommerce-system/wms-core-service/src/main/java/com/ctut/wms/wmscoreservice/WmsCoreServiceApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/wms-ecommerce-system/wms-core-service/src/main/java/com/ctut/wms/wmscoreservice/WmsCoreServiceApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/App.css" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/App.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/App.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/index.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/main.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/main.jsx" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -44,6 +55,65 @@
     <commands />
     <urls />
   </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0" />
+      <entry key="S10" value="1.0" />
+      <entry key="S30" value="1.0" />
+      <entry key="S60" value="1.0" />
+      <entry key="M2" value="1.0" />
+      <entry key="M5" value="1.0" />
+      <entry key="M10" value="1.0" />
+      <entry key="M15" value="1.0" />
+      <entry key="M30" value="1.0" />
+      <entry key="H1" value="1.0" />
+      <entry key="H2" value="1.0" />
+      <entry key="H4" value="1.0" />
+      <entry key="D1" value="1.0" />
+      <entry key="W1" value="1.0" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.004016069635375257" />
+      <entry key="MS500" value="0.33171128514929044" />
+      <entry key="S2" value="0.758909626487027" />
+      <entry key="S5" value="0.8955215158425639" />
+      <entry key="S10" value="0.9463199859680466" />
+      <entry key="S30" value="0.9817765864770643" />
+      <entry key="S60" value="0.9908463990332025" />
+      <entry key="M2" value="0.9954126777539065" />
+      <entry key="M5" value="0.9981625396818934" />
+      <entry key="M10" value="0.9990808474202142" />
+      <entry key="M15" value="0.9993871377038341" />
+      <entry key="M30" value="0.9996935218875004" />
+      <entry key="H1" value="0.9998467492008465" />
+      <entry key="H2" value="0.9999233716644723" />
+      <entry key="H4" value="0.9999616850982204" />
+      <entry key="D1" value="0.9999936140810877" />
+      <entry key="W1" value="0.999999087723373" />
+    </decayedShown>
+  </component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="CurrentFile" />
   </component>
@@ -59,7 +129,10 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;Spring Boot.ApiGatewayApplication.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.DiscoveryServerApplication.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.IdentityServiceApplication.executor&quot;: &quot;Run&quot;,
@@ -68,13 +141,23 @@
     &quot;Spring Boot.PaymentServiceApplication.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.WmsCoreServiceApplication.executor&quot;: &quot;Run&quot;,
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;D:/Projects/Do-an/Do_An/Do-An-3&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
     &quot;run.configurations.included.in.services&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;MavenSettings&quot;
+    &quot;settings.editor.selected.configurable&quot;: &quot;MavenSettings&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
   <component name="RecentsManager">
@@ -133,6 +216,14 @@
       </method>
     </configuration>
   </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.26222.65" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.26222.65" />
+      </set>
+    </attachedChunks>
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="05157197-5de5-4476-bd13-0b5f7d424e90" name="Changes" comment="" />
@@ -140,7 +231,14 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1782990342119</updated>
+      <workItem from="1790845769935" duration="4751000" />
+      <workItem from="1791423957167" duration="1541000" />
+      <workItem from="1791446908909" duration="2765000" />
+      <workItem from="1791457385800" duration="1627000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
 </project>

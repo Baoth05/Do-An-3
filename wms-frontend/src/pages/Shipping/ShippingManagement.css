@@ -1,0 +1,35 @@
+/* src/pages/Shipping/ShippingManagement.css */
+
+.shipping-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Phần Tiêu đề */
+.shipping-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shipping-header h2 {
+  font-size: 22px;
+  color: #0f172a !important; /* Chữ tối màu sắc nét */
+  margin-bottom: 4px;
+  font-weight: 800;
+}
+
+.shipping-header p {
+  font-size: 13px;
+  color: #475569 !important; /* Chữ mô tả xám sẫm */
+}
+
+/* Khung Bảng Dữ Liệu Đơn Vị Vận Chuyển */
+.shipping-table-wrapper {
+  background-color: #ffffff !important; /* Nền trắng sáng */
+  border: 1px solid #e2e8f0 !important; /* Viền xám mỏng nhạt */
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); /* Hiệu ứng nổi 3D nhẹ */
+}
