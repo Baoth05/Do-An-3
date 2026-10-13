@@ -1,0 +1,10 @@
+order-service/
+├── src/main/java/com/ctut/wms/orderservice/
+│   ├── config/          # Chứa thiết lập cấu hình (VD: RestTemplateConfig.java để gọi API nội bộ)
+│   ├── controller/      # Điểm cuối API giao tiếp với Web/App (OrderController, VoucherController)
+│   ├── dto/             # Hộp chứa dữ liệu (OrderRequest, OrderDetailRequest, WmsExportRequest...)
+│   ├── entity/          # Cấu trúc bảng CSDL (BaseEntity, Order, OrderDetail, Voucher)
+│   ├── repository/      # Giao tiếp với Database PostgreSQL (OrderRepository...)
+│   └── service/         # Chứa logic nghiệp vụ tính tiền, kiểm tra Voucher (OrderService)
+└── src/main/resources/
+    └── application.yml  # Cấu hình cổng 8082, kết nối Database order_db và Eureka Client

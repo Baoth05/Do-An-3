@@ -29,11 +29,11 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="api-gateway" options="-parameters" />
       <module name="discovery-server" options="-parameters" />
-      <module name="identity-service" options="" />
-      <module name="interaction-service" options="" />
-      <module name="order-service" options="" />
-      <module name="payment-service" options="" />
-      <module name="wms-core-service" options="" />
+      <module name="identity-service" options="-parameters" />
+      <module name="interaction-service" options="-parameters" />
+      <module name="order-service" options="-parameters" />
+      <module name="payment-service" options="-parameters" />
+      <module name="wms-core-service" options="-parameters" />
       <module name="wms-ecommerce-system" options="" />
     </option>
   </component>

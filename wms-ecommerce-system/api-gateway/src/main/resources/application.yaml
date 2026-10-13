@@ -1,5 +1,5 @@
 server:
-  port: 8080 # Cổng của Gateway
+  port: 8080
 
 spring:
   application:
@@ -8,36 +8,55 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true # Cho phép tự động dò đường qua Eureka
+          enabled: true
+      # 🌟 Giải quyết Vấn đề 1: Cấu hình CORS toàn cục cho Gateway
+      globalcors:
+        cors-configurations:
+          '[/**]': # Áp dụng cho mọi đường dẫn
+            allowedOrigins: "*" # Chấp nhận mọi Frontend (React/Vue). Khi lên thực tế có thể đổi thành http://localhost:3000
+            allowedMethods: "*" # Chấp nhận mọi HTTP Method (GET, POST, PUT, DELETE...)
+            allowedHeaders: "*" # Chấp nhận mọi Header (bao gồm cả Authorization)
+
       routes:
+        # 🌟 Giải quyết Vấn đề 3: Bỏ StripPrefix=1 vì Controller đã có sẵn @RequestMapping("/auth")
         - id: identity-service
-          uri: lb://identity-service # lb = load balancer, trỏ tới service trong Eureka
+          uri: lb://identity-service
           predicates:
-            - Path=/auth/** # Mọi request bắt đầu bằng /auth sẽ vào đây
+            - Path=/auth/**
 
         - id: wms-core-service
           uri: lb://wms-core-service
           predicates:
-            - Path=/wms/** # Route cho quản lý kho
+            - Path=/wms/**
+          filters:
+            # Nếu wms Controller chưa có @RequestMapping("/wms") thì giữ lại StripPrefix, nếu có rồi thì cậu xóa nốt dòng này nhé!
+            - StripPrefix=1
+            - AuthenticationFilter
 
         - id: order-service
           uri: lb://order-service
           predicates:
-            - Path=/orders/** # Route cho đơn hàng
+            - Path=/orders/**
+          filters:
+            - AuthenticationFilter # Đã bỏ StripPrefix=1
 
         - id: payment-service
           uri: lb://payment-service
           predicates:
-            - Path=/payments/** # Route cho thanh toán[cite: 2]
+            - Path=/payments/**
+          filters:
+            - AuthenticationFilter # Đã bỏ StripPrefix=1
 
         - id: interaction-service
           uri: lb://interaction-service
           predicates:
-            - Path=/interactions/** # Route cho đánh giá/bình luận[cite: 2]
+            - Path=/interactions/**
+          filters:
+            - AuthenticationFilter # Đã bỏ StripPrefix=1
 
 eureka:
   instance:
     prefer-ip-address: true
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/ # Khai báo vị trí của Discovery Server
+      defaultZone: http://localhost:8761/eureka/

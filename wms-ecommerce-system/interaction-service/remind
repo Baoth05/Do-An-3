@@ -1,0 +1,9 @@
+interaction-service/
+├── src/main/java/com/ctut/wms/interactionservice/
+│   ├── controller/      # API nhận và trả dữ liệu (DanhGiaController, BinhLuanController)
+│   ├── dto/             # Gói dữ liệu từ Frontend gửi xuống (DanhGiaRequest, BinhLuanRequest)
+│   ├── entity/          # Cấu trúc bảng (BaseEntity, DanhGia, BinhLuan - có tính năng Tự tham chiếu)
+│   ├── repository/      # Kết nối DB (DanhGiaRepository, BinhLuanRepository)
+│   └── service/         # Xử lý logic lưu trữ, lọc bình luận gốc (DanhGiaService, BinhLuanService)
+└── src/main/resources/
+    └── application.yml  # Cấu hình cổng 8083, kết nối Database inter_db và Eureka Client
