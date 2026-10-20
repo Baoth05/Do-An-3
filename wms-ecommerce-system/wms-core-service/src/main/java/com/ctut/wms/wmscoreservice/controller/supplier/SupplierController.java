@@ -27,6 +27,32 @@ public class SupplierController {
         return ResponseEntity.ok(supplierRepository.findAll());
     }
 
+    // API lấy chi tiết nhà cung cấp theo ID
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getSupplierById(@PathVariable Long id) {
+        return supplierRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
 
+    // API cập nhật nhà cung cấp
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateSupplier(@PathVariable Long id, @RequestBody Supplier supplier) {
+        if (!supplierRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        supplier.setId(id);
+        return ResponseEntity.ok(supplierRepository.save(supplier));
+    }
+
+    // API xóa nhà cung cấp
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteSupplier(@PathVariable Long id) {
+        if (!supplierRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        supplierRepository.deleteById(id);
+        return ResponseEntity.ok("Đã xóa nhà cung cấp!");
+    }
 }

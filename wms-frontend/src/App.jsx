@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 
@@ -6,14 +6,21 @@ import { AuthProvider, AuthContext } from './context/AuthContext';
 import WmsLayout from './components/Layout/WmsLayout';
 import Login from './pages/Auth/Login';
 
-// Import các trang nghiệp vụ từ cấu trúc thư mục của bạn
+// Import các trang nghiệp vụ
 import WmsDashboard from './pages/Dashboard/WmsDashboard';
 import InventoryStock from './pages/Inventory/InventoryStock';
 import ImportNoteList from './pages/ImportNote/ImportNoteList';
+import ImportNoteCreate from './pages/ImportNote/ImportNoteCreate';
+import ImportNoteDetail from './pages/ImportNote/ImportNoteDetail';
 import ExportNoteList from './pages/ExportNote/ExportNoteList';
+import ExportNoteCreate from './pages/ExportNote/ExportNoteCreate';
+import ExportNoteDetail from './pages/ExportNote/ExportNoteDetail';
 import ProductManagement from './pages/Product/ProductManagement';
+import ProductForm from './pages/Product/ProductForm';
 import SupplierManagement from './pages/Supplier/SupplierManagement';
+import SupplierForm from './pages/Supplier/SupplierForm';
 import ShippingManagement from './pages/Shipping/ShippingManagement';
+import ShippingForm from './pages/Shipping/ShippingForm';
 
 // Component bảo vệ Route: Kiểm tra trạng thái đăng nhập
 const ProtectedRoute = ({ children }) => {
@@ -44,13 +51,33 @@ const AppRoutes = () => {
         
         <Route path="dashboard" element={<WmsDashboard />} />
         
-        {/* Các route nghiệp vụ kho đã được gắn Component thực tế */}
+        {/* Tồn kho */}
         <Route path="inventory" element={<InventoryStock />} />
+        
+        {/* Nhập kho */}
         <Route path="import-notes" element={<ImportNoteList />} />
+        <Route path="import-notes/create" element={<ImportNoteCreate />} />
+        <Route path="import-notes/:id" element={<ImportNoteDetail />} />
+        
+        {/* Xuất kho */}
         <Route path="export-notes" element={<ExportNoteList />} />
+        <Route path="export-notes/create" element={<ExportNoteCreate />} />
+        <Route path="export-notes/:id" element={<ExportNoteDetail />} />
+        
+        {/* Hàng hóa / Sản phẩm */}
         <Route path="products" element={<ProductManagement />} />
+        <Route path="products/create" element={<ProductForm />} />
+        <Route path="products/edit/:id" element={<ProductForm />} />
+        
+        {/* Nhà cung cấp */}
         <Route path="suppliers" element={<SupplierManagement />} />
+        <Route path="suppliers/create" element={<SupplierForm />} />
+        <Route path="suppliers/edit/:id" element={<SupplierForm />} />
+        
+        {/* Đơn vị vận chuyển */}
         <Route path="shipping" element={<ShippingManagement />} />
+        <Route path="shipping/create" element={<ShippingForm />} />
+        <Route path="shipping/edit/:id" element={<ShippingForm />} />
       </Route>
 
       {/* Xử lý các đường dẫn không tồn tại (Lỗi 404) -> Đẩy về trang đăng nhập */}

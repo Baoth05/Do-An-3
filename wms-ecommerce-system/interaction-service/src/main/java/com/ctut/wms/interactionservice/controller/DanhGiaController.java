@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/danh-gia")
+@RequestMapping({"/interactions/danh-gia", "/danh-gia"})
 @RequiredArgsConstructor
 public class DanhGiaController {
 

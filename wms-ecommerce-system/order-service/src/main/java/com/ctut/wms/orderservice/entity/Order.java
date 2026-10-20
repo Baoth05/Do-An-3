@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import lombok.ToString;
+
 @Entity
 @Table(name = "don_hang")
 @Data
@@ -26,6 +28,7 @@ public class Order extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voucher_id")
+    @ToString.Exclude
     private Voucher voucher;
     @Column(name = "dia_chi_giao_hang")
     private String diaChiGiaoHang;
@@ -55,5 +58,6 @@ public class Order extends BaseEntity {
 
     // Cascade.ALL: Khi lưu Order, tự động lưu luôn các Chi tiết bên trong
     @OneToMany(mappedBy = "donHang", cascade = CascadeType.ALL)
+    @ToString.Exclude
     private List<OrderDetail> chiTietDonHangs;
 }

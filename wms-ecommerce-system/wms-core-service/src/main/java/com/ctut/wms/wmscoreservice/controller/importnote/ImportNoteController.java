@@ -23,5 +23,9 @@ public class ImportNoteController {
         }
     }
 
-
+    // API lấy danh sách toàn bộ Phiếu nhập kho
+    @GetMapping
+    public ResponseEntity<?> getAllImportNotes() {
+        return ResponseEntity.ok(importNoteService.getAllImportNotes());
+    }
 }

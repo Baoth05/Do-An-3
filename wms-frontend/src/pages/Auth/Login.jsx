@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { 
@@ -40,7 +40,7 @@ const Login = () => {
       } else {
         setErrorMessage(result.message || 'Tài khoản hoặc mật khẩu không chính xác!');
       }
-    } catch (error) {
+    } catch {
       setErrorMessage('Không thể kết nối đến máy chủ kho bãi!');
     } finally {
       setIsLoading(false);

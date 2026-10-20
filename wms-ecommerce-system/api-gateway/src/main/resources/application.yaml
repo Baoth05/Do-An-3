@@ -18,41 +18,69 @@ spring:
             allowedHeaders: "*" # Chấp nhận mọi Header (bao gồm cả Authorization)
 
       routes:
-        # 🌟 Giải quyết Vấn đề 3: Bỏ StripPrefix=1 vì Controller đã có sẵn @RequestMapping("/auth")
         - id: identity-service
           uri: lb://identity-service
           predicates:
             - Path=/auth/**
 
-        - id: wms-core-service
+        - id: wms-core-service-public
+          uri: lb://wms-core-service
+          predicates:
+            - Path=/products/**, /categories/**
+            - Method=GET
+
+        - id: wms-core-service-prefix
           uri: lb://wms-core-service
           predicates:
             - Path=/wms/**
           filters:
-            # Nếu wms Controller chưa có @RequestMapping("/wms") thì giữ lại StripPrefix, nếu có rồi thì cậu xóa nốt dòng này nhé!
             - StripPrefix=1
             - AuthenticationFilter
+
+        - id: wms-core-service
+          uri: lb://wms-core-service
+          predicates:
+            - Path=/products/**, /categories/**, /inventory/**, /warehouses/**, /suppliers/**, /export-notes/**, /import-notes/**, /shippers/**
+          filters:
+            - AuthenticationFilter
+
+        - id: order-service-vouchers-public
+          uri: lb://order-service
+          predicates:
+            - Path=/vouchers/**
+            - Method=GET
 
         - id: order-service
           uri: lb://order-service
           predicates:
-            - Path=/orders/**
+            - Path=/orders/**, /vouchers/**
           filters:
-            - AuthenticationFilter # Đã bỏ StripPrefix=1
+            - AuthenticationFilter
+
+        - id: payment-service-public
+          uri: lb://payment-service
+          predicates:
+            - Path=/payments/momo-ipn, /payments/mock-success/**, /payments/mock-success-order/**, /payments/status/**
 
         - id: payment-service
           uri: lb://payment-service
           predicates:
             - Path=/payments/**
           filters:
-            - AuthenticationFilter # Đã bỏ StripPrefix=1
+            - AuthenticationFilter
+
+        - id: interaction-service-public
+          uri: lb://interaction-service
+          predicates:
+            - Path=/interactions/**
+            - Method=GET
 
         - id: interaction-service
           uri: lb://interaction-service
           predicates:
             - Path=/interactions/**
           filters:
-            - AuthenticationFilter # Đã bỏ StripPrefix=1
+            - AuthenticationFilter
 
 eureka:
   instance:

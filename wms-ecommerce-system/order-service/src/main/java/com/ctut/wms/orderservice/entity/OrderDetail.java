@@ -1,9 +1,11 @@
 package com.ctut.wms.orderservice.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import java.math.BigDecimal;
 
 @Entity
@@ -18,6 +20,8 @@ public class OrderDetail extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "don_hang_id", nullable = false)
+    @JsonIgnore
+    @ToString.Exclude
     private Order donHang;
 
     @Column(name = "ma_hang_hoa", nullable = false)

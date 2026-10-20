@@ -128,6 +128,7 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;Maven.identity-service [clean].executor&quot;: &quot;Run&quot;,
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
@@ -165,7 +166,7 @@
       <recent name="D:\Projects\Do-an\Do_An\Do-An-3\wms-ecommerce-system\identity-service\src\main\java\com\ctut\wms\identityservice\service" />
     </key>
   </component>
-  <component name="RunManager" selected="Spring Boot.ApiGatewayApplication">
+  <component name="RunManager" selected="Spring Boot.OrderServiceApplication">
     <configuration name="ApiGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="api-gateway" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.ctut.wms.apigateway.ApiGatewayApplication" />

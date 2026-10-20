@@ -26,8 +26,39 @@ public class ProductController {
     }
 
     // API lấy danh sách toàn bộ sản phẩm
-    @GetMapping
+    @GetMapping({"", "/all"})
     public ResponseEntity<List<ProductResponse>> getAllProducts() {
         return ResponseEntity.ok(productService.getAllProducts());
+    }
+
+    // API lấy chi tiết sản phẩm theo ID
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getProductById(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(productService.getProductById(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // API cập nhật sản phẩm
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody ProductRequest request) {
+        try {
+            return ResponseEntity.ok(productService.updateProduct(id, request));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // API xóa sản phẩm
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
+        try {
+            productService.deleteProduct(id);
+            return ResponseEntity.ok("Đã xóa sản phẩm thành công!");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

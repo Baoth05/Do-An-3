@@ -22,4 +22,9 @@ public class ExportNoteController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @GetMapping
+    public ResponseEntity<?> getAllExportNotes() {
+        return ResponseEntity.ok(exportNoteService.getAllExportNotes());
+    }
 }

@@ -82,4 +82,8 @@ public class ExportNoteService {
 
         return savedExportNote;
     }
+
+    public java.util.List<ExportNote> getAllExportNotes() {
+        return exportNoteRepository.findAll();
+    }
 }

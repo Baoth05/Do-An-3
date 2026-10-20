@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface GiaoDichMoMoRepository extends JpaRepository<GiaoDichMoMo, Long> {
     Optional<GiaoDichMoMo> findByMomoOrderId(String momoOrderId);
+    Optional<GiaoDichMoMo> findByDonHangId(String donHangId);
 }

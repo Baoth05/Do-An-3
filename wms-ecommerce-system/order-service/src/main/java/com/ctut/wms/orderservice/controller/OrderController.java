@@ -23,4 +23,50 @@ public class OrderController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @GetMapping("/user/{nguoiDungId}")
+    public ResponseEntity<?> getOrdersByUser(@PathVariable Long nguoiDungId) {
+        return ResponseEntity.ok(orderService.getOrdersByUser(nguoiDungId));
+    }
+
+    @GetMapping("/{maDonHang}")
+    public ResponseEntity<?> getOrderByMaDonHang(@PathVariable String maDonHang) {
+        try {
+            return ResponseEntity.ok(orderService.getOrderByMaDonHang(maDonHang));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getAllOrders() {
+        return ResponseEntity.ok(orderService.getAllOrders());
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<?> updateOrderStatus(@PathVariable Long id, @RequestParam String status) {
+        try {
+            return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/{maDonHang}/payment-status")
+    public ResponseEntity<?> updatePaymentStatus(@PathVariable String maDonHang, @RequestParam String paymentStatus) {
+        try {
+            return ResponseEntity.ok(orderService.updatePaymentStatus(maDonHang, paymentStatus));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelOrder(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(orderService.cancelOrder(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

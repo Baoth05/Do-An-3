@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { 
@@ -93,12 +93,14 @@ const WmsLayout = () => {
           </div>
 
           <div className="wms-user-profile">
-            <span className="wms-role-badge">THỦ KHO CHÍNH</span>
+            <span className="wms-role-badge">{user?.role || 'THỦ KHO'}</span>
             <div className="wms-user-info">
-              <p className="wms-user-name">{user?.name || 'Nguyễn Văn Kho'}</p>
-              <p className="wms-user-id">Mã NV: NV-WMS-01</p>
+              <p className="wms-user-name">{user?.name || user?.taiKhoan || 'Nguyễn Văn Kho'}</p>
+              <p className="wms-user-id">ID: #{user?.id || '01'} • @{user?.taiKhoan || 'admin'}</p>
             </div>
-            <div className="wms-user-avatar">K</div>
+            <div className="wms-user-avatar">
+              {(user?.name || user?.taiKhoan || 'K').charAt(0).toUpperCase()}
+            </div>
             <button className="wms-logout-btn" onClick={handleLogout} title="Đăng xuất">
               <FiLogOut size={16} />
             </button>

@@ -9,6 +9,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserProfileResponse {
+    private Long id; // ID người dùng
     private String taiKhoan;
     private String email;
     private String vaiTro; // Thêm vai trò

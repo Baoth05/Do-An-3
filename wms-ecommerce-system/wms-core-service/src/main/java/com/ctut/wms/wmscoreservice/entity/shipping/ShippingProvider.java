@@ -15,9 +15,27 @@ public class ShippingProvider {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "ma_don_vi")
+    private String maDonVi;
+
     @Column(name = "ten_don_vi", nullable = false)
     private String tenDonVi;
 
     @Column(name = "thong_tin_lien_he")
     private String thongTinLienHe;
+
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "website")
+    private String website;
+
+    @Column(name = "dia_chi")
+    private String diaChi;
+
+    @Column(name = "ghi_chu", columnDefinition = "TEXT")
+    private String ghiChu;
+
+    @Column(name = "trang_thai")
+    private String trangThai = "HOAT_DONG";
 }

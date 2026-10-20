@@ -1,4 +1,3 @@
-import React from 'react';
 import { FiX } from 'react-icons/fi';
 import './Modal.css';
 
@@ -32,4 +31,4 @@ const Modal = ({ isOpen, onClose, title, children, footer }) => {
   );
 };
 
-export default Modal;ứ
+export default Modal;

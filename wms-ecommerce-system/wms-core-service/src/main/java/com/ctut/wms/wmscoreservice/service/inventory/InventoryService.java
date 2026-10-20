@@ -45,4 +45,8 @@ public class InventoryService {
         // 5. Lưu xuống cơ sở dữ liệu
         return inventoryRepository.save(inventory);
     }
+
+    public java.util.List<Inventory> getAllInventory() {
+        return inventoryRepository.findAll();
+    }
 }

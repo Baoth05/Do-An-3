@@ -89,4 +89,8 @@ public class ImportNoteService {
         savedImportNote.setTongTienNhap(tongTien);
         return importNoteRepository.save(savedImportNote);
     }
+
+    public java.util.List<ImportNote> getAllImportNotes() {
+        return importNoteRepository.findAll();
+    }
 }

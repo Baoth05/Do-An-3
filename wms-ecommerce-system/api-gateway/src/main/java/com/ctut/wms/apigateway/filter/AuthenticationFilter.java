@@ -7,6 +7,8 @@ import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFac
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
+import org.springframework.http.HttpStatus;
+
 @Component
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
 
@@ -22,11 +24,12 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
         return ((exchange, chain) -> {
             // Kiểm tra xem yêu cầu này có chứa Header "Authorization" không
             if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-                throw new RuntimeException("Thiếu Header Authorization: Không có quyền truy cập!");
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
             }
 
             // Lấy chuỗi Token ra
-            String authHeader = exchange.getRequest().getHeaders().get(HttpHeaders.AUTHORIZATION).get(0);
+            String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
             // Xóa chữ "Bearer " ở đầu chuỗi (do chuẩn OAuth2 thường gắn thêm vào)
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -37,7 +40,8 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 // Xác minh Token
                 jwtUtil.validateToken(authHeader);
             } catch (Exception e) {
-                throw new RuntimeException("Token không hợp lệ hoặc đã hết hạn!");
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
             }
 
             // Nếu không có lỗi gì, cho phép đi tiếp vào các module bên trong

@@ -135,4 +135,43 @@ public class OrderService {
         return savedOrder;
     }
 
+    public List<Order> getOrdersByUser(Long nguoiDungId) {
+        return orderRepository.findByNguoiDungIdOrderByCreatedAtDesc(nguoiDungId);
+    }
+
+    public Order getOrderByMaDonHang(String maDonHang) {
+        return orderRepository.findByMaDonHang(maDonHang)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng: " + maDonHang));
+    }
+
+    public List<Order> getAllOrders() {
+        return orderRepository.findAll();
+    }
+
+    @Transactional
+    public Order updateOrderStatus(Long orderId, String status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng ID: " + orderId));
+        order.setTrangThaiDonHang(status);
+        return orderRepository.save(order);
+    }
+
+    @Transactional
+    public Order updatePaymentStatus(String maDonHang, String paymentStatus) {
+        Order order = orderRepository.findByMaDonHang(maDonHang)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng: " + maDonHang));
+        order.setTrangThaiThanhToan(paymentStatus);
+        if ("ĐÃ THANH TOÁN".equalsIgnoreCase(paymentStatus) || "SUCCESS".equalsIgnoreCase(paymentStatus)) {
+            order.setTrangThaiDonHang("ĐÃ XÁC NHẬN");
+        }
+        return orderRepository.save(order);
+    }
+
+    @Transactional
+    public Order cancelOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng ID: " + orderId));
+        order.setTrangThaiDonHang("ĐÃ HỦY");
+        return orderRepository.save(order);
+    }
 }

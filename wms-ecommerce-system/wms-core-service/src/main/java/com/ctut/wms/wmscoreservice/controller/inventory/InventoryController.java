@@ -19,4 +19,9 @@ public class InventoryController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @GetMapping
+    public ResponseEntity<?> getAllInventory() {
+        return ResponseEntity.ok(inventoryService.getAllInventory());
+    }
 }

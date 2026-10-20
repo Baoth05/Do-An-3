@@ -28,6 +28,9 @@ public class GiaoDichMoMo extends BaseEntity {
     @Column(name = "so_tien", nullable = false)
     private BigDecimal soTien;
 
+    @Column(name = "phuong_thuc")
+    private String phuongThuc = "MOMO";
+
     // PENDING (Đang chờ), SUCCESS (Thành công), FAILED (Thất bại)
     @Column(name = "trang_thai")
     private String trangThai = "PENDING";
