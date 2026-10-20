@@ -5,16 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="05157197-5de5-4476-bd13-0b5f7d424e90" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-ecommerce-system/wms-core-service/src/main/java/com/ctut/wms/wmscoreservice/WmsCoreServiceApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/wms-ecommerce-system/wms-core-service/src/main/java/com/ctut/wms/wmscoreservice/WmsCoreServiceApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/App.css" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/App.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/App.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/index.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/main.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/main.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin-frontend/src/pages/CustomerManagement.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/src/pages/CustomerManagement.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin-frontend/src/pages/Login.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/src/pages/Login.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin-frontend/src/pages/StaffManagement.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/src/pages/StaffManagement.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin-frontend/src/pages/UserManagementDashboard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/src/pages/UserManagementDashboard.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin-frontend/src/services/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/src/services/api.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin-frontend/vite.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/vite.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-ecommerce-system/identity-service/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/wms-ecommerce-system/identity-service/src/main/resources/application.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-ecommerce-system/wms-core-service/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/wms-ecommerce-system/wms-core-service/src/main/resources/application.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/.env" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/.env" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -130,6 +132,10 @@
   &quot;keyToString&quot;: {
     &quot;Maven.identity-service [clean].executor&quot;: &quot;Run&quot;,
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
     &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
@@ -236,6 +242,10 @@
       <workItem from="1791423957167" duration="1541000" />
       <workItem from="1791446908909" duration="2765000" />
       <workItem from="1791457385800" duration="1627000" />
+      <workItem from="1791799163163" duration="5972000" />
+      <workItem from="1792367475347" duration="851000" />
+      <workItem from="1792368499725" duration="573000" />
+      <workItem from="1792488759964" duration="1499000" />
     </task>
     <servers />
   </component>

@@ -9,7 +9,7 @@ import lombok.*;
 @Getter
 @Setter
 @Entity
-public class Role {
+public final class Role {
     @Id
     @GeneratedValue(strategy =  GenerationType.IDENTITY)
     private Long id;

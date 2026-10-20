@@ -1,12 +1,50 @@
-import React, { useState } from 'react';
+// src/pages/UserManagement/UserManagementDashboard.jsx
+import React, { useState, useEffect } from 'react';
 import { FiUsers, FiShoppingBag, FiBriefcase, FiShield } from 'react-icons/fi';
 import CustomerManagement from './CustomerManagement';
 import StaffManagement from './StaffManagement';
+import { userService } from '../services/userService'; // Lưu ý đường dẫn import userService
 import './UserManagement.css'; 
 
 const UserManagementDashboard = () => {
-  // Quản lý trạng thái tab đang chọn
   const [activeTab, setActiveTab] = useState('customers');
+  
+  // 1. Chỉnh sửa giá trị khởi tạo về 0 (Dữ liệu thật lúc chưa gọi API là 0)
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalCustomers: 0,
+    totalStaff: 0
+  });
+
+  // 2. Thêm state loading để hiển thị thân thiện hơn khi đang lấy dữ liệu
+  const [isStatsLoading, setIsStatsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setIsStatsLoading(true);
+        // Gọi API lấy dữ liệu thật
+        const data = await userService.getStats();
+        
+        // Nếu API trả về dữ liệu thành công, cập nhật vào state
+        if (data) {
+          setStats({
+            totalUsers: data.totalUsers || 0,
+            totalCustomers: data.totalCustomers || 0,
+            totalStaff: data.totalStaff || 0
+          });
+        }
+      } catch (err) {
+        console.error('Lỗi khi tải thống kê từ backend:', err);
+        // Tùy chọn: Bạn có thể set một thông báo lỗi ở đây nếu muốn
+      } finally {
+        // Hoàn thành quá trình tải
+        setIsStatsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   return (
     <div className="user-management-page">
@@ -26,12 +64,14 @@ const UserManagementDashboard = () => {
         </div>
       </div>
 
-      {/* Thống kê dùng chung */}
+      {/* Thống kê dùng chung từ Backend */}
       <div className="user-stats-grid">
         <div className="user-stat-card">
           <div className="stat-info">
             <div className="stat-label">Tổng tài khoản</div>
-            <div className="stat-number">1.250</div>
+            <div className="stat-number">
+              {isStatsLoading ? '...' : stats.totalUsers.toLocaleString()}
+            </div>
             <div className="stat-sub">Toàn bộ dữ liệu hệ thống</div>
           </div>
           <div className="stat-icon-wrapper red-light"><FiUsers size={22} /></div>
@@ -40,8 +80,10 @@ const UserManagementDashboard = () => {
         <div className="user-stat-card">
           <div className="stat-info">
             <div className="stat-label">Khách hàng</div>
-            <div className="stat-number" style={{ color: '#d63031' }}>1.238</div>
-            <div className="stat-sub">99.04% tài khoản người mua</div>
+            <div className="stat-number" style={{ color: '#d63031' }}>
+              {isStatsLoading ? '...' : stats.totalCustomers.toLocaleString()}
+            </div>
+            <div className="stat-sub">Tài khoản người mua hàng</div>
           </div>
           <div className="stat-icon-wrapper red-light"><FiShoppingBag size={22} /></div>
         </div>
@@ -49,7 +91,9 @@ const UserManagementDashboard = () => {
         <div className="user-stat-card">
           <div className="stat-info">
             <div className="stat-label">Nhân viên</div>
-            <div className="stat-number">12</div>
+            <div className="stat-number">
+              {isStatsLoading ? '...' : stats.totalStaff.toLocaleString()}
+            </div>
             <div className="stat-sub">Nội bộ quản trị & vận hành</div>
           </div>
           <div className="stat-icon-wrapper orange-light"><FiBriefcase size={22} /></div>
@@ -62,13 +106,13 @@ const UserManagementDashboard = () => {
           className={`tab-item ${activeTab === 'customers' ? 'active' : ''}`}
           onClick={() => setActiveTab('customers')}
         >
-          <FiUsers size={16} /> Danh sách khách hàng (1.238) ●
+          <FiUsers size={16} /> Danh sách khách hàng ({isStatsLoading ? '...' : stats.totalCustomers}) ●
         </button>
         <button 
           className={`tab-item ${activeTab === 'staff' ? 'active' : ''}`}
           onClick={() => setActiveTab('staff')}
         >
-          <FiBriefcase size={16} /> Danh sách nhân viên (12) ●
+          <FiBriefcase size={16} /> Danh sách nhân viên ({isStatsLoading ? '...' : stats.totalStaff}) ●
         </button>
         <button 
           className={`tab-item ${activeTab === 'logs' ? 'active' : ''}`}
@@ -78,7 +122,7 @@ const UserManagementDashboard = () => {
         </button>
       </div>
 
-      {/* Khu vực render Component con tùy theo Tab */}
+      {/* Khu vực render Component con */}
       <div className="content-card-wrapper">
         {activeTab === 'customers' && <CustomerManagement />}
         {activeTab === 'staff' && <StaffManagement />}

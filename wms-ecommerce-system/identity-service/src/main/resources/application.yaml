@@ -7,7 +7,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/identity_db # Database riêng[cite: 2]
     username: postgres
-    password: 123456 # Đổi lại nếu máy cậu dùng pass khác
+    password: 12345 # Đổi lại nếu máy cậu dùng pass khác
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
