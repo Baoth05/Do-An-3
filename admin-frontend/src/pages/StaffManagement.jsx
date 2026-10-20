@@ -33,16 +33,41 @@ const StaffManagement = () => {
     fetchStaff();
   }, [search, roleFilter]);
 
-  const renderRoleBadge = (st) => {
-    const roleName = (st.role || (st.roles && st.roles[0]) || '').toUpperCase();
+const renderRoleBadge = (st) => {
+    // 1. Tìm vai trò từ nhiều cấu trúc có thể do Backend trả về
+    let roleStr = '';
+
+    if (st.roles && st.roles.length > 0) {
+      // Nếu là mảng (String hoặc Object)
+      const firstRole = st.roles[0];
+      roleStr = typeof firstRole === 'string' ? firstRole : (firstRole.name || firstRole.roleName || '');
+    } else if (st.role) {
+      roleStr = st.role; // Dạng chuỗi đơn
+    } else if (st.vaiTro) {
+      roleStr = st.vaiTro; // Backend dùng tên tiếng Việt
+    } else if (st.authorities && st.authorities.length > 0) {
+      // Chuẩn mặc định của Spring Security
+      const auth = st.authorities[0];
+      roleStr = typeof auth === 'string' ? auth : (auth.authority || '');
+    }
+
+    // 2. Chuẩn hóa chuỗi (Viết hoa và xóa chữ ROLE_ nếu có)
+    const roleName = (roleStr || '').toUpperCase().replace('ROLE_', '');
+
+    // 3. Hiển thị giao diện tương ứng
     if (roleName.includes('ADMIN')) {
       return <span className="role-badge admin"><FiShield /> Quản trị viên</span>;
     } else if (roleName.includes('THUKHO')) {
       return <span className="role-badge warehouse"><FiBox /> Thủ kho</span>;
-    } else if (roleName.includes('NVKHO')) {
+    } else if (roleName.includes('NVKHO') || roleName.includes('USER')) {
       return <span className="role-badge sales"><FiUserCheck /> Nhân viên kho</span>;
     }
-    return <span className="role-badge" style={{ background: '#e2e8f0', color: '#475569' }}>{roleName || 'Chưa phân quyền'}</span>;
+    
+    return (
+      <span className="role-badge" style={{ background: '#e2e8f0', color: '#475569' }}>
+        {roleName || 'Chưa phân quyền'}
+      </span>
+    );
   };
 
   // Nếu đang ở chế độ thêm mới
