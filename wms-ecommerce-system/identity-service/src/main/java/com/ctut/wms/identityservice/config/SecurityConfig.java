@@ -12,24 +12,36 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // Sử dụng thuật toán Bcrypt
+        return new BCryptPasswordEncoder();
     }
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                // 1. Tắt tính năng bảo vệ CSRF vì hệ thống sử dụng REST API (JSON)
-                .csrf(AbstractHttpConfigurer::disable)
 
-                // 2. Thiết lập quy tắc cấp quyền truy cập cho các đường dẫn
-                .authorizeHttpRequests(auth -> auth
-                        // Cho phép tất cả mọi người truy cập tự do vào nhóm API xác thực
-                        .requestMatchers("/auth/**").permitAll()
-                        // Yêu cầu phải đăng nhập đối với tất cả các API còn lại
-                        .anyRequest().authenticated()
-                );
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // 1. Tắt CSRF
+        http.csrf(AbstractHttpConfigurer::disable);
+
+        // 2. Phân quyền các đường dẫn API
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers("/auth/register", "/auth/login", "/auth/validate").permitAll()
+
+                // 🌟 ĐÃ SỬA: Cung cấp cả đường dẫn chính xác (không có /**) và đường dẫn bao quát (có /**)
+                .requestMatchers(
+                        "/auth/stats", "/auth/stats/**",
+                        "/auth/customers", "/auth/customers/**",
+                        "/auth/staff", "/auth/staff/**",
+                        "/auth/users", "/auth/users/**"
+
+
+                ).permitAll()
+
+                .anyRequest().authenticated()
+        );
 
         return http.build();
     }
+
+    // 🌟 ĐÃ XÓA TOÀN BỘ HÀM corsConfigurationSource() Ở DƯỚI NÀY
 }

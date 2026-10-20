@@ -2,35 +2,54 @@
 import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { authService } from '../services/authService'; // Import authService vừa tạo
+import { authService } from '../services/authService';
 import { FiUser, FiLock, FiEye, FiEyeOff, FiShield, FiArrowRight } from 'react-icons/fi';
 import './Login.css';
 
 const Login = () => {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
-  
-  // Các state để lưu trữ dữ liệu form và trạng thái lỗi
+
+  // Các state để lưu trữ dữ liệu form và trạng thái
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Hàm xử lý hành động khi nhấn nút ĐĂNG NHẬP
   const handleLogin = async (e) => {
     e.preventDefault();
     setErrorMessage(''); // Xóa thông báo lỗi cũ (nếu có)
     setIsLoading(true);
 
     try {
-      // 1. Gọi API đăng nhập để lấy Token thật
-      await authService.login(username, password);
-      
-      // 2. Nếu không có lỗi, cập nhật context (UI) và chuyển hướng
-      login();
+      // 1. Gọi API đăng nhập tới Backend Spring Boot
+      const response = await authService.login(username, password);
+
+      // Axios thường bọc dữ liệu trả về bên trong thuộc tính .data
+      const data = response.data || response;
+
+      // 2. Tách các thông tin mà Backend (AuthResponse) trả về
+      const { token, hoTen, vaiTro, taiKhoan } = data;
+
+      // 3. Đóng gói dữ liệu người dùng để truyền vào Context
+      const userData = {
+        name: hoTen || taiKhoan || 'Quản trị viên', // Ưu tiên tên thật, nếu không có thì lấy tài khoản
+        role: vaiTro || 'ADMIN',
+        status: 'TRỰC TUYẾN',
+        // Lấy chữ cái đầu của tên làm ảnh đại diện
+        avatar: (hoTen || taiKhoan || 'A').charAt(0).toUpperCase()
+      };
+
+      // 4. Truyền thông tin UI và Token thực tế vào hàm login của Context
+      login(userData, token);
+
+      // 5. Chuyển hướng sang trang Bảng điều khiển chính
       navigate('/');
     } catch (error) {
-      // 3. Nếu lỗi (sai mật khẩu, tài khoản không tồn tại...), hiển thị thông báo
+      // Bắt lỗi nếu sai tài khoản/mật khẩu hoặc Backend không phản hồi
+      console.error("Lỗi đăng nhập:", error);
       setErrorMessage('Tài khoản hoặc mật khẩu không chính xác. Vui lòng thử lại!');
     } finally {
       setIsLoading(false);
@@ -74,12 +93,12 @@ const Login = () => {
             <label>Tài khoản quản trị <span className="required">*</span></label>
             <div className="input-wrapper">
               <FiUser className="input-icon" size={18} />
-              <input 
-                type="text" 
-                placeholder="Nhập tài khoản admin..." 
+              <input
+                type="text"
+                placeholder="Nhập tài khoản admin..."
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                required 
+                required
               />
             </div>
           </div>
@@ -88,16 +107,16 @@ const Login = () => {
             <label>Mật khẩu xác thực <span className="required">*</span></label>
             <div className="input-wrapper">
               <FiLock className="input-icon" size={18} />
-              <input 
-                type={showPassword ? "text" : "password"} 
-                placeholder="Nhập mật khẩu..." 
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Nhập mật khẩu..."
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required 
+                required
               />
-              <button 
-                type="button" 
-                className="toggle-password" 
+              <button
+                type="button"
+                className="toggle-password"
                 onClick={togglePasswordVisibility}
               >
                 {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
@@ -128,7 +147,7 @@ const Login = () => {
       </div>
 
       <div className="login-footer">
-        <p><strong>CTUT Gear Enterprise Platform v1.0.4</strong> <FiShield size={12}/> Bảo mật đa lớp 2FA</p>
+        <p><strong>CTUT Gear Enterprise Platform v1.0.4</strong> <FiShield size={12} /> Bảo mật đa lớp 2FA</p>
         <p className="footer-links">
           <a href="#">Hỗ trợ kỹ thuật</a>
           <a href="#">Điều khoản bảo mật nội bộ</a>

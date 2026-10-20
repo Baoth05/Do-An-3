@@ -30,4 +30,5 @@ public class RegisterRequest {
     private String diaChi; // Các trường không bắt buộc thì không cần gắn nhãn
     private LocalDate ngaySinh;
     private String gioiTinh;
+    private String vaiTro;
 }

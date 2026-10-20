@@ -9,13 +9,16 @@ spring:
       discovery:
         locator:
           enabled: true
-      # 🌟 Giải quyết Vấn đề 1: Cấu hình CORS toàn cục cho Gateway
+      # 🌟 Cấu hình CORS toàn cục cho Gateway (Đã căn chỉnh chuẩn YAML)
       globalcors:
         cors-configurations:
-          '[/**]': # Áp dụng cho mọi đường dẫn
-            allowedOrigins: "*" # Chấp nhận mọi Frontend (React/Vue). Khi lên thực tế có thể đổi thành http://localhost:3000
-            allowedMethods: "*" # Chấp nhận mọi HTTP Method (GET, POST, PUT, DELETE...)
-            allowedHeaders: "*" # Chấp nhận mọi Header (bao gồm cả Authorization)
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:5174"
+              - "http://localhost:5173"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
 
       routes:
         - id: identity-service
@@ -60,7 +63,7 @@ spring:
         - id: payment-service-public
           uri: lb://payment-service
           predicates:
-            - Path=/payments/momo-ipn, /payments/mock-success/**, /payments/mock-success-order/**, /payments/status/**
+            - Path=/payments/momo-ipn, /payments/mock-success/**, /payments/mock-success-order/**, /payments/status/**, /payments/confirm-manual/**
 
         - id: payment-service
           uri: lb://payment-service

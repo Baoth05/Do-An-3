@@ -1,12 +1,12 @@
 server:
-  port: 8085 # Cổng của Payment Service[cite: 2]
+  port: 8085 # Cổng của Payment Service
 
 spring:
   application:
     name: payment-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/payment_db # Database riêng[cite: 2]
+    url: jdbc:postgresql://localhost:5432/payment_db # Database riêng
     username: postgres
     password: 123456
     driver-class-name: org.postgresql.Driver
@@ -15,14 +15,40 @@ spring:
       ddl-auto: update
     show-sql: true
 
-  # Cấu hình Message Broker (RabbitMQ)[cite: 2]
+  # Cấu hình Message Broker (RabbitMQ)
   rabbitmq:
     host: localhost
     port: 5672
     username: guest
     password: guest
 
+# ========================================================
+# CẤU HÌNH CỔNG THANH TOÁN MOMO & NHẬN TIỀN VÀO TÀI KHOẢN
+# ========================================================
+momo:
+  # Thông tin tài khoản Doanh nghiệp / Sandbox MoMo
+  partner-code: ${MOMO_PARTNER_CODE:MOMOBKUN20180529}
+  access-key: ${MOMO_ACCESS_KEY:klm05TvNBzhg7h7j}
+  secret-key: ${MOMO_SECRET_KEY:at67qH6mk8w5Y1nAyMoYKMWACiEi2Aca}
+  
+  # Endpoint Cổng MoMo (Mặc định là Sandbox V2, có thể chuyển sang https://payment.momo.vn/v2/gateway/api/create khi chạy thật)
+  api-url: ${MOMO_API_URL:https://test-payment.momo.vn/v2/gateway/api/create}
+  
+  # Đường dẫn trả về sau khi khách thanh toán thành công trên ứng dụng MoMo
+  redirect-url: ${MOMO_REDIRECT_URL:http://localhost:3000/payment-result}
+  
+  # Webhook MoMo IPN gửi kết quả xác nhận tiền về hệ thống
+  ipn-url: ${MOMO_IPN_URL:http://localhost:8080/payments/momo-ipn}
+  
+  # 🌟 SỐ ĐIỆN THOẠI VÍ MOMO ĐỂ NHẬN TIỀN TRỰC TIẾP (Thay bằng SĐT MoMo của bạn)
+  account-number: ${MOMO_ACCOUNT_NUMBER:0901234567}
+  
+  # TÊN CHỦ TÀI KHOẢN VÍ MOMO THỤ HƯỞNG
+  account-name: ${MOMO_ACCOUNT_NAME:CTUT WMS STORE}
+
 eureka:
+  instance:
+    prefer-ip-address: true
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/

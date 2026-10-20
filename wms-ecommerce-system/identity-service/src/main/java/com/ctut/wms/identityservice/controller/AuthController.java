@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*; // Dùng RestController thay cho Controller
 
+import java.util.List;
+
 @RestController // Đánh dấu đây là API trả về dữ liệu (JSON)
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -51,12 +53,10 @@ public class AuthController {
     }
 
     // --- API CẬP NHẬT THÔNG TIN CÁ NHÂN ---
-    @PutMapping("/profile/{taiKhoan}")
-    public ResponseEntity<UserProfileResponse> updateUserProfile(
-            @PathVariable String taiKhoan,
-            @Valid @RequestBody UpdateProfileRequest request) {
-        UserProfileResponse response = authService.updateUserProfile(taiKhoan, request);
-        return ResponseEntity.ok(response);
+    @PutMapping("/users/{id}")
+    public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody com.ctut.wms.identityservice.dto.UpdateUserRequest request) {
+        String result = authService.updateUser(id, request);
+        return ResponseEntity.ok(result);
     }
 
     // --- API ĐỔI MẬT KHẨU ---
@@ -66,5 +66,10 @@ public class AuthController {
             @Valid @RequestBody ChangePasswordRequest request) {
         String response = authService.changePassword(taiKhoan, request);
         return ResponseEntity.ok(response);
+    }
+    @GetMapping("/users")
+    public ResponseEntity<List<UserProfileResponse>> getAllUsers() {
+        List<UserProfileResponse> userList = authService.getAllUsers();
+        return ResponseEntity.ok(userList);
     }
 }

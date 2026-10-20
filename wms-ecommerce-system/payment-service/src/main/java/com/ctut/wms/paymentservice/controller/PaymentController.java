@@ -15,13 +15,13 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    // 1. Tạo liên kết thanh toán MoMo
+    // 1. Khởi tạo giao dịch & liên kết thanh toán MoMo (hỗ trợ cả Cổng MoMo và Quét mã QR nhận tiền)
     @PostMapping("/create")
     public ResponseEntity<PaymentResponse> createPayment(@RequestBody PaymentRequest request) {
         return ResponseEntity.ok(paymentService.createPayment(request));
     }
 
-    // 2. Webhook nhận kết quả từ MoMo IPN
+    // 2. Webhook nhận kết quả từ MoMo IPN tự động
     @PostMapping("/momo-ipn")
     public ResponseEntity<String> handleMomoIpn(@RequestBody MomoIpnRequest ipnRequest) {
         return ResponseEntity.ok(paymentService.processIpn(ipnRequest));
@@ -37,13 +37,22 @@ public class PaymentController {
         }
     }
 
-    // 4. Tiện ích Mock thanh toán thành công theo momoOrderId (phục vụ Demo / Test)
+    // 4. Xác nhận tiền đã vào tài khoản MoMo (Dành cho Quản trị viên / Thủ kho đối soát giao dịch)
+    @PostMapping("/confirm-manual/{donHangId}")
+    public ResponseEntity<PaymentResponse> confirmManualPayment(
+            @PathVariable String donHangId,
+            @RequestParam(required = false) Long transId,
+            @RequestParam(required = false) String ghiChu) {
+        return ResponseEntity.ok(paymentService.confirmManualPayment(donHangId, transId, ghiChu));
+    }
+
+    // 5. Tiện ích Mock thanh toán thành công theo momoOrderId (phục vụ Demo / Test)
     @PostMapping("/mock-success/{momoOrderId}")
     public ResponseEntity<PaymentResponse> mockPaymentSuccess(@PathVariable String momoOrderId) {
         return ResponseEntity.ok(paymentService.mockPaymentSuccess(momoOrderId));
     }
 
-    // 5. Tiện ích Mock thanh toán thành công theo mã đơn hàng donHangId (phục vụ Demo / Test)
+    // 6. Tiện ích Mock thanh toán thành công theo mã đơn hàng donHangId (phục vụ Demo / Test)
     @PostMapping("/mock-success-order/{donHangId}")
     public ResponseEntity<PaymentResponse> mockPaymentSuccessByDonHangId(@PathVariable String donHangId) {
         return ResponseEntity.ok(paymentService.mockPaymentSuccessByDonHangId(donHangId));

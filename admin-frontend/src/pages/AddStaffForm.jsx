@@ -12,8 +12,7 @@ const AddStaffForm = ({ onBack, onSuccess }) => {
     xacNhanMatKhau: '',
     hoTen: '',
     email: '',
-    soDienThoai: '',
-    role: 'ROLE_WAREHOUSE_STAFF', // Mặc định: Nhân viên kho
+    soDienThoai: ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -67,12 +66,12 @@ const AddStaffForm = ({ onBack, onSuccess }) => {
         hoTen: cleanHoTen,
         email: cleanEmail,
         soDienThoai: cleanSoDienThoai,
-        roles: [formData.role] // Gửi đúng 1 role được chọn lên Backend
+        role: formData.role // Gửi đúng vai trò 'ADMIN', 'THUKHO', hoặc 'NVKHO' lên Backend
       });
-      
+
       alert('Thêm tài khoản nội bộ mới thành công!');
       if (onSuccess) onSuccess();
-      
+
     } catch (err) {
       const backendError = err.response?.data;
       const errorMsg = typeof backendError === 'string' ? backendError : backendError?.message;
@@ -203,49 +202,49 @@ const AddStaffForm = ({ onBack, onSuccess }) => {
           </div>
         </div>
 
-        {/* Chọn 1 trong 3 Vai Trò Nội Bộ chuẩn V2.0 */}
+        {/* 🌟 CẬP NHẬT: 3 Vai trò chuẩn ADMIN, THUKHO, NVKHO */}
         <div className="role-section">
           <label>Phân quyền Vai trò / Bộ phận (*)</label>
           <div className="role-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-            
-            {/* 1. Quản trị viên */}
-            <label className={`role-option ${formData.role === 'ROLE_ADMIN' ? 'active' : ''}`}>
-              <input 
-                type="radio" 
-                name="role" 
-                value="ROLE_ADMIN" 
-                checked={formData.role === 'ROLE_ADMIN'} 
-                onChange={handleChange} 
+
+            {/* 1. Quản trị viên (ADMIN) */}
+            <label className={`role-option ${formData.role === 'ADMIN' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="role"
+                value="ADMIN"
+                checked={formData.role === 'ADMIN'}
+                onChange={handleChange}
               />
               <div>
                 <strong className="role-title"><FiShield /> Quản trị viên</strong>
-                <small className="role-desc">Toàn quyền hệ thống</small>
+                <small className="role-desc">Toàn quyền hệ thống (Admin)</small>
               </div>
             </label>
 
-            {/* 2. Thủ kho (Quản lý) */}
-            <label className={`role-option ${formData.role === 'ROLE_WAREHOUSE_MANAGER' ? 'active' : ''}`}>
-              <input 
-                type="radio" 
-                name="role" 
-                value="ROLE_WAREHOUSE_MANAGER" 
-                checked={formData.role === 'ROLE_WAREHOUSE_MANAGER'} 
-                onChange={handleChange} 
+            {/* 2. Thủ kho (THUKHO) */}
+            <label className={`role-option ${formData.role === 'THUKHO' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="role"
+                value="THUKHO"
+                checked={formData.role === 'THUKHO'}
+                onChange={handleChange}
               />
               <div>
-                <strong className="role-title"><FiBox /> Thủ kho (Quản lý)</strong>
-                <small className="role-desc">Kho Tổng & Master Catalog</small>
+                <strong className="role-title"><FiBox /> Thủ kho</strong>
+                <small className="role-desc">Quản lý kho & danh mục</small>
               </div>
             </label>
 
-            {/* 3. Nhân viên kho */}
-            <label className={`role-option ${formData.role === 'ROLE_WAREHOUSE_STAFF' ? 'active' : ''}`}>
-              <input 
-                type="radio" 
-                name="role" 
-                value="ROLE_WAREHOUSE_STAFF" 
-                checked={formData.role === 'ROLE_WAREHOUSE_STAFF'} 
-                onChange={handleChange} 
+            {/* 3. Nhân viên kho (NVKHO) */}
+            <label className={`role-option ${formData.role === 'NVKHO' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="role"
+                value="NVKHO"
+                checked={formData.role === 'NVKHO'}
+                onChange={handleChange}
               />
               <div>
                 <strong className="role-title"><FiCheckSquare /> Nhân viên kho</strong>

@@ -1,69 +1,142 @@
 // src/services/userService.js
-// Import cấu hình API dùng chung từ tệp api.js
 import api from './api';
 
+// Chuẩn hóa chuỗi để tìm kiếm không phân biệt chữ hoa/chữ thường
+const normalize = (value) =>
+  String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
+// 🌟 ĐÃ CẬP NHẬT: Cho phép "Chưa phân quyền" và các quyền chuẩn hiện lên bảng Khách hàng
+const isCustomer = (user) => {
+  const role = normalize(user?.vaiTro ?? user?.role ?? user?.maVaiTro);
+  return (
+    role.includes('customer') || 
+    role.includes('khachhang') || 
+    role.includes('chua phan quyen') // Cho phép hiện để dễ cấp quyền lại
+  );
+};
+
+// 🌟 ĐÃ CẬP NHẬT: Cho phép "Chưa phân quyền" và 3 quyền chuẩn hiện lên bảng Nhân viên
+const isStaff = (user) => {
+  const role = normalize(user?.vaiTro ?? user?.role ?? user?.maVaiTro);
+  return (
+    role.includes('admin') ||
+    role.includes('thukho') ||
+    role.includes('nvkho') ||
+    role.includes('chua phan quyen') // Cho phép hiện để dễ cấp quyền lại
+  );
+};
+
+const matchesSearch = (user, search) => {
+  if (!search?.trim()) return true;
+
+  const keyword = normalize(search);
+  const searchableFields = [
+    user?.id,
+    user?.taiKhoan,
+    user?.hoTen,
+    user?.email,
+    user?.soDienThoai,
+    user?.diaChi,
+    user?.vaiTro,
+  ];
+
+  return searchableFields.some((value) =>
+    normalize(value).includes(keyword)
+  );
+};
+
 export const userService = {
-  // Lấy thống kê số lượng người dùng
+  // 1. Lấy toàn bộ người dùng với cơ chế bóc tách dữ liệu mạnh mẽ nhất
+  getAllUsers: async () => {
+    try {
+      const response = await api.get('/auth/users');
+      let data = response.data;
+
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data);
+        } catch (e) {
+          console.error("Không thể dịch chuỗi JSON từ Backend:", e);
+        }
+      }
+
+      let userList = [];
+      if (Array.isArray(data)) {
+        userList = data;
+      } else if (data && Array.isArray(data.data)) {
+        userList = data.data;
+      } else if (data && Array.isArray(data.content)) {
+        userList = data.content;
+      } else if (data && typeof data === 'object') {
+        const possibleArray = Object.values(data).find(val => Array.isArray(val));
+        if (possibleArray) {
+          userList = possibleArray;
+        }
+      }
+      
+      return userList;
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách toàn bộ người dùng:', error);
+      return []; 
+    }
+  },
+
+  // 🌟 2. ĐÃ CẬP NHẬT TÊN BIẾN: Khớp 100% với UserManagementDashboard.jsx
   getStats: async () => {
-    try {
-      const response = await api.get('/auth/stats');
-      return response.data;
-    } catch (error) {
-      console.error('Lỗi khi lấy thống kê người dùng:', error);
-      throw error;
-    }
+    const users = await userService.getAllUsers();
+    return {
+      totalUsers: users.length,
+      totalCustomers: users.filter(isCustomer).length,
+      totalStaff: users.filter(isStaff).length,
+    };
   },
 
-  // Lấy danh sách khách hàng
-  getCustomers: async (search = '', status = '') => {
-    try {
-      const cleanStatus = status === 'Tất cả' ? '' : status;
-      const response = await api.get('/auth/customers', {
-        params: { search, status: cleanStatus },
+  // 3. Lọc danh sách khách hàng
+  getCustomers: async (search = '') => {
+    const users = await userService.getAllUsers();
+    return users
+      .filter(isCustomer)
+      .filter((user) => matchesSearch(user, search));
+  },
+
+  // 4. Lọc danh sách nhân viên
+  getStaff: async (search = '', roleFilter = '') => {
+    const users = await userService.getAllUsers();
+    return users
+      .filter(isStaff)
+      .filter((user) => matchesSearch(user, search))
+      .filter((user) => {
+        if (!roleFilter || roleFilter === 'Tất cả') return true;
+        return normalize(user?.vaiTro).includes(normalize(roleFilter));
       });
-      return response.data;
-    } catch (error) {
-      console.error('Lỗi khi lấy danh sách khách hàng:', error);
-      throw error;
-    }
   },
 
-  // Lấy danh sách nhân viên
-  getStaff: async (search = '', role = '') => {
-    try {
-      const cleanRole = role === 'Tất cả' ? '' : role;
-      const response = await api.get('/auth/staff', {
-        params: { search, role: cleanRole },
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Lỗi khi lấy danh sách nhân viên:', error);
-      throw error;
-    }
-  },
-
-  // Tạo nhân viên mới
+  // 5. Tạo nhân viên mới
   createStaff: async (staffData) => {
     const payload = {
-      username: staffData.taiKhoan,
-      password: staffData.matKhau,
-      fullName: staffData.hoTen,
-      email: staffData.email,
-      phone: staffData.soDienThoai,
-      roles: staffData.roles || [staffData.role],
-
       taiKhoan: staffData.taiKhoan,
       matKhau: staffData.matKhau,
       hoTen: staffData.hoTen,
+      email: staffData.email,
       soDienThoai: staffData.soDienThoai,
+      vaiTro: staffData.role,
     };
 
-    try {
-      const response = await api.post('/auth/register', payload);
-      return response.data;
-    } catch (error) {
-      console.error('Lỗi khi tạo nhân viên mới:', error);
-      throw error;
-    }
+    const response = await api.post('/auth/register', payload);
+    return response.data;
+  },updateStaff: async (id, staffData) => {
+    const payload = {
+      hoTen: staffData.hoTen,
+      email: staffData.email,
+      soDienThoai: staffData.soDienThoai,
+      vaiTro: staffData.role,
+    };
+
+    const response = await api.put(`/auth/users/${id}`, payload);
+    return response.data;
   },
 };
