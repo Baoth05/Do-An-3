@@ -151,4 +151,24 @@ export const userService = {
     const response = await api.put(`/auth/users/${id}/toggle-status`);
     return response.data;
   },
+ changePassword: async (taiKhoan, newPassword) => {
+    const payload = {
+      matKhauCu: "", // Gửi rỗng vì Admin đổi trực tiếp không cần mật khẩu cũ
+      matKhauMoi: newPassword
+    };
+
+    const response = await api.put(`/auth/change-password/${taiKhoan}`, payload);
+    return response.data;
+  },
+  // Khóa/Mở khóa tài khoản nhân viên
+  lockAccount: async (taiKhoan) => {
+    try {
+      // Gọi API khóa tài khoản (Bạn cần đảm bảo Backend có API này, ví dụ: /auth/lock/{taiKhoan})
+      const response = await api.put(`/auth/lock/${taiKhoan}`);
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi khóa tài khoản:', error);
+      throw error;
+    }
+  },
 };

@@ -64,10 +64,6 @@ const WmsLayout = () => {
             <span>Quản Lý Xuất Kho</span>
           </Link>
 
-          <Link to="/transfers" className={`wms-menu-item ${isActive('transfers') ? 'active' : ''}`}>
-            <FiRepeat size={18} />
-            <span>Điều Chuyển Kho</span>
-          </Link>
 
           <div className="wms-menu-label">DANH MỤC MASTER</div>
 

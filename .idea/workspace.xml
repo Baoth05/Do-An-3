@@ -5,10 +5,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="05157197-5de5-4476-bd13-0b5f7d424e90" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/admin-frontend/.env" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin-frontend/src/pages/StaffManagement.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/src/pages/StaffManagement.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/admin-frontend/src/services/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/src/services/api.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin-frontend/src/services/userService.js" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/src/services/userService.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/admin-frontend/vite.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/vite.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-ecommerce-system/wms-core-service/src/main/java/com/ctut/wms/wmscoreservice/entity/ImportNote.java" beforeDir="false" afterPath="$PROJECT_DIR$/wms-ecommerce-system/wms-core-service/src/main/java/com/ctut/wms/wmscoreservice/entity/ImportNote.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/.env" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/App.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/components/Layout/WmsLayout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/components/Layout/WmsLayout.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/Supplier/SupplierForm.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/Supplier/SupplierForm.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/Supplier/SupplierManagement.css" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/Supplier/SupplierManagement.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/Supplier/SupplierManagement.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/Supplier/SupplierManagement.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/services/wmsCoreService.js" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/services/wmsCoreService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/utils/constants.js" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/utils/constants.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -145,7 +159,7 @@
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/Projects/Do-an/Do_An/Do-An-3&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Do-An-3&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
@@ -238,6 +252,7 @@
       <workItem from="1792367475347" duration="851000" />
       <workItem from="1792368499725" duration="573000" />
       <workItem from="1792488759964" duration="1499000" />
+      <workItem from="1793090969941" duration="6297000" />
     </task>
     <servers />
   </component>

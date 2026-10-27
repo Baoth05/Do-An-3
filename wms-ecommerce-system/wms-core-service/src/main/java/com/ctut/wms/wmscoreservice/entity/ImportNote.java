@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collection;
 
 @Entity
 @Table(name = "phieu_nhap_kho")
@@ -61,4 +62,14 @@ public class ImportNote {
 
     @Column(name = "tong_tien_nhap")
     private BigDecimal tongTienNhap; // Tổng giá trị phiếu nhập
+    @OneToMany(mappedBy = "phieuNhap")
+    private Collection<ImportNoteDetail> importNoteDetail;
+
+    public Collection<ImportNoteDetail> getImportNoteDetail() {
+        return importNoteDetail;
+    }
+
+    public void setImportNoteDetail(Collection<ImportNoteDetail> importNoteDetail) {
+        this.importNoteDetail = importNoteDetail;
+    }
 }

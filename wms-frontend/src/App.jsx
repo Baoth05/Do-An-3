@@ -18,7 +18,8 @@ import ExportNoteDetail from './pages/ExportNote/ExportNoteDetail';
 import ProductManagement from './pages/Product/ProductManagement';
 import ProductForm from './pages/Product/ProductForm';
 import SupplierManagement from './pages/Supplier/SupplierManagement';
-import SupplierForm from './pages/Supplier/SupplierForm';
+import SupplierCreate from './pages/Supplier/SupplierCreate';
+import SupplierEdit from './pages/Supplier/SupplierEdit';
 import ShippingManagement from './pages/Shipping/ShippingManagement';
 import ShippingForm from './pages/Shipping/ShippingForm';
 
@@ -89,10 +90,10 @@ const AppRoutes = () => {
         <Route path="warehouses/create" element={<WarehouseForm />} />
         <Route path="warehouses/edit/:id" element={<WarehouseForm />} />
         
-        {/* Nhà cung cấp */}
+        {/* Nhà cung cấp (ĐÃ SỬA LỖI CÚ PHÁP TẠI ĐÂY) */}
         <Route path="suppliers" element={<SupplierManagement />} />
-        <Route path="suppliers/create" element={<SupplierForm />} />
-        <Route path="suppliers/edit/:id" element={<SupplierForm />} />
+        <Route path="suppliers/create" element={<SupplierCreate />} />
+        <Route path="suppliers/edit/:id" element={<SupplierEdit />} />
         
         {/* Đơn vị vận chuyển */}
         <Route path="shipping" element={<ShippingManagement />} />

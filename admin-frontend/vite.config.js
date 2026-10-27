@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 // Biến lưu địa chỉ của API Gateway (Backend) để dễ dàng chỉnh sửa ở một nơi duy nhất
-const BACKEND_GATEWAY_URL = 'http://10.10.22.175:8080';
+const BACKEND_GATEWAY_URL = 'http://10.10.44.138:8080';
 
 export default defineConfig({
   plugins: [react()],

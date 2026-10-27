@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   FiSearch, FiPlus, FiSliders, FiEdit2, FiLock, FiUnlock,
-  FiShield, FiBox, FiBriefcase, FiRefreshCw, FiUser, FiUserCheck
+  FiShield, FiBox, FiBriefcase, FiRefreshCw, FiUserCheck, FiKey
 } from 'react-icons/fi';
 import { userService } from '../services/userService';
 import AddStaffForm from './AddStaffForm';
@@ -20,10 +20,14 @@ const StaffManagement = ({ onRefreshStats }) => {
   const [roleFilter, setRoleFilter] = useState('Tất cả');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Form mode: 'list' | 'add' | 'edit'
+  // Chế độ xem: 'list' | 'add' | 'edit'
   const [viewMode, setViewMode] = useState('list');
   const [editingStaff, setEditingStaff] = useState(null);
 
+  // State quản lý Modal đổi mật khẩu
+  const [pwdModal, setPwdModal] = useState({ isOpen: false, staff: null, newPassword: '' });
+
+  // 1. Hàm nạp danh sách nhân sự từ Backend
   const fetchStaff = async () => {
     try {
       setIsLoading(true);
@@ -40,7 +44,7 @@ const StaffManagement = ({ onRefreshStats }) => {
     fetchStaff();
   }, [searchTerm, roleFilter]);
 
-  // Hàm khóa / mở khóa tài khoản nhân sự
+  // 2. Hàm khóa / mở khóa tài khoản nhân sự
   const handleToggleStatus = async (user) => {
     const action = user.trangThai === false ? 'mở khóa' : 'khóa';
     if (window.confirm(`Bạn có chắc chắn muốn ${action} tài khoản nhân sự "${user.taiKhoan}"?`)) {
@@ -52,6 +56,22 @@ const StaffManagement = ({ onRefreshStats }) => {
       } catch (err) {
         alert('Lỗi thay đổi trạng thái: ' + (err.response?.data || err.message));
       }
+    }
+  };
+
+  // 3. Hàm xử lý gửi yêu cầu đổi mật khẩu
+  const handlePasswordChange = async () => {
+    if (!pwdModal.newPassword || pwdModal.newPassword.length < 6) {
+      alert('Mật khẩu mới phải chứa ít nhất 6 ký tự!');
+      return;
+    }
+    try {
+      const targetAcc = pwdModal.staff.taiKhoan || pwdModal.staff.username;
+      await userService.changePassword(targetAcc, pwdModal.newPassword);
+      alert(`Đã đổi mật khẩu thành công cho tài khoản ${targetAcc}!`);
+      setPwdModal({ isOpen: false, staff: null, newPassword: '' });
+    } catch (err) {
+      alert('Lỗi khi đổi mật khẩu: ' + (err.response?.data || err.message));
     }
   };
 
@@ -68,6 +88,7 @@ const StaffManagement = ({ onRefreshStats }) => {
     if (onRefreshStats) onRefreshStats();
   };
 
+  // Phân bổ giao diện theo Chế độ xem
   if (viewMode === 'add') {
     return (
       <AddStaffForm
@@ -87,22 +108,30 @@ const StaffManagement = ({ onRefreshStats }) => {
     );
   }
 
-  const getRoleBadge = (role) => {
-    const r = (role || '').toUpperCase();
-    if (r.includes('ADMIN')) {
+  // 4. Chuẩn hóa hiển thị Huy hiệu Vai trò (Role Badge)
+  const getRoleBadge = (st) => {
+    let r = st?.vaiTro || st?.role || '';
+    if (st?.roles && st.roles.length > 0) {
+      const first = st.roles[0];
+      r = typeof first === 'string' ? first : (first.name || first.authority || '');
+    }
+    const roleStr = (r || '').toUpperCase().replace('ROLE_', '');
+
+    if (roleStr.includes('ADMIN')) {
       return { label: 'Quản trị viên', className: 'admin', icon: <FiShield /> };
     }
-    if (r.includes('THUKHO')) {
+    if (roleStr.includes('THUKHO') || roleStr.includes('WAREHOUSE_MANAGER')) {
       return { label: 'Thủ kho trưởng', className: 'warehouse', icon: <FiBox /> };
     }
-    if (r.includes('NVKHO')) {
-      return { label: 'Nhân viên kho', className: 'warehouse', icon: <FiBox /> };
+    if (roleStr.includes('NVKHO') || roleStr.includes('WAREHOUSE_STAFF')) {
+      return { label: 'Nhân viên kho', className: 'warehouse', icon: <FiUserCheck /> };
     }
-    return { label: role || 'Chưa phân quyền', className: 'sales', icon: <FiBriefcase /> };
+    return { label: roleStr || 'Chưa phân quyền', className: 'sales', icon: <FiBriefcase /> };
   };
 
   return (
     <>
+      {/* Thanh công cụ Tìm kiếm & Bộ lọc */}
       <div className="filter-control-bar">
         <div className="search-input-box">
           <FiSearch className="search-icon" size={16} />
@@ -134,6 +163,7 @@ const StaffManagement = ({ onRefreshStats }) => {
         </div>
       </div>
 
+      {/* Bảng dữ liệu nhân viên */}
       <table className="data-table">
         <thead>
           <tr>
@@ -164,15 +194,15 @@ const StaffManagement = ({ onRefreshStats }) => {
             </tr>
           ) : (
             staffList.map((st) => {
-              const roleInfo = getRoleBadge(st.vaiTro);
+              const roleInfo = getRoleBadge(st);
               const initial = (st.hoTen || st.taiKhoan || 'NV').substring(0, 2).toUpperCase();
               const isLocked = st.trangThai === false;
 
               return (
-                <tr key={st.id}>
+                <tr key={st.id || st.taiKhoan}>
                   <td>
                     <div className="user-cell-flex">
-                      <div className={`avatar-circle red-dark`}>{initial}</div>
+                      <div className="avatar-circle red-dark">{initial}</div>
                       <div>
                         <div className="user-name-title">{st.hoTen || st.taiKhoan}</div>
                         <div className="user-sub-id" style={{ color: '#d63031', fontWeight: 600 }}>
@@ -197,7 +227,8 @@ const StaffManagement = ({ onRefreshStats }) => {
                     </span>
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <div className="action-buttons-group" style={{ justifyContent: 'flex-end' }}>
+                    <div className="action-buttons-group" style={{ justifyContent: 'flex-end', display: 'flex', gap: '6px' }}>
+                      {/* Nút 1: Sửa thông tin */}
                       <button
                         className="icon-btn-action"
                         title="Sửa thông tin"
@@ -205,9 +236,20 @@ const StaffManagement = ({ onRefreshStats }) => {
                       >
                         <FiEdit2 size={16} />
                       </button>
+
+                      {/* Nút 2: Đổi mật khẩu */}
                       <button
                         className="icon-btn-action"
-                        title={isLocked ? "Mở khóa tài khoản" : "Khóa tài khoản"}
+                        title="Đổi mật khẩu"
+                        onClick={() => setPwdModal({ isOpen: true, staff: st, newPassword: '' })}
+                      >
+                        <FiKey size={16} />
+                      </button>
+
+                      {/* Nút 3: Khóa / Mở khóa */}
+                      <button
+                        className="icon-btn-action"
+                        title={isLocked ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
                         onClick={() => handleToggleStatus(st)}
                       >
                         {isLocked ? <FiUnlock size={16} style={{ color: '#16a34a' }} /> : <FiLock size={16} />}
@@ -221,9 +263,55 @@ const StaffManagement = ({ onRefreshStats }) => {
         </tbody>
       </table>
 
+      {/* Chân bảng */}
       <div className="table-pagination-footer">
         <span>Hiển thị <strong>{staffList.length}</strong> nhân sự nội bộ</span>
       </div>
+
+      {/* Modal đổi mật khẩu nhanh */}
+      {pwdModal.isOpen && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
+          alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div style={{
+            background: '#fff', padding: '24px', borderRadius: '8px',
+            width: '360px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+          }}>
+            <h3 style={{ marginTop: 0, marginBottom: '12px', fontSize: '18px' }}>
+              Đổi mật khẩu nhân viên
+            </h3>
+            <p style={{ color: '#636e72', fontSize: '14px', marginBottom: '16px' }}>
+              Tài khoản: <strong>{pwdModal.staff?.taiKhoan}</strong>
+            </p>
+            <input
+              type="password"
+              placeholder="Nhập mật khẩu mới..."
+              value={pwdModal.newPassword}
+              onChange={(e) => setPwdModal({ ...pwdModal, newPassword: e.target.value })}
+              style={{
+                width: '100%', padding: '10px', borderRadius: '6px',
+                border: '1px solid #dfe6e9', marginBottom: '16px', boxSizing: 'border-box'
+              }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                onClick={() => setPwdModal({ isOpen: false, staff: null, newPassword: '' })}
+                style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #ccc', background: '#fff', cursor: 'pointer' }}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handlePasswordChange}
+                style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', background: '#d63031', color: '#fff', cursor: 'pointer', fontWeight: 600 }}
+              >
+                Lưu mật khẩu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
