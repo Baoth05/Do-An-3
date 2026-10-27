@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Cấu Hình (Configuration): SecurityConfig
+ * Phân hệ: Identity Service (Quản lý định danh & Phân quyền RBAC - Port 8084)
+ * Mô tả: Lớp cấu hình hệ thống, bảo mật hoặc thiết lập các Spring Bean cho Identity Service (Quản lý định danh & Phân quyền RBAC - Port 8084).
+ * ==============================================================================
+ */
 package com.ctut.wms.identityservice.config;
 
 import org.springframework.context.annotation.Bean;
@@ -32,7 +39,8 @@ public class SecurityConfig {
                         "/auth/stats", "/auth/stats/**",
                         "/auth/customers", "/auth/customers/**",
                         "/auth/staff", "/auth/staff/**",
-                        "/auth/users", "/auth/users/**"
+                        "/auth/users", "/auth/users/**",
+                        "/auth/change-password/**"
 
 
                 ).permitAll()

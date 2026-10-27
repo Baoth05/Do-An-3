@@ -1,4 +1,11 @@
-// src/services/marketplaceService.js
+/**
+ * ==============================================================================
+ * Module: marketplaceService.js
+ * Mô tả: Cổng kết nối API Sàn Thương Mại Điện Tử (Marketplace Client API).
+ * Chức năng: Gọi API thông qua API Gateway (Port 8080) lấy danh sách shop, sản phẩm mở bán,
+ *            voucher, thực hiện đặt hàng đa shop và thanh toán MoMo / Web3 Crypto.
+ * ==============================================================================
+ */
 import api from './api';
 
 const MOCK_STORES = [

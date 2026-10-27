@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Module: ImportNoteList.jsx
+ * Mô tả: Giao diện Quản lý Phiếu Nhập Kho.
+ * Chức năng: Quản lý các chứng từ nhập hàng từ Nhà cung cấp hoặc điều chuyển từ Kho Tổng.
+ * ==============================================================================
+ */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiPlus, FiEye, FiRefreshCw, FiFileText } from 'react-icons/fi';

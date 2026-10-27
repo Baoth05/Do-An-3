@@ -1,3 +1,15 @@
+/**
+ * ==============================================================================
+ * Controller: AuthController
+ * Phân hệ: Identity Service (Xác thực & Phân quyền RBAC - Port 8084)
+ * Mô tả: Cung cấp API đăng ký, đăng nhập JWT và quản lý tài khoản người dùng theo vai trò.
+ * Chức năng chính:
+ *   - POST /auth/login: Xác thực tài khoản, sinh JWT token chứa vai trò người dùng.
+ *   - POST /auth/register: Đăng ký tài khoản khách hàng mới.
+ *   - POST /auth/users: Admin tạo tài khoản nhân sự (Quản lý kho, Thủ kho, Chủ shop).
+ *   - GET /auth/users: Lấy danh sách người dùng theo vai trò và trạng thái.
+ * ==============================================================================
+ */
 package com.ctut.wms.identityservice.controller;
 
 import com.ctut.wms.identityservice.dto.*;

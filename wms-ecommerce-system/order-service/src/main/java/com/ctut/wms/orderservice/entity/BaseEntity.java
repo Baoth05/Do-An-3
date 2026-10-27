@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Entity: BaseEntity
+ * Phân hệ: Order Service (Quản lý đơn hàng & Tách đơn đa shop - Port 8082)
+ * Mô tả: Thực thể cơ sở dữ liệu ánh xạ bảng lưu trữ dữ liệu BaseEntity trong cơ sở dữ liệu.
+ * ==============================================================================
+ */
 package com.ctut.wms.orderservice.entity;
 
 import jakarta.persistence.*;

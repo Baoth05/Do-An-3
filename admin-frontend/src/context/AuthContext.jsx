@@ -1,4 +1,10 @@
-// src/context/AuthContext.jsx
+/**
+ * ==============================================================================
+ * Module: AuthContext.jsx
+ * Mô tả: Context quản lý phiên đăng nhập và quyền hạn của Quản trị viên (Admin).
+ * Chức năng: Lưu trữ JWT Token, thông tin Admin trong localStorage, hỗ trợ Login/Logout.
+ * ==============================================================================
+ */
 import { createContext, useState } from 'react';
 
 // Tạo Context để chia sẻ dữ liệu toàn ứng dụng

@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Repository: OrderDetailRepository
+ * Phân hệ: Order Service (Quản lý đơn hàng & Tách đơn đa shop - Port 8082)
+ * Mô tả: Giao diện truy vấn dữ liệu Spring Data JPA thao tác với cơ sở dữ liệu cho OrderDetailRepository.
+ * ==============================================================================
+ */
 package com.ctut.wms.orderservice.repository;
 
 import com.ctut.wms.orderservice.entity.OrderDetail;

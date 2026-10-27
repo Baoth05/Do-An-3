@@ -1,4 +1,10 @@
-// src/pages/MarketplaceHome.jsx
+/**
+ * ==============================================================================
+ * Module: MarketplaceHome.jsx
+ * Mô tả: Trang chủ Sàn Thương Mại Điện Tử Tập Trung (CTUT Gear Marketplace).
+ * Chức năng: Hiển thị Banner sàn, danh sách Gian hàng nổi bật, bộ lọc danh mục và sản phẩm mở bán toàn sàn.
+ * ==============================================================================
+ */
 import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { marketplaceService } from '../services/marketplaceService';

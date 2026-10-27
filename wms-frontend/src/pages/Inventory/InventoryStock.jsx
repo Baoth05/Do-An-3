@@ -1,3 +1,14 @@
+/**
+ * ==============================================================================
+ * Module: InventoryStock.jsx
+ * Mô tả: Phân hệ Quản lý Tồn Kho & Thẻ Kho Vật Lý (WMS Core).
+ * Chức năng: 
+ *   - Giám sát số lượng tồn thực tế, khả dụng đặt hàng và cảnh báo cạn kho.
+ *   - Tìm kiếm theo SKU/Tên/Kho, lọc trạng thái hàng hóa và định mức an toàn.
+ *   - Nhập thêm số lượng tồn kho nhanh chóng.
+ *   - Xem chi tiết biến động lịch sử thẻ kho (Stock Card).
+ * ==============================================================================
+ */
 import { useState, useEffect, useMemo } from 'react';
 import { 
   FiSearch, FiRefreshCw, FiPlus, FiBox, FiCheckCircle, 

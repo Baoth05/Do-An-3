@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Ngoại Lệ (Exception): GlobalExceptionHandler
+ * Phân hệ: Identity Service (Quản lý định danh & Phân quyền RBAC - Port 8084)
+ * Mô tả: Định nghĩa và xử lý các ngoại lệ nghiệp vụ tùy chỉnh trong Identity Service (Quản lý định danh & Phân quyền RBAC - Port 8084).
+ * ==============================================================================
+ */
 package com.ctut.wms.identityservice.exception;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;

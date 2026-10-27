@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Service: JwtService
+ * Phân hệ: Identity Service (Quản lý định danh & Phân quyền RBAC - Port 8084)
+ * Mô tả: Cung cấp logic nghiệp vụ, giao dịch cơ sở dữ liệu và xử lý dữ liệu cho JwtService.
+ * ==============================================================================
+ */
 package com.ctut.wms.identityservice.service;
 
 import io.jsonwebtoken.Jwts;

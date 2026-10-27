@@ -1,4 +1,11 @@
-// src/context/CartContext.jsx
+/**
+ * ==============================================================================
+ * Module: CartContext.jsx
+ * Mô tả: Context quản lý trạng thái giỏ hàng sàn TMĐT tập trung (Marketplace Cart).
+ * Chức năng: Lưu trữ giỏ hàng trong localStorage, tự động gom nhóm sản phẩm theo gian hàng (groupedByShop),
+ *            hỗ trợ thêm/bớt/xóa và tính toán tổng số lượng, tổng tiền.
+ * ==============================================================================
+ */
 import { createContext, useState, useEffect } from 'react';
 
 export const CartContext = createContext();

@@ -1,4 +1,10 @@
-// src/pages/UserManagement/StaffManagement.jsx
+/**
+ * ==============================================================================
+ * Module: StaffManagement.jsx
+ * Mô tả: Giao diện quản lý danh sách nhân sự (Quản lý kho, Thủ kho, Nhân viên).
+ * Chức năng: Tìm kiếm nhân sự, lọc theo chức vụ, khóa/mở khóa tài khoản, thêm và sửa nhân viên.
+ * ==============================================================================
+ */
 import React, { useState, useEffect } from 'react';
 import {
   FiSearch, FiPlus, FiSliders, FiEdit2, FiLock, FiUnlock,

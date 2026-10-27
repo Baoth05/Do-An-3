@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Tiện Ích (Utility): JwtUtil
+ * Phân hệ: API Gateway (Cổng định tuyến tập trung - Port 8080)
+ * Mô tả: Lớp tiện ích cung cấp các hàm hỗ trợ kỹ thuật dùng chung cho API Gateway (Cổng định tuyến tập trung - Port 8080).
+ * ==============================================================================
+ */
 package com.ctut.wms.apigateway.util;
 
 import io.jsonwebtoken.Jwts;

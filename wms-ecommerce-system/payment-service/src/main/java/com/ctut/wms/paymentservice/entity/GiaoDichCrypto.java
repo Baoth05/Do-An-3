@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Entity: GiaoDichCrypto
+ * Phân hệ: Payment Service (Cổng thanh toán MoMo VietQR & Web3 Crypto - Port 8085)
+ * Mô tả: Thực thể cơ sở dữ liệu ánh xạ bảng lưu trữ dữ liệu GiaoDichCrypto trong cơ sở dữ liệu.
+ * ==============================================================================
+ */
 package com.ctut.wms.paymentservice.entity;
 
 import jakarta.persistence.*;

@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Lớp Khởi Động: DiscoveryServerApplication
+ * Phân hệ: Discovery Server (Eureka Service Registry - Port 8761)
+ * Mô tả: Điểm khởi chạy ứng dụng Spring Boot chính cho Discovery Server (Eureka Service Registry - Port 8761).
+ * ==============================================================================
+ */
 package com.ctut.wms.discoveryserver;
 
 import org.springframework.boot.SpringApplication;

@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * DTO (Data Transfer Object): RegisterRequest
+ * Phân hệ: Identity Service (Quản lý định danh & Phân quyền RBAC - Port 8084)
+ * Mô tả: Đối tượng truyền tải dữ liệu đóng gói thông tin đầu vào/đầu ra cho API RegisterRequest.
+ * ==============================================================================
+ */
 package com.ctut.wms.identityservice.dto;
 
 import jakarta.validation.constraints.Email;

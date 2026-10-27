@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Module: WmsLayout.jsx
+ * Mô tả: Khung Layout chính cho toàn bộ hệ thống Quản lý Kho (WMS Portal).
+ * Chức năng: Sidebar điều hướng phân quyền, Top Header hiển thị tài khoản/trạng thái và Outlet render page con.
+ * ==============================================================================
+ */
 import { useContext } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';

@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Lớp Khởi Động: IdentityServiceApplication
+ * Phân hệ: Identity Service (Quản lý định danh & Phân quyền RBAC - Port 8084)
+ * Mô tả: Điểm khởi chạy ứng dụng Spring Boot chính cho Identity Service (Quản lý định danh & Phân quyền RBAC - Port 8084).
+ * ==============================================================================
+ */
 package com.ctut.wms.identityservice;
 
 import org.springframework.boot.SpringApplication;

@@ -1,3 +1,14 @@
+/**
+ * ==============================================================================
+ * Controller: PaymentController
+ * Phân hệ: Payment Service (Cổng thanh toán đa kênh - Port 8085)
+ * Mô tả: Xử lý giao dịch thanh toán MoMo VietQR và Web3 Crypto (USDT/ETH).
+ * Chức năng chính:
+ *   - POST /payments/momo/create: Khởi tạo giao dịch MoMo, sinh mã QR thanh toán.
+ *   - POST /payments/momo/ipn: Nhận Webhook IPN từ MoMo để cập nhật trạng thái đơn hàng.
+ *   - POST /payments/crypto/submit: Tiếp nhận và xác thực TxHash thanh toán On-chain Web3.
+ * ==============================================================================
+ */
 package com.ctut.wms.paymentservice.controller;
 
 import com.ctut.wms.paymentservice.dto.CryptoPaymentRequest;

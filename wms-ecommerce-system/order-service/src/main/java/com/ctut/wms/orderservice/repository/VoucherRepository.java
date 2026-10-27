@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Repository: VoucherRepository
+ * Phân hệ: Order Service (Quản lý đơn hàng & Tách đơn đa shop - Port 8082)
+ * Mô tả: Giao diện truy vấn dữ liệu Spring Data JPA thao tác với cơ sở dữ liệu cho VoucherRepository.
+ * ==============================================================================
+ */
 package com.ctut.wms.orderservice.repository;
 
 import com.ctut.wms.orderservice.entity.Voucher;

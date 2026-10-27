@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Controller: BinhLuanController
+ * Phân hệ: Interaction Service (Đánh giá, nhận xét & hỏi đáp - Port 8083)
+ * Mô tả: Tiếp nhận, điều phối và xử lý các yêu cầu HTTP API liên quan đến BinhLuanController.
+ * ==============================================================================
+ */
 package com.ctut.wms.interactionservice.controller;
 
 import com.ctut.wms.interactionservice.dto.BinhLuanRequest;

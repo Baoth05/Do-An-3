@@ -1,3 +1,11 @@
+/**
+ * ==============================================================================
+ * Controller: DanhGiaController
+ * Phân hệ: Interaction Service (Tương tác khách hàng - Port 8083)
+ * Mô tả: Xử lý đánh giá sản phẩm và xếp hạng sao (1 - 5 sao) từ khách hàng đã mua đơn hàng.
+ * Chức năng: Tạo đánh giá mới, xem đánh giá theo mã sản phẩm hoặc theo gian hàng.
+ * ==============================================================================
+ */
 package com.ctut.wms.interactionservice.controller;
 
 import com.ctut.wms.interactionservice.dto.DanhGiaRequest;

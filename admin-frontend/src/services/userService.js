@@ -1,4 +1,10 @@
-// src/services/userService.js
+/**
+ * ==============================================================================
+ * Module: userService.js
+ * Mô tả: Dịch vụ API phía Admin kết nối với Identity Service (Port 8084).
+ * Chức năng: Lấy danh sách tài khoản, thêm mới nhân viên, cập nhật thông tin và khóa/mở khóa tài khoản.
+ * ==============================================================================
+ */
 import api from './api';
 
 // Chuẩn hóa chuỗi để tìm kiếm không phân biệt chữ hoa/chữ thường

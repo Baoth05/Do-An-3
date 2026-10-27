@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Module: UserManagementDashboard.jsx
+ * Mô tả: Bảng điều khiển quản lý toàn diện người dùng hệ thống (Admin Dashboard).
+ * Chức năng: Thống kê số lượng khách hàng, nhân sự, admin, và chuyển đổi tab quản trị.
+ * ==============================================================================
+ */
 import React, { useState, useEffect } from 'react';
 import { FiUsers, FiShoppingBag, FiBriefcase, FiShield, FiRefreshCw } from 'react-icons/fi';
 import CustomerManagement from './CustomerManagement';

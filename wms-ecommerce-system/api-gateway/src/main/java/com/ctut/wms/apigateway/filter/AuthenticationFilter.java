@@ -1,3 +1,14 @@
+/**
+ * ==============================================================================
+ * Filter: AuthenticationFilter
+ * Phân hệ: API Gateway (Cổng định tuyến tập trung - Port 8080)
+ * Mô tả: Bộ lọc bảo mật GatewayFilter chịu trách nhiệm xác thực JWT Token trước khi chuyển tiếp yêu cầu đến các microservices.
+ * Chức năng chính:
+ *   - Kiểm tra Header Authorization (Bearer Token).
+ *   - Giải mã và xác thực tính hợp lệ của JWT token.
+ *   - Cho phép các route công khai (Public Endpoints) đi qua mà không cần token.
+ * ==============================================================================
+ */
 package com.ctut.wms.apigateway.filter;
 
 import com.ctut.wms.apigateway.util.JwtUtil;

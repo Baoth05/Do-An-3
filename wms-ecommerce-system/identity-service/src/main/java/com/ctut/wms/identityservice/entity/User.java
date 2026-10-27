@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Entity: User
+ * Phân hệ: Identity Service (Quản lý định danh & Phân quyền RBAC - Port 8084)
+ * Mô tả: Thực thể cơ sở dữ liệu ánh xạ bảng lưu trữ dữ liệu User trong cơ sở dữ liệu.
+ * ==============================================================================
+ */
 package com.ctut.wms.identityservice.entity;
 
 import jakarta.persistence.*;

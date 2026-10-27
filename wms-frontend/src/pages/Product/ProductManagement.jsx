@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Module: ProductManagement.jsx
+ * Mô tả: Phân hệ Quản lý Danh mục Hàng hóa Master (Master SKU).
+ * Chức năng: Hiển thị danh sách sản phẩm, giá niêm yết, phân loại và điều hướng Thêm/Sửa/Xóa.
+ * ==============================================================================
+ */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiBox, FiRefreshCw } from 'react-icons/fi';

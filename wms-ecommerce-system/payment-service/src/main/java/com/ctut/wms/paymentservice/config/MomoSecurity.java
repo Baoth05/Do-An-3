@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Cấu Hình (Configuration): MomoSecurity
+ * Phân hệ: Payment Service (Cổng thanh toán MoMo VietQR & Web3 Crypto - Port 8085)
+ * Mô tả: Lớp cấu hình hệ thống, bảo mật hoặc thiết lập các Spring Bean cho Payment Service (Cổng thanh toán MoMo VietQR & Web3 Crypto - Port 8085).
+ * ==============================================================================
+ */
 package com.ctut.wms.paymentservice.config;
 
 import javax.crypto.Mac;

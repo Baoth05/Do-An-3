@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Service: PaymentService
+ * Phân hệ: Payment Service (Cổng thanh toán MoMo VietQR & Web3 Crypto - Port 8085)
+ * Mô tả: Cung cấp logic nghiệp vụ, giao dịch cơ sở dữ liệu và xử lý dữ liệu cho PaymentService.
+ * ==============================================================================
+ */
 package com.ctut.wms.paymentservice.service;
 
 import com.ctut.wms.paymentservice.config.MomoConfig;

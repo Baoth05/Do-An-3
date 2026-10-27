@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Service: DanhGiaService
+ * Phân hệ: Interaction Service (Đánh giá, nhận xét & hỏi đáp - Port 8083)
+ * Mô tả: Cung cấp logic nghiệp vụ, giao dịch cơ sở dữ liệu và xử lý dữ liệu cho DanhGiaService.
+ * ==============================================================================
+ */
 package com.ctut.wms.interactionservice.service;
 
 import com.ctut.wms.interactionservice.dto.DanhGiaRequest;

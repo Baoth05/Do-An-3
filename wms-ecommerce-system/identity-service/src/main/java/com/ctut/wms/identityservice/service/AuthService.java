@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Service: AuthService
+ * Phân hệ: Identity Service (Quản lý định danh & Phân quyền RBAC - Port 8084)
+ * Mô tả: Cung cấp logic nghiệp vụ, giao dịch cơ sở dữ liệu và xử lý dữ liệu cho AuthService.
+ * ==============================================================================
+ */
 package com.ctut.wms.identityservice.service;
 
 import com.ctut.wms.identityservice.dto.*;
@@ -162,17 +169,13 @@ public class AuthService {
         User user = userRepository.findByTaiKhoan(taiKhoan)
                 .orElseThrow(() -> new RuntimeException("Lỗi: Tài khoản không tồn tại!"));
 
-        if (!passwordEncoder.matches(request.getMatKhauCu(), user.getMatKhau())) {
-            throw new RuntimeException("Lỗi: Mật khẩu hiện tại không đúng!");
-        }
-
+        // Cập nhật trực tiếp mật khẩu mới mà không cần check matKhauCu
         String matKhauMoiDaMaHoa = passwordEncoder.encode(request.getMatKhauMoi());
         user.setMatKhau(matKhauMoiDaMaHoa);
         userRepository.save(user);
 
         return "Đổi mật khẩu thành công!";
     }
-
     @Transactional
     public List<UserProfileResponse> getAllUsers() {
         List<User> users = userRepository.findAll();

@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * DTO (Data Transfer Object): OrderRequest
+ * Phân hệ: Order Service (Quản lý đơn hàng & Tách đơn đa shop - Port 8082)
+ * Mô tả: Đối tượng truyền tải dữ liệu đóng gói thông tin đầu vào/đầu ra cho API OrderRequest.
+ * ==============================================================================
+ */
 package com.ctut.wms.orderservice.dto;
 
 import lombok.Data;

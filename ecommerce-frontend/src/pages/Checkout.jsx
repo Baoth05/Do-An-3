@@ -1,4 +1,11 @@
-// src/pages/Checkout.jsx
+/**
+ * ==============================================================================
+ * Module: Checkout.jsx
+ * Mô tả: Trang Thanh toán & Điều phối Đơn hàng Đa Shop (Checkout & Payment Gateway).
+ * Chức năng: Nhập thông tin giao hàng, chọn ĐVVC, chọn phương thức thanh toán (MoMo VietQR / Crypto Web3 / COD),
+ *            thực thi giải thuật Order Splitting qua API /orders/checkout-multishop.
+ * ==============================================================================
+ */
 import { useContext, useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';

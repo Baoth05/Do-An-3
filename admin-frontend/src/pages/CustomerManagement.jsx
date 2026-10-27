@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Module: CustomerManagement.jsx
+ * Mô tả: Giao diện quản lý danh sách tài khoản khách hàng trên sàn E-commerce.
+ * Chức năng: Tìm kiếm khách hàng, lọc trạng thái hoạt động, khóa/mở khóa tài khoản khách.
+ * ==============================================================================
+ */
 import React, { useState, useEffect } from 'react';
 import { FiSearch, FiSliders, FiEye, FiLock, FiUnlock, FiInfo, FiRefreshCw, FiUser } from 'react-icons/fi';
 import { userService } from '../services/userService';

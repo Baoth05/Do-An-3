@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Module: WmsDashboard.jsx
+ * Mô tả: Màn hình Thống kê Tổng quan Vận hành Kho Bãi (WMS Dashboard).
+ * Chức năng: Thống kê số lượng SKU, tồn kho thực tế, số phiếu nhập/xuất và nhật ký hoạt động gần đây.
+ * ==============================================================================
+ */
 import { useState, useEffect } from 'react';
 import { 
   FiBox, FiArrowDownLeft, FiArrowUpRight, FiLayers, 

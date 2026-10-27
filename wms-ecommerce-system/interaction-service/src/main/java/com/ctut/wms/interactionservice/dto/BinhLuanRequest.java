@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * DTO (Data Transfer Object): BinhLuanRequest
+ * Phân hệ: Interaction Service (Đánh giá, nhận xét & hỏi đáp - Port 8083)
+ * Mô tả: Đối tượng truyền tải dữ liệu đóng gói thông tin đầu vào/đầu ra cho API BinhLuanRequest.
+ * ==============================================================================
+ */
 package com.ctut.wms.interactionservice.dto;
 
 import lombok.Data;

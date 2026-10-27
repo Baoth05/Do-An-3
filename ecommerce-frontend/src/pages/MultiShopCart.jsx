@@ -1,4 +1,10 @@
-// src/pages/MultiShopCart.jsx
+/**
+ * ==============================================================================
+ * Module: MultiShopCart.jsx
+ * Mô tả: Giỏ hàng đa gian hàng (Multi-Shop Cart Block kiểu Shopee Mall).
+ * Chức năng: Gom nhóm sản phẩm theo từng Shop, áp dụng Voucher riêng của Shop & Voucher toàn sàn, tóm tắt tách đơn.
+ * ==============================================================================
+ */
 import { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';

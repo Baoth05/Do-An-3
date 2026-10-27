@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Repository: BinhLuanRepository
+ * Phân hệ: Interaction Service (Đánh giá, nhận xét & hỏi đáp - Port 8083)
+ * Mô tả: Giao diện truy vấn dữ liệu Spring Data JPA thao tác với cơ sở dữ liệu cho BinhLuanRepository.
+ * ==============================================================================
+ */
 package com.ctut.wms.interactionservice.repository;
 
 import com.ctut.wms.interactionservice.entity.BinhLuan;

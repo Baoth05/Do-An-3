@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Entity: BaseEntity
+ * Phân hệ: Interaction Service (Đánh giá, nhận xét & hỏi đáp - Port 8083)
+ * Mô tả: Thực thể cơ sở dữ liệu ánh xạ bảng lưu trữ dữ liệu BaseEntity trong cơ sở dữ liệu.
+ * ==============================================================================
+ */
 package com.ctut.wms.interactionservice.entity;
 
 import jakarta.persistence.*;

@@ -1,3 +1,14 @@
+/**
+ * ==============================================================================
+ * Service: OrderService
+ * Phân hệ: Order Service (Microservice quản lý đơn hàng - Port 8082)
+ * Mô tả: Cung cấp logic nghiệp vụ xử lý đơn hàng, mã giảm giá và tách đơn đa gian hàng.
+ * Chức năng chính:
+ *   - placeOrder: Tính tiền hàng, kiểm tra & khấu trừ lượt dùng Voucher, lưu đơn hàng và tạo yêu cầu xuất kho sang WMS Core.
+ *   - checkoutMultiShop: Thuật toán tách đơn hàng đa shop (Shopee Mall model), gom đơn theo từng cua_hang_id.
+ *   - updatePaymentStatus & updatePaymentStatusForCheckoutSession: Đồng bộ thanh toán từ MoMo/Crypto sang các đơn hàng con.
+ * ==============================================================================
+ */
 package com.ctut.wms.orderservice.service;
 
 import com.ctut.wms.orderservice.dto.*;

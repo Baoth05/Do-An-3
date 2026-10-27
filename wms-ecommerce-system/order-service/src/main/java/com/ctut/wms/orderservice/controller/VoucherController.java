@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Controller: VoucherController
+ * Phân hệ: Order Service (Quản lý đơn hàng & Tách đơn đa shop - Port 8082)
+ * Mô tả: Tiếp nhận, điều phối và xử lý các yêu cầu HTTP API liên quan đến VoucherController.
+ * ==============================================================================
+ */
 package com.ctut.wms.orderservice.controller;
 
 import com.ctut.wms.orderservice.entity.Voucher;

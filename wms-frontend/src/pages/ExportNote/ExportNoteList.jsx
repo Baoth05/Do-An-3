@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * Module: ExportNoteList.jsx
+ * Mô tả: Giao diện Quản lý Phiếu Xuất Kho (WMS Fulfillment).
+ * Chức năng: Theo dõi danh sách chứng từ xuất kho bàn giao cho đơn vị vận chuyển hoặc điều chuyển.
+ * ==============================================================================
+ */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 

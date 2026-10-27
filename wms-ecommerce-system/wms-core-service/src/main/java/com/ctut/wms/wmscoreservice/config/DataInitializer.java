@@ -1,17 +1,7 @@
 package com.ctut.wms.wmscoreservice.config;
 
-import com.ctut.wms.wmscoreservice.entity.category.Category;
-import com.ctut.wms.wmscoreservice.entity.inventory.Inventory;
-import com.ctut.wms.wmscoreservice.entity.product.Product;
-import com.ctut.wms.wmscoreservice.entity.shipping.ShippingProvider;
-import com.ctut.wms.wmscoreservice.entity.supplier.Supplier;
-import com.ctut.wms.wmscoreservice.entity.warehouse.Warehouse;
-import com.ctut.wms.wmscoreservice.repository.category.CategoryRepository;
-import com.ctut.wms.wmscoreservice.repository.inventory.InventoryRepository;
-import com.ctut.wms.wmscoreservice.repository.product.ProductRepository;
-import com.ctut.wms.wmscoreservice.repository.shipping.ShippingProviderRepository;
-import com.ctut.wms.wmscoreservice.repository.supplier.SupplierRepository;
-import com.ctut.wms.wmscoreservice.repository.warehouse.WarehouseRepository;
+import com.ctut.wms.wmscoreservice.entity.*;
+import com.ctut.wms.wmscoreservice.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -28,9 +18,9 @@ public class DataInitializer implements CommandLineRunner {
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final WarehouseRepository warehouseRepository;
-    private final InventoryRepository inventoryRepository;
-    private final ShippingProviderRepository shippingProviderRepository;
     private final SupplierRepository supplierRepository;
+    private final ShippingProviderRepository shippingProviderRepository;
+    private final InventoryRepository inventoryRepository;
 
     @Override
     public void run(String... args) {
@@ -47,7 +37,7 @@ public class DataInitializer implements CommandLineRunner {
             khoTong.setDiaChi("Lô A2, KCN Tân Bình, Tây Thạnh, Tân Phú, TP.HCM");
             khoTong.setSucChuaToiDa(100000);
             khoTong.setLoaiHinh("KHO_TONG");
-            khoTong.setQuanLyId(2L); // Thủ kho quản lý
+            khoTong.setQuanLyId(2L);
             khoTong.setTrangThai("HOAT_DONG");
 
             storeApple = new Warehouse();
@@ -57,7 +47,7 @@ public class DataInitializer implements CommandLineRunner {
             storeApple.setSucChuaToiDa(5000);
             storeApple.setLoaiHinh("KHO_CUA_HANG");
             storeApple.setMoTaGianHang("Gian hàng ủy quyền chính hãng Apple tại Cần Thơ, bảo hành 12 tháng 1 đổi 1");
-            storeApple.setQuanLyId(3L); // Chủ cửa hàng 1
+            storeApple.setQuanLyId(3L);
             storeApple.setTrangThai("HOAT_DONG");
 
             storeGear = new Warehouse();
@@ -67,7 +57,7 @@ public class DataInitializer implements CommandLineRunner {
             storeGear.setSucChuaToiDa(8000);
             storeGear.setLoaiHinh("KHO_CUA_HANG");
             storeGear.setMoTaGianHang("Thiên đường gaming gear, bàn phím cơ, chuột không dây & phụ kiện gaming cao cấp");
-            storeGear.setQuanLyId(4L); // Chủ cửa hàng 2
+            storeGear.setQuanLyId(4L);
             storeGear.setTrangThai("HOAT_DONG");
 
             warehouseRepository.saveAll(Arrays.asList(khoTong, storeApple, storeGear));
@@ -79,85 +69,51 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        // 2. Danh mục
+        // 2. Danh mục ngành hàng
         Category catPhone = null;
         Category catLaptop = null;
         Category catPhuKien = null;
         if (categoryRepository.count() == 0) {
             catPhone = new Category();
             catPhone.setTenDanhMuc("Điện Thoại & Tablet");
-            catPhone.setMoTa("Thiết bị di động thông minh chính hãng");
+            catPhone.setMoTa("Thiết bị di động thông minh chính hãng Apple, Samsung, Xiaomi");
+            categoryRepository.save(catPhone);
 
             catLaptop = new Category();
             catLaptop.setTenDanhMuc("Laptop & Máy Tính");
-            catLaptop.setMoTa("Máy tính xách tay và máy trạm văn phòng");
+            catLaptop.setMoTa("Laptop văn phòng, Gaming, đồ họa cao cấp");
+            categoryRepository.save(catLaptop);
 
             catPhuKien = new Category();
-            catPhuKien.setTenDanhMuc("Phụ Kiện Gaming & Văn Phòng");
-            catPhuKien.setMoTa("Chuột, bàn phím, tai nghe chất lượng cao");
+            catPhuKien.setTenDanhMuc("Phụ Kiện & Gaming Gear");
+            catPhuKien.setMoTa("Bàn phím cơ, chuột, tai nghe gaming chính hãng");
+            categoryRepository.save(catPhuKien);
 
-            categoryRepository.saveAll(Arrays.asList(catPhone, catLaptop, catPhuKien));
-            log.info("-> Đã khởi tạo 3 Danh mục hàng hóa.");
-        } else {
-            catPhone = categoryRepository.findAll().get(0);
-            if (categoryRepository.count() > 2) {
-                catPhuKien = categoryRepository.findAll().get(2);
-            }
+            log.info("-> Đã khởi tạo 3 danh mục ngành hàng.");
         }
 
-        // 3. Nhà cung cấp gốc (Kho Tổng làm việc)
-        if (supplierRepository.count() == 0) {
-            Supplier nccApple = new Supplier();
-            nccApple.setMaNhaCungCap("NCC-APPLE");
-            nccApple.setTenNhaCungCap("Công ty TNHH Apple Việt Nam");
-            nccApple.setNguoiLienHe("Trần Minh Quân");
-            nccApple.setSoDienThoai("0901234567");
-            nccApple.setEmail("contact@apple.vn");
-            nccApple.setDiaChi("Tầng 5, Tòa nhà Bitexco, Q.1, TP.HCM");
-            nccApple.setTrangThai("HOAT_DONG");
-
-            Supplier nccLogitech = new Supplier();
-            nccLogitech.setMaNhaCungCap("NCC-LOGI");
-            nccLogitech.setTenNhaCungCap("Công ty TNHH Logitech Việt Nam");
-            nccLogitech.setNguoiLienHe("Lê Hoàng Phong");
-            nccLogitech.setSoDienThoai("0912345678");
-            nccLogitech.setEmail("b2b@logitech.vn");
-            nccLogitech.setDiaChi("Tòa nhà Vincom Center, Lê Thánh Tôn, TP.HCM");
-            nccLogitech.setTrangThai("HOAT_DONG");
-
-            supplierRepository.saveAll(Arrays.asList(nccApple, nccLogitech));
-            log.info("-> Đã khởi tạo 2 Nhà cung cấp gốc.");
-        }
-
-        // 4. Đơn vị vận chuyển
+        // 3. Đơn vị vận chuyển
         if (shippingProviderRepository.count() == 0) {
-            ShippingProvider ghtk = new ShippingProvider();
-            ghtk.setMaDonVi("DV-GHTK");
-            ghtk.setTenDonVi("Giao Hàng Tiết Kiệm (GHTK)");
-            ghtk.setThongTinLienHe("1900 6092");
-            ghtk.setWebsite("https://ghtk.vn");
-            ghtk.setTrangThai("HOAT_DONG");
+            ShippingProvider sp1 = new ShippingProvider();
+            sp1.setMaDonVi("GHN");
+            sp1.setTenDonVi("Giao Hàng Nhanh Express");
+            sp1.setSoDienThoai("1900 636677");
+            sp1.setEmail("cskh@ghn.vn");
+            sp1.setWebsite("https://ghn.vn");
 
-            ShippingProvider ghn = new ShippingProvider();
-            ghn.setMaDonVi("DV-GHN");
-            ghn.setTenDonVi("Giao Hàng Nhanh (GHN)");
-            ghn.setThongTinLienHe("1900 636677");
-            ghn.setWebsite("https://ghn.vn");
-            ghn.setTrangThai("HOAT_DONG");
+            ShippingProvider sp2 = new ShippingProvider();
+            sp2.setMaDonVi("VTP");
+            sp2.setTenDonVi("Viettel Post Cần Thơ");
+            sp2.setSoDienThoai("1900 8095");
+            sp2.setEmail("support@viettelpost.vn");
+            sp2.setWebsite("https://viettelpost.com.vn");
 
-            ShippingProvider viettelPost = new ShippingProvider();
-            viettelPost.setMaDonVi("DV-VTPOST");
-            viettelPost.setTenDonVi("Tổng Công Ty Viettel Post");
-            viettelPost.setThongTinLienHe("1900 8095");
-            viettelPost.setWebsite("https://viettelpost.com.vn");
-            viettelPost.setTrangThai("HOAT_DONG");
-
-            shippingProviderRepository.saveAll(Arrays.asList(ghtk, ghn, viettelPost));
-            log.info("-> Đã khởi tạo 3 Đơn vị vận chuyển.");
+            shippingProviderRepository.saveAll(Arrays.asList(sp1, sp2));
+            log.info("-> Đã khởi tạo 2 đơn vị vận chuyển đối tác.");
         }
 
-        // 5. Master Catalog & Tồn kho 2 Tầng (Kho Tổng & Đăng bán tại Gian hàng)
-        if (productRepository.count() == 0 && catPhone != null && khoTong != null) {
+        // 4. Sản phẩm mẫu & Tồn kho
+        if (productRepository.count() == 0 && khoTong != null) {
             Product sp1 = new Product();
             sp1.setSku("SP001");
             sp1.setTenSanPham("iPhone 15 Pro Max 256GB Titan Tự Nhiên");
@@ -166,7 +122,7 @@ public class DataInitializer implements CommandLineRunner {
             sp1.setGiaNhap(25500000.0);
             sp1.setKhoiLuong(0.22);
             sp1.setHinhAnh("https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500&auto=format&fit=crop");
-            sp1.setMoTa("iPhone 15 Pro Max với khung viền Titan chuẩn hàng không vũ trụ, chip A17 Pro mạnh mẽ hàng đầu.");
+            sp1.setMoTa("Flagship cao cấp nhất của Apple với khung viền titan chuẩn hàng không vũ trụ, chip A17 Pro mạnh mẽ hàng đầu.");
             sp1.setTrangThai("DANG_KINH_DOANH");
             sp1.setDanhMuc(catPhone);
             Product savedSp1 = productRepository.save(sp1);
@@ -180,7 +136,7 @@ public class DataInitializer implements CommandLineRunner {
             inv1Tong.setSoLuongToiThieu(20);
             inv1Tong.setSoLuongToiDa(1000);
             inv1Tong.setGiaBanHienTai(BigDecimal.valueOf(29990000));
-            inv1Tong.setDangBan(false); // Kho tổng không trực tiếp bán lẻ B2C
+            inv1Tong.setDangBan(false);
             inventoryRepository.save(inv1Tong);
 
             // Tồn kho và mở bán tại Cửa Hàng Apple
@@ -192,9 +148,9 @@ public class DataInitializer implements CommandLineRunner {
                 inv1Shop.setSoLuongKhaDung(25);
                 inv1Shop.setSoLuongToiThieu(5);
                 inv1Shop.setSoLuongToiDa(100);
-                inv1Shop.setGiaBanHienTai(BigDecimal.valueOf(29490000)); // Giá khuyến mãi riêng của shop
+                inv1Shop.setGiaBanHienTai(BigDecimal.valueOf(29490000));
                 inv1Shop.setSoLuongDaBan(18);
-                inv1Shop.setDangBan(true); // Đăng bán lên Sàn TMĐT tập trung
+                inv1Shop.setDangBan(true);
                 inventoryRepository.save(inv1Shop);
             }
 
@@ -232,9 +188,9 @@ public class DataInitializer implements CommandLineRunner {
                 inv2Shop.setSoLuongKhaDung(40);
                 inv2Shop.setSoLuongToiThieu(8);
                 inv2Shop.setSoLuongToiDa(200);
-                inv2Shop.setGiaBanHienTai(BigDecimal.valueOf(2390000)); // Giá shop
+                inv2Shop.setGiaBanHienTai(BigDecimal.valueOf(2390000));
                 inv2Shop.setSoLuongDaBan(32);
-                inv2Shop.setDangBan(true); // Đăng bán lên Sàn
+                inv2Shop.setDangBan(true);
                 inventoryRepository.save(inv2Shop);
             }
 
@@ -250,3 +206,4 @@ public class DataInitializer implements CommandLineRunner {
         log.info("====== WMS CORE SERVICE SẴN SÀNG CHO MÔ HÌNH V2.0 ======");
     }
 }
+

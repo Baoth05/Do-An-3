@@ -1,4 +1,10 @@
-// src/services/wmsCoreService.js
+/**
+ * ==============================================================================
+ * Module: wmsCoreService.js
+ * Mô tả: Cổng dịch vụ Client API kết nối trực tiếp với microservice wms-core-service (Port 8081).
+ * Chức năng: Cung cấp các hàm gọi API cho Hàng hóa, Danh mục, Kho bãi, Tồn kho, Thẻ kho, Phiếu nhập/xuất và Điều chuyển.
+ * ==============================================================================
+ */
 import api from './api';
 
 export const wmsCoreService = {

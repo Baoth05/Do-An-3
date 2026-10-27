@@ -1,3 +1,10 @@
+/**
+ * ==============================================================================
+ * DTO (Data Transfer Object): UserProfileResponse
+ * Phân hệ: Identity Service (Quản lý định danh & Phân quyền RBAC - Port 8084)
+ * Mô tả: Đối tượng truyền tải dữ liệu đóng gói thông tin đầu vào/đầu ra cho API UserProfileResponse.
+ * ==============================================================================
+ */
 package com.ctut.wms.identityservice.dto;
 
 import lombok.AllArgsConstructor;
