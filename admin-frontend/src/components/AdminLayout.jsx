@@ -6,7 +6,6 @@ import { FiPieChart, FiUsers, FiTrendingUp, FiLogOut } from 'react-icons/fi';
 import './AdminLayout.css';
 
 const AdminLayout = () => {
-  // Lấy dữ liệu user thực tế và hàm logout từ AuthContext
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
@@ -15,6 +14,33 @@ const AdminLayout = () => {
     logout();
     navigate('/login');
   };
+
+  // 🌟 Hàm chuyển đổi đường dẫn URL thành Tên trang để hiển thị Breadcrumb
+  const getPageTitle = (pathname) => {
+    if (pathname.includes('/finance')) return 'Quản lý tài chính';
+    if (pathname.includes('/user-management')) return 'Quản lý người dùng';
+    if (pathname.includes('/strategic-report')) return 'Báo cáo chiến lược';
+    return 'Bảng điều khiển'; // Mặc định
+  };
+
+  // 🌟 Xử lý hiển thị thông tin thực tế từ Backend (Bao quát các biến hoTen, fullName, name...)
+  const displayUserName = user?.hoTen || user?.fullName || user?.name || user?.taiKhoan || 'Người dùng';
+  
+  // Xử lý hiển thị vai trò (đọc mảng roles hoặc chuỗi role từ API)
+  let displayRole = 'Chưa phân quyền';
+  if (user?.roles && user.roles.length > 0) {
+    const r = user.roles[0];
+    const roleStr = (typeof r === 'string' ? r : (r.name || r.authority || '')).toUpperCase();
+    if (roleStr.includes('ADMIN')) displayRole = 'Quản trị viên';
+    else if (roleStr.includes('THUKHO')) displayRole = 'Thủ kho';
+    else if (roleStr.includes('NVKHO')) displayRole = 'Nhân viên kho';
+    else displayRole = roleStr.replace('ROLE_', '');
+  } else if (user?.role) {
+    displayRole = user.role;
+  }
+
+  // Chữ cái đầu tiên của tên dùng làm Avatar
+  const avatarChar = displayUserName.charAt(0).toUpperCase();
 
   return (
     <div className="admin-layout">
@@ -31,28 +57,25 @@ const AdminLayout = () => {
         <nav className="sidebar-menu">
           <div className="menu-label">BẢNG ĐIỀU KHIỂN</div>
           
-          {/* 1. Quản lý tài chính */}
           <Link 
             to="/finance" 
-            className={`menu-item ${location.pathname.includes('finance') ? 'active' : ''}`}
+            className={`menu-item ${location.pathname.includes('/finance') ? 'active' : ''}`}
           >
             <FiPieChart size={18} />
             <span>Quản lý tài chính</span>
           </Link>
 
-          {/* 2. Quản lý người dùng (Đã cập nhật sang /user-management) */}
           <Link 
             to="/user-management" 
-            className={`menu-item ${location.pathname.includes('user-management') ? 'active' : ''}`}
+            className={`menu-item ${location.pathname.includes('/user-management') ? 'active' : ''}`}
           >
             <FiUsers size={18} />
             <span>Quản lý người dùng</span>
           </Link>
 
-          {/* 3. Báo cáo chiến lược (Đã cập nhật sang /strategic-report) */}
           <Link 
             to="/strategic-report" 
-            className={`menu-item ${location.pathname.includes('strategic-report') ? 'active' : ''}`}
+            className={`menu-item ${location.pathname.includes('/strategic-report') ? 'active' : ''}`}
           >
             <FiTrendingUp size={18} />
             <span>Báo cáo chiến lược</span>
@@ -74,20 +97,25 @@ const AdminLayout = () => {
       {/* Cột Nội dung bên phải */}
       <div className="main-content">
         <header className="top-header">
+          {/* 🌟 Cập nhật Breadcrumb động */}
           <div className="breadcrumb">
-            Cổng Quản Trị / <span>Bảng điều khiển</span>
+            Cổng Quản Trị / <span>{getPageTitle(location.pathname)}</span>
           </div>
 
           <div className="user-profile-section">
-            <span className="status-badge">• {user?.status || 'TRỰC TUYẾN'}</span>
+            <span className="status-badge">
+              <span className="status-dot"></span>
+              TRỰC TUYẾN
+            </span>
             
+            {/* 🌟 Hiển thị thông tin thực */}
             <div className="user-info">
-              <p className="user-name">{user?.name || 'Chưa đăng nhập'}</p>
-              <p className="user-role">{user?.role || 'Quản trị viên'}</p>
+              <p className="user-name">{displayUserName}</p>
+              <p className="user-role">{displayRole}</p>
             </div>
 
             <div className="user-avatar">
-              {user?.avatar || user?.name?.charAt(0) || 'A'}
+              {avatarChar}
             </div>
 
             <button className="logout-btn" onClick={handleLogout} title="Đăng xuất">

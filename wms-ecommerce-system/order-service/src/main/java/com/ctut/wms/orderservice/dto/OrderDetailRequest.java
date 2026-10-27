@@ -13,4 +13,3 @@ public class OrderDetailRequest {
     private Integer soLuong;
 }
 
-}

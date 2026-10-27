@@ -1,7 +1,8 @@
+// src/pages/UserManagement/StaffManagement.jsx
 import React, { useState, useEffect } from 'react';
-import { 
-  FiSearch, FiPlus, FiSliders, FiEdit2, FiLock, FiUnlock, 
-  FiShield, FiBox, FiBriefcase, FiRefreshCw, FiUser 
+import {
+  FiSearch, FiPlus, FiSliders, FiEdit2, FiLock, FiUnlock,
+  FiShield, FiBox, FiBriefcase, FiRefreshCw, FiUser, FiUserCheck
 } from 'react-icons/fi';
 import { userService } from '../services/userService';
 import AddStaffForm from './AddStaffForm';
@@ -33,6 +34,7 @@ const StaffManagement = ({ onRefreshStats }) => {
     fetchStaff();
   }, [searchTerm, roleFilter]);
 
+  // Hàm khóa / mở khóa tài khoản nhân sự
   const handleToggleStatus = async (user) => {
     const action = user.trangThai === false ? 'mở khóa' : 'khóa';
     if (window.confirm(`Bạn có chắc chắn muốn ${action} tài khoản nhân sự "${user.taiKhoan}"?`)) {
@@ -62,19 +64,19 @@ const StaffManagement = ({ onRefreshStats }) => {
 
   if (viewMode === 'add') {
     return (
-      <AddStaffForm 
-        onBack={() => setViewMode('list')} 
-        onSuccess={handleAddSuccess} 
+      <AddStaffForm
+        onBack={() => setViewMode('list')}
+        onSuccess={handleAddSuccess}
       />
     );
   }
 
   if (viewMode === 'edit' && editingStaff) {
     return (
-      <EditStaffForm 
+      <EditStaffForm
         staff={editingStaff}
-        onBack={() => { setViewMode('list'); setEditingStaff(null); }} 
-        onSuccess={handleEditSuccess} 
+        onBack={() => { setViewMode('list'); setEditingStaff(null); }}
+        onSuccess={handleEditSuccess}
       />
     );
   }
@@ -90,7 +92,7 @@ const StaffManagement = ({ onRefreshStats }) => {
     if (r.includes('NVKHO')) {
       return { label: 'Nhân viên kho', className: 'warehouse', icon: <FiBox /> };
     }
-    return { label: role || 'Nhân sự', className: 'sales', icon: <FiBriefcase /> };
+    return { label: role || 'Chưa phân quyền', className: 'sales', icon: <FiBriefcase /> };
   };
 
   return (
@@ -98,16 +100,16 @@ const StaffManagement = ({ onRefreshStats }) => {
       <div className="filter-control-bar">
         <div className="search-input-box">
           <FiSearch className="search-icon" size={16} />
-          <input 
-            type="text" 
-            placeholder="Tìm kiếm nhân viên theo tên, tài khoản, SĐT..." 
+          <input
+            type="text"
+            placeholder="Tìm kiếm nhân viên theo tên, tài khoản, SĐT..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <div className="filter-group">
           <span className="filter-label-inline">Vai trò:</span>
-          <select 
+          <select
             className="select-filter"
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
@@ -190,15 +192,15 @@ const StaffManagement = ({ onRefreshStats }) => {
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <div className="action-buttons-group" style={{ justifyContent: 'flex-end' }}>
-                      <button 
-                        className="icon-btn-action" 
+                      <button
+                        className="icon-btn-action"
                         title="Sửa thông tin"
                         onClick={() => { setEditingStaff(st); setViewMode('edit'); }}
                       >
                         <FiEdit2 size={16} />
                       </button>
-                      <button 
-                        className="icon-btn-action" 
+                      <button
+                        className="icon-btn-action"
                         title={isLocked ? "Mở khóa tài khoản" : "Khóa tài khoản"}
                         onClick={() => handleToggleStatus(st)}
                       >
