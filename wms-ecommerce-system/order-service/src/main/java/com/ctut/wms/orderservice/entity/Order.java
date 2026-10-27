@@ -20,21 +20,35 @@ public class Order extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Mã phiên Checkout chung (gom các đơn hàng tách ra từ 1 lần bấm thanh toán giỏ hàng đa shop)
+    @Column(name = "ma_giao_dich_goc", length = 50)
+    private String maGiaoDichGoc;
+
+    // Logical FK ID Gian hàng bán đơn này (từ wms_core_db)
+    @Column(name = "cua_hang_id")
+    private Long cuaHangId;
+
     @Column(name = "ma_don_hang", unique = true, nullable = false)
     private String maDonHang = "DH-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
     @Column(name = "nguoi_dung_id", nullable = false)
-    private Long nguoiDungId; // Đổi từ khachHangId thành nguoiDungId cho khớp ERD
+    private Long nguoiDungId; // Logical FK Khách hàng mua (từ identity_service)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voucher_id")
     @ToString.Exclude
     private Voucher voucher;
+
+    // Đơn vị vận chuyển do Chủ cửa hàng điều phối
+    @Column(name = "don_vi_van_chuyen", length = 100)
+    private String donViVanChuyen;
+
     @Column(name = "dia_chi_giao_hang")
     private String diaChiGiaoHang;
 
     @Column(name = "so_dien_thoai")
     private String soDienThoai;
+
     @Column(name = "tong_tien_hang", nullable = false)
     private BigDecimal tongTienHang = BigDecimal.ZERO;
 
@@ -45,16 +59,16 @@ public class Order extends BaseEntity {
     private BigDecimal tongThanhToan = BigDecimal.ZERO;
 
     @Column(name = "phuong_thuc_thanh_toan")
-    private String phuongThucThanhToan; // VD: MOMO, COD
+    private String phuongThucThanhToan; // MOMO, CRYPTO, COD
 
     @Column(name = "trang_thai_don_hang")
-    private String trangThaiDonHang = "CHỜ XÁC NHẬN";
+    private String trangThaiDonHang = "PENDING"; // PENDING, CONFIRMED, CANCELLED_PAYMENT_FAILED, COMPLETED
 
     @Column(name = "trang_thai_thanh_toan")
-    private String trangThaiThanhToan = "CHƯA THANH TOÁN";
+    private String trangThaiThanhToan = "UNPAID"; // UNPAID, PAID, REFUNDED
 
     @Column(name = "trang_thai_giao_hang")
-    private String trangThaiGiaoHang = "CHƯA GIAO";
+    private String trangThaiGiaoHang = "WAITING"; // WAITING, PACKING, SHIPPING, DELIVERED
 
     // Cascade.ALL: Khi lưu Order, tự động lưu luôn các Chi tiết bên trong
     @OneToMany(mappedBy = "donHang", cascade = CascadeType.ALL)

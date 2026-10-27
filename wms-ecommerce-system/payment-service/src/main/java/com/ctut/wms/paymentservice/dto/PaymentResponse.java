@@ -16,6 +16,7 @@ public class PaymentResponse {
     private String deeplink;        // Link mở trực tiếp App MoMo trên điện thoại
     private String momoOrderId;     // Mã giao dịch MoMo
     private String donHangId;       // Mã đơn hàng
+    private String maGiaoDichGoc;   // Mã phiên checkout gộp
     private BigDecimal soTien;      // Số tiền cần thanh toán
     private String trangThai;       // Trạng thái giao dịch
     private String message;         // Thông báo phản hồi

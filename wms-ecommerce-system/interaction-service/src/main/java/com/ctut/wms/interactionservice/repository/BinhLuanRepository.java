@@ -8,7 +8,6 @@ import java.util.List;
 
 @Repository
 public interface BinhLuanRepository extends JpaRepository<BinhLuan, Long> {
-    // Chỉ lấy các bình luận gốc (parentComment bị null),
-    // tránh lấy trùng lặp các câu trả lời (replies) vì chúng đã nằm bên trong bình luận gốc rồi.
     List<BinhLuan> findByMaHangHoaAndParentCommentIsNull(String maHangHoa);
+    List<BinhLuan> findByCuaHangIdAndParentCommentIsNull(Long cuaHangId);
 }

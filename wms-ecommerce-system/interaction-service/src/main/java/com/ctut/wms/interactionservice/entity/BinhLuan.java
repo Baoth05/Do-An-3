@@ -19,6 +19,9 @@ public class BinhLuan extends BaseEntity {
     @Column(name = "nguoi_dung_id", nullable = false)
     private Long nguoiDungId;
 
+    @Column(name = "cua_hang_id")
+    private Long cuaHangId; // Logical FK Gian hàng nơi sản phẩm được bình luận
+
     @Column(name = "ma_hang_hoa", nullable = false)
     private String maHangHoa;
 
@@ -29,11 +32,11 @@ public class BinhLuan extends BaseEntity {
     @Column(name = "trang_thai")
     private String trangThai = "ĐÃ DUYỆT";
 
-    // 🌟 Kỹ thuật Tự tham chiếu (Self-referencing) để làm chức năng Trả lời (Reply)
+    // Kỹ thuật Tự tham chiếu (Self-referencing) để làm chức năng Trả lời (Reply)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
-    private BinhLuan parentComment; // Nếu đây là một câu trả lời, nó sẽ lưu lại ID của bình luận gốc
+    private BinhLuan parentComment;
 
     @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL)
-    private List<BinhLuan> replies; // Danh sách các câu trả lời cho bình luận này
+    private List<BinhLuan> replies;
 }

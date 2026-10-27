@@ -1,48 +1,34 @@
-// src/pages/UserManagement/UserManagementDashboard.jsx
 import React, { useState, useEffect } from 'react';
-import { FiUsers, FiShoppingBag, FiBriefcase, FiShield } from 'react-icons/fi';
+import { FiUsers, FiShoppingBag, FiBriefcase, FiShield, FiRefreshCw } from 'react-icons/fi';
 import CustomerManagement from './CustomerManagement';
 import StaffManagement from './StaffManagement';
-import { userService } from '../services/userService'; // Lưu ý đường dẫn import userService
+import { userService } from '../services/userService';
 import './UserManagement.css'; 
 
 const UserManagementDashboard = () => {
   const [activeTab, setActiveTab] = useState('customers');
-  
-  // 1. Chỉnh sửa giá trị khởi tạo về 0 (Dữ liệu thật lúc chưa gọi API là 0)
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalCustomers: 0,
-    totalStaff: 0
+    totalStaff: 0,
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  // 2. Thêm state loading để hiển thị thân thiện hơn khi đang lấy dữ liệu
-  const [isStatsLoading, setIsStatsLoading] = useState(true);
+  const fetchStats = async () => {
+    try {
+      setIsLoading(true);
+      const data = await userService.getStats();
+      if (data) {
+        setStats(data);
+      }
+    } catch (e) {
+      console.warn('Lỗi lấy thống kê người dùng:', e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setIsStatsLoading(true);
-        // Gọi API lấy dữ liệu thật
-        const data = await userService.getStats();
-        
-        // Nếu API trả về dữ liệu thành công, cập nhật vào state
-        if (data) {
-          setStats({
-            totalUsers: data.totalUsers || 0,
-            totalCustomers: data.totalCustomers || 0,
-            totalStaff: data.totalStaff || 0
-          });
-        }
-      } catch (err) {
-        console.error('Lỗi khi tải thống kê từ backend:', err);
-        // Tùy chọn: Bạn có thể set một thông báo lỗi ở đây nếu muốn
-      } finally {
-        // Hoàn thành quá trình tải
-        setIsStatsLoading(false);
-      }
-    };
-
     fetchStats();
   }, []);
 
@@ -53,25 +39,29 @@ const UserManagementDashboard = () => {
         <div className="title-group">
           <h1>
             Quản Lý Người Dùng & Phân Quyền
-            <span className="tag-badge-project">DỮ LIỆU ĐỒ ÁN</span>
+            <span className="tag-badge-project">DỮ LIỆU THỰC TẾ</span>
           </h1>
           <p className="subtitle">
-            Hệ thống quản lý tài khoản người dùng mua hàng và phân quyền nhân sự.
+            Hệ thống quản lý tài khoản người dùng mua hàng và phân quyền nhân sự kết nối Backend.
           </p>
         </div>
         <div className="project-meta-badge">
-          🛡️ Đồ án TMĐT CTUT • Mã đề tài: <strong>DA-TMDT-04</strong>
+          <button 
+            onClick={fetchStats} 
+            disabled={isLoading}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: 'inherit' }}
+          >
+            <FiRefreshCw className={isLoading ? 'spin-icon' : ''} /> Đồng bộ dữ liệu
+          </button>
         </div>
       </div>
 
-      {/* Thống kê dùng chung từ Backend */}
+      {/* Thống kê từ Database */}
       <div className="user-stats-grid">
         <div className="user-stat-card">
           <div className="stat-info">
             <div className="stat-label">Tổng tài khoản</div>
-            <div className="stat-number">
-              {isStatsLoading ? '...' : stats.totalUsers.toLocaleString()}
-            </div>
+            <div className="stat-number">{stats.totalUsers}</div>
             <div className="stat-sub">Toàn bộ dữ liệu hệ thống</div>
           </div>
           <div className="stat-icon-wrapper red-light"><FiUsers size={22} /></div>
@@ -80,9 +70,7 @@ const UserManagementDashboard = () => {
         <div className="user-stat-card">
           <div className="stat-info">
             <div className="stat-label">Khách hàng</div>
-            <div className="stat-number" style={{ color: '#d63031' }}>
-              {isStatsLoading ? '...' : stats.totalCustomers.toLocaleString()}
-            </div>
+            <div className="stat-number" style={{ color: '#d63031' }}>{stats.totalCustomers}</div>
             <div className="stat-sub">Tài khoản người mua hàng</div>
           </div>
           <div className="stat-icon-wrapper red-light"><FiShoppingBag size={22} /></div>
@@ -90,11 +78,9 @@ const UserManagementDashboard = () => {
 
         <div className="user-stat-card">
           <div className="stat-info">
-            <div className="stat-label">Nhân viên</div>
-            <div className="stat-number">
-              {isStatsLoading ? '...' : stats.totalStaff.toLocaleString()}
-            </div>
-            <div className="stat-sub">Nội bộ quản trị & vận hành</div>
+            <div className="stat-label">Nhân sự nội bộ</div>
+            <div className="stat-number">{stats.totalStaff}</div>
+            <div className="stat-sub">Quản trị & Thủ kho vận hành</div>
           </div>
           <div className="stat-icon-wrapper orange-light"><FiBriefcase size={22} /></div>
         </div>
@@ -106,13 +92,13 @@ const UserManagementDashboard = () => {
           className={`tab-item ${activeTab === 'customers' ? 'active' : ''}`}
           onClick={() => setActiveTab('customers')}
         >
-          <FiUsers size={16} /> Danh sách khách hàng ({isStatsLoading ? '...' : stats.totalCustomers}) ●
+          <FiUsers size={16} /> Danh sách khách hàng ({stats.totalCustomers})
         </button>
         <button 
           className={`tab-item ${activeTab === 'staff' ? 'active' : ''}`}
           onClick={() => setActiveTab('staff')}
         >
-          <FiBriefcase size={16} /> Danh sách nhân viên ({isStatsLoading ? '...' : stats.totalStaff}) ●
+          <FiBriefcase size={16} /> Danh sách nhân viên ({stats.totalStaff})
         </button>
         <button 
           className={`tab-item ${activeTab === 'logs' ? 'active' : ''}`}
@@ -122,14 +108,14 @@ const UserManagementDashboard = () => {
         </button>
       </div>
 
-      {/* Khu vực render Component con */}
+      {/* Khu vực render Component con tùy theo Tab */}
       <div className="content-card-wrapper">
-        {activeTab === 'customers' && <CustomerManagement />}
-        {activeTab === 'staff' && <StaffManagement />}
+        {activeTab === 'customers' && <CustomerManagement onRefreshStats={fetchStats} />}
+        {activeTab === 'staff' && <StaffManagement onRefreshStats={fetchStats} />}
         {activeTab === 'logs' && (
           <div style={{ padding: '40px 20px', textAlign: 'center', color: '#868e96' }}>
             <FiShield size={48} style={{ marginBottom: '12px', color: '#d63031' }} />
-            <h3>Nhật Ký Đang Được Cập Nhật</h3>
+            <h3>Nhật Ký Đang Được Cập Nhật Tự Động Từ Backend</h3>
           </div>
         )}
       </div>

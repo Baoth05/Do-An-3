@@ -1,65 +1,82 @@
 import { useState, useEffect } from 'react';
 import { 
-  FiArrowDownLeft, FiArrowUpRight, FiAlertTriangle, 
-  FiBox, FiClock, FiCheckCircle, FiFileText, FiRefreshCw 
+  FiBox, FiArrowDownLeft, FiArrowUpRight, FiLayers, 
+  FiRefreshCw
 } from 'react-icons/fi';
-import { productService } from '../../services/productService';
-import { orderService } from '../../services/orderService';
+import { wmsCoreService } from '../../services/wmsCoreService';
 import './WmsDashboard.css';
 
 const WmsDashboard = () => {
   const [stats, setStats] = useState({
-    skuCount: 456,
-    lowStockCount: 8,
-    ordersCount: 1280,
-    importsCount: 342,
+    productsCount: 0,
+    totalStockCount: 0,
+    importNotesCount: 0,
+    exportNotesCount: 0,
+    warehousesCount: 0,
   });
 
-  const [activities, setActivities] = useState([
-    { id: 'PN-2026-001', type: 'IMPORT', code: 'NHA_CUNG_CAP_AKKO', items: 120, total: '85.000.000 đ', status: 'HOAN_THANH', time: '10 phút trước' },
-    { id: 'PX-2026-089', type: 'EXPORT', code: 'DON_HANG_ORD-902', items: 2, total: '3.200.000 đ', status: 'HOAN_THANH', time: '25 phút trước' },
-    { id: 'PN-2026-002', type: 'IMPORT', code: 'LOGITECH_VIETNAM', items: 50, total: '42.500.000 đ', status: 'CHO_DUYET', time: '1 giờ trước' },
-    { id: 'PX-2026-090', type: 'EXPORT', code: 'DON_HANG_ORD-905', items: 1, total: '1.850.000 đ', status: 'DANG_XUAT', time: '2 giờ trước' }
-  ]);
-
+  const [recentActivities, setRecentActivities] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isBackendConnected, setIsBackendConnected] = useState(false);
 
   const fetchDashboardData = async () => {
-    setIsLoading(true);
     try {
-      // 1. Tải dữ liệu sản phẩm và tồn kho
-      const products = await productService.getAllProducts();
-      if (Array.isArray(products) && products.length > 0) {
-        const warningCount = products.filter(p => (p.soLuongTonKho ?? 0) <= 10).length;
-        setStats(prev => ({
-          ...prev,
-          skuCount: products.length,
-          lowStockCount: warningCount,
-        }));
-      }
+      setIsLoading(true);
 
-      // 2. Tải dữ liệu đơn hàng
-      const orders = await orderService.getAllOrders();
-      if (Array.isArray(orders) && orders.length > 0) {
-        setStats(prev => ({
-          ...prev,
-          ordersCount: orders.length,
-        }));
+      const [prodsRes, invRes, importRes, exportRes, whRes] = await Promise.allSettled([
+        wmsCoreService.getProducts(),
+        wmsCoreService.getAllInventory(),
+        wmsCoreService.getImportNotes(),
+        wmsCoreService.getExportNotes(),
+        wmsCoreService.getWarehouses(),
+      ]);
 
-        // Chuyển đơn hàng mới nhất thành nhật ký biến động
-        const liveActivities = orders.slice(0, 5).map(o => ({
-          id: 'PX-' + (o.maDonHang || o.id),
+      const prods = prodsRes.status === 'fulfilled' && Array.isArray(prodsRes.value) ? prodsRes.value : [];
+      const invs = invRes.status === 'fulfilled' && Array.isArray(invRes.value) ? invRes.value : [];
+      const imports = importRes.status === 'fulfilled' && Array.isArray(importRes.value) ? importRes.value : [];
+      const exports = exportRes.status === 'fulfilled' && Array.isArray(exportRes.value) ? exportRes.value : [];
+      const whs = whRes.status === 'fulfilled' && Array.isArray(whRes.value) ? whRes.value : [];
+
+      setIsBackendConnected(true);
+
+      const totalQty = invs.reduce((sum, item) => sum + (Number(item.soLuongThucTe) || 0), 0);
+
+      setStats({
+        productsCount: prods.length,
+        totalStockCount: totalQty,
+        importNotesCount: imports.length,
+        exportNotesCount: exports.length,
+        warehousesCount: whs.length,
+      });
+
+      // Tạo nhật ký biến động kết hợp từ các phiếu nhập và xuất gần nhất
+      const activities = [];
+      imports.slice(0, 4).forEach(n => {
+        activities.push({
+          id: 'PN-' + n.id,
+          type: 'IMPORT',
+          code: n.maPhieuNhap || `PN-${n.id}`,
+          desc: `Nhập kho từ ${n.tenNhaCungCap || 'NCC'}`,
+          time: n.ngayNhap ? new Date(n.ngayNhap).toLocaleString('vi-VN') : 'Mới đây',
+          status: n.trangThai || 'ĐÃ NHẬP KHO',
+        });
+      });
+
+      exports.slice(0, 4).forEach(n => {
+        activities.push({
+          id: 'PX-' + n.id,
           type: 'EXPORT',
-          code: o.maDonHang,
-          items: o.chiTietDonHangs?.length || 1,
-          total: o.tongThanhToan ? Number(o.tongThanhToan).toLocaleString('vi-VN') + ' đ' : '0 đ',
-          status: o.trangThaiDonHang === 'HOÀN THÀNH' ? 'HOAN_THANH' : 'CHO_DUYET',
-          time: o.createdAt ? new Date(o.createdAt).toLocaleTimeString('vi-VN') : 'Vừa xong',
-        }));
-        setActivities(liveActivities);
-      }
+          code: n.maPhieuXuat || `PX-${n.id}`,
+          desc: `Xuất kho giao cho ${n.tenDonViVanChuyen || 'ĐVVC'}`,
+          time: n.ngayXuat ? new Date(n.ngayXuat).toLocaleString('vi-VN') : 'Mới đây',
+          status: n.trangThai || 'HOÀN THÀNH',
+        });
+      });
+
+      setRecentActivities(activities);
     } catch (e) {
-      console.warn('Lỗi lấy dữ liệu Dashboard từ Backend, dùng mock:', e.message);
+      console.warn('Lỗi lấy dữ liệu Dashboard từ Backend:', e.message);
+      setIsBackendConnected(false);
     } finally {
       setIsLoading(false);
     }
@@ -73,96 +90,102 @@ const WmsDashboard = () => {
     <div className="wms-dashboard">
       <div className="wms-dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1>Bảng Điều Khiển Vận Hành Kho</h1>
-          <p>Giám sát dòng hàng hóa nhập/xuất và mức độ cảnh báo tồn kho thực tế.</p>
+          <h2>Trung Tâm Điều Hành Kho Bãi & Master Data</h2>
+          <p>Giám sát tổng quan tình trạng xuất - nhập, lượng tồn kệ và dữ liệu vật lý toàn chuỗi</p>
         </div>
-        <button className="btn-secondary" onClick={fetchDashboardData} disabled={isLoading}>
-          <FiRefreshCw className={isLoading ? 'spin-icon' : ''} /> Đồng bộ dữ liệu
+        <button className="btn-secondary" onClick={fetchDashboardData} disabled={isLoading} title="Làm mới">
+          <FiRefreshCw className={isLoading ? 'spin-icon' : ''} /> {isBackendConnected ? 'Backend Live' : 'Đồng bộ'}
         </button>
       </div>
 
-      {/* Thẻ Thống Kê Chỉ Số Kho */}
-      <div className="wms-stats-grid">
-        <div className="wms-stat-card">
-          <div className="wms-stat-header">
-            <span>NHẬP KHO THÁNG NÀY</span>
-            <div className="wms-icon-box import"><FiArrowDownLeft size={20} /></div>
+      {/* Grid thống kê chính */}
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-icon-wrapper blue">
+            <FiLayers size={22} />
           </div>
-          <div className="wms-stat-value">{stats.importsCount} <small>Phiếu</small></div>
-          <div className="wms-stat-sub text-green">↑ +12% so với tháng trước</div>
+          <div className="stat-info">
+            <span className="stat-label">Hàng Hóa (Master SKU)</span>
+            <h3 className="stat-value">{stats.productsCount}</h3>
+            <span className="stat-meta">Mã mặt hàng trong CSDL</span>
+          </div>
         </div>
 
-        <div className="wms-stat-card">
-          <div className="wms-stat-header">
-            <span>XUẤT KHO / ĐƠN HÀNG</span>
-            <div className="wms-icon-box export"><FiArrowUpRight size={20} /></div>
+        <div className="stat-card">
+          <div className="stat-icon-wrapper orange">
+            <FiBox size={22} />
           </div>
-          <div className="wms-stat-value">{stats.ordersCount} <small>Đơn</small></div>
-          <div className="wms-stat-sub text-green">Đã đồng bộ Order Service</div>
+          <div className="stat-info">
+            <span className="stat-label">Tổng Tồn Kho Kệ</span>
+            <h3 className="stat-value">{stats.totalStockCount}</h3>
+            <span className="stat-meta">Số lượng vật lý trên các kệ</span>
+          </div>
         </div>
 
-        <div className="wms-stat-card">
-          <div className="wms-stat-header">
-            <span>CẢNH BÁO TỒN KHO</span>
-            <div className="wms-icon-box warning"><FiAlertTriangle size={20} /></div>
+        <div className="stat-card">
+          <div className="stat-icon-wrapper green">
+            <FiArrowDownLeft size={22} />
           </div>
-          <div className={`wms-stat-value ${stats.lowStockCount > 0 ? 'text-red' : 'text-green'}`}>
-            {stats.lowStockCount} <small>Sản phẩm</small>
+          <div className="stat-info">
+            <span className="stat-label">Phiếu Nhập Kho</span>
+            <h3 className="stat-value">{stats.importNotesCount}</h3>
+            <span className="stat-meta">Chứng từ nhập hàng NCC</span>
           </div>
-          <div className="wms-stat-sub text-red">Mức tồn kho &le; 10 cái</div>
         </div>
 
-        <div className="wms-stat-card">
-          <div className="wms-stat-header">
-            <span>TỔNG MÃ HÀNG TRONG KHO</span>
-            <div className="wms-icon-box box"><FiBox size={20} /></div>
+        <div className="stat-card">
+          <div className="stat-icon-wrapper purple">
+            <FiArrowUpRight size={22} />
           </div>
-          <div className="wms-stat-value">{stats.skuCount} <small>Mã SKU</small></div>
-          <div className="wms-stat-sub">WMS Core Service live</div>
+          <div className="stat-info">
+            <span className="stat-label">Phiếu Xuất Kho</span>
+            <h3 className="stat-value">{stats.exportNotesCount}</h3>
+            <span className="stat-meta">Chứng từ bàn giao bưu tá</span>
+          </div>
         </div>
       </div>
 
-      {/* Bảng Nhật Ký Biến Động Kho */}
-      <div className="wms-table-container">
-        <div className="wms-table-header">
-          <h3><FiClock size={18} /> Lịch Sử Biến Động Kho Mới Nhất</h3>
-          <button className="wms-btn-outline"><FiFileText size={14} /> Xem Thẻ Kho</button>
-        </div>
-
-        <table className="wms-data-table">
-          <thead>
-            <tr>
-              <th>Mã Phiếu</th>
-              <th>Loại Giao Dịch</th>
-              <th>Đối Tác / Đơn Hàng</th>
-              <th>Số Lượng</th>
-              <th>Giá Trị</th>
-              <th>Trạng Thái</th>
-              <th>Thời Gian</th>
-            </tr>
-          </thead>
-          <tbody>
-            {activities.map((act) => (
-              <tr key={act.id}>
-                <td className="font-mono">{act.id}</td>
-                <td>
-                  <span className={`wms-badge ${act.type === 'IMPORT' ? 'badge-import' : 'badge-export'}`}>
-                    {act.type === 'IMPORT' ? 'NHẬP KHO' : 'XUẤT KHO'}
-                  </span>
-                </td>
-                <td className="font-mono text-bold text-blue">{act.code}</td>
-                <td className="text-bold">{act.items} món</td>
-                <td>{act.total}</td>
-                <td>
-                  {act.status === 'HOAN_THANH' && <span className="status-text green"><FiCheckCircle size={12}/> Hoàn thành</span>}
-                  {act.status === 'CHO_DUYET' && <span className="status-text yellow"><FiClock size={12}/> Chờ duyệt</span>}
-                  {act.status === 'DANG_XUAT' && <span className="status-text blue"><FiArrowUpRight size={12}/> Đang xuất</span>}
-                </td>
-                <td className="text-muted">{act.time}</td>
+      {/* Hoạt động gần đây */}
+      <div className="dashboard-section" style={{ marginTop: '24px' }}>
+        <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '16px' }}>Chứng Từ Giao Dịch Gần Đây</h3>
+        <div className="table-responsive">
+          <table className="inventory-table">
+            <thead>
+              <tr>
+                <th>Loại Chứng Từ</th>
+                <th>Mã Chứng Từ</th>
+                <th>Nghiệp Vụ</th>
+                <th>Thời Gian</th>
+                <th style={{ textAlign: 'center' }}>Trạng Thái</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {recentActivities.length === 0 ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
+                    Chưa có giao dịch xuất nhập kho nào được tạo.
+                  </td>
+                </tr>
+              ) : (
+                recentActivities.map((act) => (
+                  <tr key={act.id}>
+                    <td>
+                      <span className={`stock-badge ${act.type === 'IMPORT' ? 'success' : 'warning'}`}>
+                        {act.type === 'IMPORT' ? 'Nhập Kho' : 'Xuất Kho'}
+                      </span>
+                    </td>
+                    <td><strong>{act.code}</strong></td>
+                    <td>{act.desc}</td>
+                    <td style={{ fontSize: '13px', color: '#64748b' }}>{act.time}</td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className="status-tag active">{act.status}</span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

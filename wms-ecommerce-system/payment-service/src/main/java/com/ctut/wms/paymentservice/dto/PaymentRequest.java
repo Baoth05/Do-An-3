@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class PaymentRequest {
     private String donHangId;
+    private String maGiaoDichGoc; // Thanh toán gộp cho phiên Checkout đa shop
     private BigDecimal soTien;
     private String thongTinDonHang;
     private String redirectUrl;

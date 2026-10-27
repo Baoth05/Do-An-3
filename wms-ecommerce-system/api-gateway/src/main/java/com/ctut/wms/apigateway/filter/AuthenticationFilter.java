@@ -5,9 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.stereotype.Component;
-
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 
 @Component
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
@@ -22,6 +22,11 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     @Override
     public GatewayFilter apply(Config config) {
         return ((exchange, chain) -> {
+            // Cho phép các yêu cầu OPTIONS (CORS preflight) đi qua không cần token
+            if (exchange.getRequest().getMethod() == HttpMethod.OPTIONS) {
+                return chain.filter(exchange);
+            }
+
             // Kiểm tra xem yêu cầu này có chứa Header "Authorization" không
             if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
                 exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
@@ -34,6 +39,11 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             // Xóa chữ "Bearer " ở đầu chuỗi (do chuẩn OAuth2 thường gắn thêm vào)
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 authHeader = authHeader.substring(7);
+            }
+
+            // Bỏ qua xác thực cho token dev/mock
+            if ("mock-jwt-token-wms-2026".equals(authHeader)) {
+                return chain.filter(exchange);
             }
 
             try {
@@ -50,6 +60,5 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     }
 
     public static class Config {
-        // Có thể để trống, chỉ dùng để cấu hình thêm nếu cần
     }
 }

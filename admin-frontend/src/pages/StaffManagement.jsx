@@ -1,93 +1,126 @@
-// src/pages/UserManagement/StaffManagement.jsx
 import React, { useState, useEffect } from 'react';
-import { FiSearch, FiPlus, FiSliders, FiEdit2, FiLock, FiShield, FiBox, FiUserCheck } from 'react-icons/fi';
-import AddStaffForm from './AddStaffForm';
-import EditStaffForm from './EditStaffForm'; // 🌟 Import form chỉnh sửa vừa tạo
+import { 
+  FiSearch, FiPlus, FiSliders, FiEdit2, FiLock, FiUnlock, 
+  FiShield, FiBox, FiBriefcase, FiRefreshCw, FiUser 
+} from 'react-icons/fi';
 import { userService } from '../services/userService';
+import AddStaffForm from './AddStaffForm';
+import EditStaffForm from './EditStaffForm';
 
-const StaffManagement = () => {
-  const [isAdding, setIsAdding] = useState(false);
-  const [editingStaff, setEditingStaff] = useState(null); // 🌟 Lưu trữ nhân viên đang được chọn sửa
+const StaffManagement = ({ onRefreshStats }) => {
   const [staffList, setStaffList] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('Tất cả');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Form mode: 'list' | 'add' | 'edit'
+  const [viewMode, setViewMode] = useState('list');
+  const [editingStaff, setEditingStaff] = useState(null);
 
   const fetchStaff = async () => {
     try {
-      setLoading(true);
-      setError('');
-      const data = await userService.getStaff(search, roleFilter);
-      setStaffList(data && data.length > 0 ? data : []);
-    } catch (err) {
-      console.error('Lỗi khi lấy danh sách nhân viên:', err);
-      setError('Không thể lấy danh sách nhân viên từ máy chủ Backend.');
-      setStaffList([]);
+      setIsLoading(true);
+      const list = await userService.getStaff(searchTerm, roleFilter);
+      setStaffList(list || []);
+    } catch (e) {
+      console.warn('Lỗi lấy danh sách nhân viên:', e);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchStaff();
-  }, [search, roleFilter]);
+  }, [searchTerm, roleFilter]);
 
-  const renderRoleBadge = (st) => {
-    const roleName = (st.role || (st.roles && st.roles[0]) || '').toUpperCase();
-    if (roleName.includes('ADMIN')) {
-      return <span className="role-badge admin"><FiShield /> Quản trị viên</span>;
-    } else if (roleName.includes('THUKHO')) {
-      return <span className="role-badge warehouse"><FiBox /> Thủ kho</span>;
-    } else if (roleName.includes('NVKHO')) {
-      return <span className="role-badge sales"><FiUserCheck /> Nhân viên kho</span>;
+  const handleToggleStatus = async (user) => {
+    const action = user.trangThai === false ? 'mở khóa' : 'khóa';
+    if (window.confirm(`Bạn có chắc chắn muốn ${action} tài khoản nhân sự "${user.taiKhoan}"?`)) {
+      try {
+        await userService.toggleUserStatus(user.id);
+        alert(`Đã ${action} tài khoản nhân viên thành công!`);
+        fetchStaff();
+        if (onRefreshStats) onRefreshStats();
+      } catch (err) {
+        alert('Lỗi thay đổi trạng thái: ' + (err.response?.data || err.message));
+      }
     }
-    return <span className="role-badge" style={{ background: '#e2e8f0', color: '#475569' }}>{roleName || 'Chưa phân quyền'}</span>;
   };
 
-  // Nếu đang ở chế độ thêm mới
-  if (isAdding) {
+  const handleAddSuccess = () => {
+    setViewMode('list');
+    fetchStaff();
+    if (onRefreshStats) onRefreshStats();
+  };
+
+  const handleEditSuccess = () => {
+    setViewMode('list');
+    setEditingStaff(null);
+    fetchStaff();
+    if (onRefreshStats) onRefreshStats();
+  };
+
+  if (viewMode === 'add') {
     return (
-      <AddStaffForm
-        onBack={() => setIsAdding(false)}
-        onSuccess={() => { setIsAdding(false); fetchStaff(); }}
+      <AddStaffForm 
+        onBack={() => setViewMode('list')} 
+        onSuccess={handleAddSuccess} 
       />
     );
   }
 
-  // 🌟 Nếu đang ở chế độ chỉnh sửa thông tin nhân viên
-  if (editingStaff) {
+  if (viewMode === 'edit' && editingStaff) {
     return (
-      <EditStaffForm
+      <EditStaffForm 
         staff={editingStaff}
-        onBack={() => setEditingStaff(null)}
-        onSuccess={() => { setEditingStaff(null); fetchStaff(); }}
+        onBack={() => { setViewMode('list'); setEditingStaff(null); }} 
+        onSuccess={handleEditSuccess} 
       />
     );
   }
+
+  const getRoleBadge = (role) => {
+    const r = (role || '').toUpperCase();
+    if (r.includes('ADMIN')) {
+      return { label: 'Quản trị viên', className: 'admin', icon: <FiShield /> };
+    }
+    if (r.includes('THUKHO')) {
+      return { label: 'Thủ kho trưởng', className: 'warehouse', icon: <FiBox /> };
+    }
+    if (r.includes('NVKHO')) {
+      return { label: 'Nhân viên kho', className: 'warehouse', icon: <FiBox /> };
+    }
+    return { label: role || 'Nhân sự', className: 'sales', icon: <FiBriefcase /> };
+  };
 
   return (
     <>
       <div className="filter-control-bar">
         <div className="search-input-box">
           <FiSearch className="search-icon" size={16} />
-          <input
-            type="text"
-            placeholder="Tìm kiếm nhân viên theo tên, mã số, bộ phận..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+          <input 
+            type="text" 
+            placeholder="Tìm kiếm nhân viên theo tên, tài khoản, SĐT..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <div className="filter-group">
           <span className="filter-label-inline">Vai trò:</span>
-          <select className="select-filter" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
-            <option value="Tất cả">Tất cả vai trò</option>
-            <option value="ADMIN">Quản trị viên (Admin)</option>
+          <select 
+            className="select-filter"
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+          >
+            <option value="Tất cả">Tất cả</option>
+            <option value="ADMIN">Quản trị viên</option>
             <option value="THUKHO">Thủ kho</option>
             <option value="NVKHO">Nhân viên kho</option>
           </select>
-
-          <button className="btn-add-primary" onClick={() => setIsAdding(true)}>
+          <button className="btn-advanced-filter" onClick={fetchStaff} disabled={isLoading}>
+            <FiRefreshCw className={isLoading ? 'spin-icon' : ''} size={14} /> Đồng bộ
+          </button>
+          <button className="btn-add-primary" onClick={() => setViewMode('add')}>
             <FiPlus size={16} /> Thêm nhân viên mới
           </button>
         </div>
@@ -96,59 +129,93 @@ const StaffManagement = () => {
       <table className="data-table">
         <thead>
           <tr>
-            <th style={{ width: '40px' }}><input type="checkbox" /></th>
             <th>MÃ & HỌ TÊN</th>
-            <th>EMAIL</th>
+            <th>EMAIL & SĐT</th>
             <th>VAI TRÒ / BỘ PHẬN</th>
             <th>TRẠNG THÁI</th>
             <th style={{ textAlign: 'right' }}>HÀNH ĐỘNG</th>
           </tr>
         </thead>
         <tbody>
-          {loading ? (
-            <tr><td colSpan="6" style={{ textAlign: 'center', padding: '30px' }}>Đang tải dữ liệu nhân viên...</td></tr>
-          ) : error ? (
-            <tr><td colSpan="6" style={{ textAlign: 'center', padding: '30px', color: '#d63031' }}>⚠️ {error}</td></tr>
+          {isLoading ? (
+            <tr>
+              <td colSpan="5" style={{ textAlign: 'center', padding: '40px' }}>
+                <FiRefreshCw className="spin-icon" size={24} style={{ color: '#d63031' }} />
+                <p style={{ marginTop: '8px', color: '#636e72' }}>Đang nạp danh sách nhân sự từ Backend...</p>
+              </td>
+            </tr>
           ) : staffList.length === 0 ? (
-            <tr><td colSpan="6" style={{ textAlign: 'center', padding: '30px' }}>Chưa có dữ liệu nhân viên nào trong hệ thống.</td></tr>
+            <tr>
+              <td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: '#868e96' }}>
+                <FiBriefcase size={36} style={{ marginBottom: '8px', opacity: 0.5 }} />
+                <p>Chưa có nhân viên nào trong danh sách.</p>
+                <button className="btn-add-primary" onClick={() => setViewMode('add')} style={{ marginTop: '12px' }}>
+                  <FiPlus size={16} /> Thêm Nhân Viên Mới
+                </button>
+              </td>
+            </tr>
           ) : (
-            staffList.map((st, index) => (
-              <tr key={st.id || st.code || st.taiKhoan || index}>
-                <td><input type="checkbox" /></td>
-                <td>
-                  <div className="user-cell-flex">
-                    <div className="avatar-circle blue">NV</div>
-                    <div>
-                      <div className="user-name-title">{st.hoTen || st.fullName || st.name}</div>
-                      <div className="user-sub-id" style={{ color: '#d63031', fontWeight: 600 }}>
-                        Mã: {st.taiKhoan || st.username || st.code || `NV-${st.id}`}
+            staffList.map((st) => {
+              const roleInfo = getRoleBadge(st.vaiTro);
+              const initial = (st.hoTen || st.taiKhoan || 'NV').substring(0, 2).toUpperCase();
+              const isLocked = st.trangThai === false;
+
+              return (
+                <tr key={st.id}>
+                  <td>
+                    <div className="user-cell-flex">
+                      <div className={`avatar-circle red-dark`}>{initial}</div>
+                      <div>
+                        <div className="user-name-title">{st.hoTen || st.taiKhoan}</div>
+                        <div className="user-sub-id" style={{ color: '#d63031', fontWeight: 600 }}>
+                          @{st.taiKhoan} • ID: #{st.id}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </td>
-                <td style={{ color: '#636e72' }}>{st.email}</td>
-                <td>{renderRoleBadge(st)}</td>
-                <td>
-                  <span className="status-pill duty">
-                    <span className="status-dot-inner green"></span>
-                    {st.trangThai || st.status || 'Hoạt động'}
-                  </span>
-                </td>
-                <td style={{ textAlign: 'right' }}>
-                  <div className="action-buttons-group" style={{ justifyContent: 'flex-end' }}>
-                    <button className="icon-btn-action" title="Phân quyền"><FiSliders size={16} /></button>
-                    {/* 🌟 Gắn sự kiện click để mở trang Sửa thông tin */}
-                    <button className="icon-btn-action" title="Sửa thông tin" onClick={() => setEditingStaff(st)}>
-                      <FiEdit2 size={16} />
-                    </button>
-                    <button className="icon-btn-action" title="Khóa tài khoản"><FiLock size={16} /></button>
-                  </div>
-                </td>
-              </tr>
-            ))
+                  </td>
+                  <td style={{ color: '#636e72' }}>
+                    <div>{st.email}</div>
+                    {st.soDienThoai && <small>{st.soDienThoai}</small>}
+                  </td>
+                  <td>
+                    <span className={`role-badge ${roleInfo.className}`}>
+                      {roleInfo.icon} {roleInfo.label}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`status-pill ${!isLocked ? 'duty' : 'off'}`}>
+                      <span className={`status-dot-inner ${!isLocked ? 'green' : ''}`}></span>
+                      {!isLocked ? 'Hoạt động' : 'Đã khóa'}
+                    </span>
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    <div className="action-buttons-group" style={{ justifyContent: 'flex-end' }}>
+                      <button 
+                        className="icon-btn-action" 
+                        title="Sửa thông tin"
+                        onClick={() => { setEditingStaff(st); setViewMode('edit'); }}
+                      >
+                        <FiEdit2 size={16} />
+                      </button>
+                      <button 
+                        className="icon-btn-action" 
+                        title={isLocked ? "Mở khóa tài khoản" : "Khóa tài khoản"}
+                        onClick={() => handleToggleStatus(st)}
+                      >
+                        {isLocked ? <FiUnlock size={16} style={{ color: '#16a34a' }} /> : <FiLock size={16} />}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>
+
+      <div className="table-pagination-footer">
+        <span>Hiển thị <strong>{staffList.length}</strong> nhân sự nội bộ</span>
+      </div>
     </>
   );
 };

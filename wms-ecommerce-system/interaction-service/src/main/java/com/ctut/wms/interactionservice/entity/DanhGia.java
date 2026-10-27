@@ -19,6 +19,10 @@ public class DanhGia extends BaseEntity {
     @Column(name = "nguoi_dung_id", nullable = false)
     private Long nguoiDungId;
 
+    // Logical FK Đánh giá cho sản phẩm của Gian hàng nào trên Sàn
+    @Column(name = "cua_hang_id")
+    private Long cuaHangId;
+
     // Lưu mã SKU sản phẩm (từ module WMS)
     @Column(name = "ma_hang_hoa", nullable = false)
     private String maHangHoa;
@@ -39,5 +43,5 @@ public class DanhGia extends BaseEntity {
 
     // CHỜ DUYỆT, ĐÃ DUYỆT, ẨN
     @Column(name = "trang_thai")
-    private String trangThai = "CHỜ DUYỆT";
+    private String trangThai = "ĐÃ DUYỆT";
 }

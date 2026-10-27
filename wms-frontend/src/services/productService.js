@@ -2,9 +2,9 @@
 import api from './api';
 
 export const productService = {
-  // Lấy toàn bộ hàng hóa trong kho (bao gồm cả hàng ẩn)
+  // Lấy toàn bộ hàng hóa trong kho
   getAllProducts: async () => {
-    return await api.get('/wms/products/all');
+    return await api.get('/wms/products');
   },
 
   // Lấy các sản phẩm đang kích hoạt
@@ -22,12 +22,12 @@ export const productService = {
     return await api.post('/wms/products', productData);
   },
 
-  // Cập nhật thông tin hoặc số lượng tồn kho
+  // Cập nhật thông tin hàng hóa
   updateProduct: async (id, productData) => {
     return await api.put(`/wms/products/${id}`, productData);
   },
 
-  // Ẩn / Xóa hàng hóa
+  // Xóa hàng hóa
   deleteProduct: async (id) => {
     return await api.delete(`/wms/products/${id}`);
   },
@@ -37,4 +37,3 @@ export const productService = {
     return await api.get('/wms/categories');
   },
 };
-

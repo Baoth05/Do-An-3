@@ -9,24 +9,21 @@ const normalize = (value) =>
     .toLowerCase()
     .trim();
 
-// 🌟 ĐÃ CẬP NHẬT: Cho phép "Chưa phân quyền" và các quyền chuẩn hiện lên bảng Khách hàng
 const isCustomer = (user) => {
   const role = normalize(user?.vaiTro ?? user?.role ?? user?.maVaiTro);
   return (
     role.includes('customer') || 
     role.includes('khachhang') || 
-    role.includes('chua phan quyen') // Cho phép hiện để dễ cấp quyền lại
+    role.includes('chua phan quyen')
   );
 };
 
-// 🌟 ĐÃ CẬP NHẬT: Cho phép "Chưa phân quyền" và 3 quyền chuẩn hiện lên bảng Nhân viên
 const isStaff = (user) => {
   const role = normalize(user?.vaiTro ?? user?.role ?? user?.maVaiTro);
   return (
     role.includes('admin') ||
     role.includes('thukho') ||
-    role.includes('nvkho') ||
-    role.includes('chua phan quyen') // Cho phép hiện để dễ cấp quyền lại
+    role.includes('nvkho')
   );
 };
 
@@ -50,7 +47,7 @@ const matchesSearch = (user, search) => {
 };
 
 export const userService = {
-  // 1. Lấy toàn bộ người dùng với cơ chế bóc tách dữ liệu mạnh mẽ nhất
+  // 1. Lấy toàn bộ người dùng
   getAllUsers: async () => {
     try {
       const response = await api.get('/auth/users');
@@ -85,7 +82,7 @@ export const userService = {
     }
   },
 
-  // 🌟 2. ĐÃ CẬP NHẬT TÊN BIẾN: Khớp 100% với UserManagementDashboard.jsx
+  // 2. Thống kê số lượng
   getStats: async () => {
     const users = await userService.getAllUsers();
     return {
@@ -128,7 +125,10 @@ export const userService = {
 
     const response = await api.post('/auth/register', payload);
     return response.data;
-  },updateStaff: async (id, staffData) => {
+  },
+
+  // 6. Cập nhật nhân viên
+  updateStaff: async (id, staffData) => {
     const payload = {
       hoTen: staffData.hoTen,
       email: staffData.email,
@@ -137,6 +137,12 @@ export const userService = {
     };
 
     const response = await api.put(`/auth/users/${id}`, payload);
+    return response.data;
+  },
+
+  // 7. Khóa / Mở khóa tài khoản
+  toggleUserStatus: async (id) => {
+    const response = await api.put(`/auth/users/${id}/toggle-status`);
     return response.data;
   },
 };

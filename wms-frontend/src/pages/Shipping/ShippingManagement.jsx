@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  FiPlus, FiEdit2, FiTrash2, FiTruck, FiRefreshCw, 
-  FiSearch, FiPhoneCall, FiCheckCircle, FiGlobe 
+  FiSearch, FiPlus, FiEdit2, FiTrash2, FiTruck, 
+  FiRefreshCw, FiPhone, FiGlobe, FiCheckCircle 
 } from 'react-icons/fi';
 import { wmsCoreService } from '../../services/wmsCoreService';
 import './ShippingManagement.css';
@@ -10,34 +10,7 @@ import './ShippingManagement.css';
 const ShippingManagement = () => {
   const navigate = useNavigate();
 
-  const initialMockShippers = [
-    { 
-      id: 1, 
-      maDonVi: 'DV-GHTK', 
-      tenDonVi: 'Giao Hàng Tiết Kiệm (GHTK)', 
-      thongTinLienHe: '1900 6092', 
-      website: 'https://i.ghtk.vn',
-      trangThai: 'HOAT_DONG' 
-    },
-    { 
-      id: 2, 
-      maDonVi: 'DV-VTP', 
-      tenDonVi: 'Viettel Post', 
-      thongTinLienHe: '1900 8095', 
-      website: 'https://viettelpost.vn',
-      trangThai: 'HOAT_DONG' 
-    },
-    { 
-      id: 3, 
-      maDonVi: 'DV-GHN', 
-      tenDonVi: 'Giao Hàng Nhanh (GHN)', 
-      thongTinLienHe: '1900 636677', 
-      website: 'https://ghn.vn',
-      trangThai: 'HOAT_DONG' 
-    },
-  ];
-
-  const [shippers, setShippers] = useState(initialMockShippers);
+  const [shippers, setShippers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
@@ -46,9 +19,11 @@ const ShippingManagement = () => {
     try {
       setIsLoading(true);
       const data = await wmsCoreService.getShippers();
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         setShippers(data);
         setIsBackendConnected(true);
+      } else {
+        setShippers([]);
       }
     } catch (e) {
       console.warn('Lỗi lấy đơn vị vận chuyển từ Backend:', e.message);
@@ -62,39 +37,33 @@ const ShippingManagement = () => {
     fetchShippers();
   }, []);
 
-  // Xóa ĐVVC
   const handleDelete = async (id, name) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn ngưng hợp tác và xóa đối tác vận chuyển "${name}" không?`)) {
-      return;
-    }
-
-    try {
-      await wmsCoreService.deleteShipper(id);
-      alert('Đã xóa đơn vị vận chuyển thành công!');
-      fetchShippers();
-    } catch {
-      setShippers(prev => prev.filter(s => s.id !== id));
-      alert('Đã xóa đơn vị vận chuyển!');
+    if (window.confirm(`Bạn có chắc chắn muốn xóa đơn vị vận chuyển "${name}"?`)) {
+      try {
+        await wmsCoreService.deleteShipper(id);
+        alert('Đã xóa đơn vị vận chuyển thành công!');
+        fetchShippers();
+      } catch (err) {
+        alert('Lỗi xóa đơn vị vận chuyển: ' + (err.response?.data || err.message));
+      }
     }
   };
 
-  // Lọc dữ liệu
-  const filteredShippers = shippers.filter(shipper => {
-    const name = shipper.tenDonVi || shipper.tenDV || '';
-    const code = shipper.maDonVi || shipper.maDV || `DV-00${shipper.id}`;
-    const contact = shipper.thongTinLienHe || shipper.hotline || '';
-    const search = searchTerm.toLowerCase();
-    return name.toLowerCase().includes(search) || 
-           code.toLowerCase().includes(search) || 
-           contact.toLowerCase().includes(search);
+  const filteredShippers = shippers.filter(s => {
+    const code = s.maDonVi || '';
+    const name = s.tenDonVi || '';
+    const contact = s.thongTinLienHe || '';
+    return code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           contact.includes(searchTerm);
   });
 
   return (
     <div className="shipping-container">
       <div className="shipping-header">
         <div>
-          <h2>Quản Lý Đơn Vị Vận Chuyển</h2>
-          <p>Danh sách các đối tác giao nhận hàng hóa và tích hợp chuyển phát</p>
+          <h2>Quản Lý Đơn Vị Vận Chuyển (3PL & Courier)</h2>
+          <p>Danh sách các đối tác giao vận, bưu cục lấy hàng và liên kết tracking</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button className="btn-secondary" onClick={fetchShippers} disabled={isLoading} title="Làm mới">
@@ -104,100 +73,129 @@ const ShippingManagement = () => {
             className="btn-primary" 
             onClick={() => navigate('/shipping/create')}
           >
-            <FiPlus size={16} /> Thêm ĐVVC
+            <FiPlus size={16} /> Thêm Đối Tác Vận Chuyển
           </button>
         </div>
       </div>
 
-      <div className="shipping-toolbar" style={{ marginBottom: '16px' }}>
+      <div className="shipping-toolbar">
         <div className="search-box">
           <FiSearch className="search-icon" />
           <input 
             type="text" 
-            placeholder="Tìm theo mã, tên hoặc hotline đơn vị vận chuyển..." 
+            placeholder="Tìm theo tên hãng vận chuyển, mã đơn vị, hotline..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="shipping-table-wrapper">
-        <table className="wms-data-table">
+      <div className="table-responsive">
+        <table className="shipping-table">
           <thead>
             <tr>
               <th>Mã ĐVVC</th>
-              <th>Tên Đơn Vị Vận Chuyển</th>
-              <th>Hotline / CSKH</th>
-              <th>Cổng Tra Cứu (Website)</th>
-              <th>Trạng Thái</th>
-              <th>Hành Động</th>
+              <th>Tên Đơn Vị Giao Vận</th>
+              <th>Hotline Hỗ Trợ</th>
+              <th>Website / Cổng Tra Cứu</th>
+              <th style={{ textAlign: 'center' }}>Trạng Thái</th>
+              <th style={{ textAlign: 'right' }}>Hành Động</th>
             </tr>
           </thead>
           <tbody>
-            {filteredShippers.map((shipper) => {
-              const code = shipper.maDonVi || shipper.maDV || `DV-00${shipper.id}`;
-              const name = shipper.tenDonVi || shipper.tenDV;
-              const contact = shipper.thongTinLienHe || shipper.hotline || 'Chưa cập nhật';
-              const website = shipper.website || 'Đang cập nhật';
-              const isActive = shipper.trangThai !== 'TAM_NGUNG' && shipper.trangThai !== 'NGUNG_HOP_TAC';
-
-              return (
-                <tr key={shipper.id}>
-                  <td className="font-mono text-bold">{code}</td>
-                  <td className="text-bold">
-                    <FiTruck className="text-muted" style={{ marginRight: '6px' }} />
-                    {name}
-                  </td>
-                  <td>
-                    <FiPhoneCall className="text-muted" style={{ marginRight: '6px' }} />
-                    {contact}
-                  </td>
-                  <td>
-                    <FiGlobe className="text-muted" style={{ marginRight: '6px' }} />
-                    {website !== 'Đang cập nhật' ? (
-                      <a href={website} target="_blank" rel="noreferrer" style={{ color: '#2563eb', textDecoration: 'none' }}>
-                        {website}
-                      </a>
-                    ) : (
-                      <span className="text-muted">Đang cập nhật</span>
-                    )}
-                  </td>
-                  <td>
-                    {isActive ? (
-                      <span className="badge safe"><FiCheckCircle /> Đang hợp tác</span>
-                    ) : (
-                      <span className="badge warning">Tạm ngưng</span>
-                    )}
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button 
-                        className="btn-icon text-blue" 
-                        title="Chỉnh sửa thông tin đối tác trên trang riêng"
-                        onClick={() => navigate(`/shipping/edit/${shipper.id}`)}
-                      >
-                        <FiEdit2 />
-                      </button>
-                      <button 
-                        className="btn-icon text-red" 
-                        title="Xóa đối tác"
-                        onClick={() => handleDelete(shipper.id, name)}
-                      >
-                        <FiTrash2 />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-
-            {filteredShippers.length === 0 && (
+            {isLoading ? (
               <tr>
-                <td colSpan="6" className="text-center">Không tìm thấy đối tác vận chuyển nào.</td>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '40px' }}>
+                  <FiRefreshCw className="spin-icon" size={24} style={{ color: '#4f46e5' }} />
+                  <p style={{ marginTop: '8px', color: '#64748b' }}>Đang nạp đối tác giao vận...</p>
+                </td>
               </tr>
+            ) : filteredShippers.length === 0 ? (
+              <tr>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                  <FiTruck size={36} style={{ marginBottom: '8px', opacity: 0.5 }} />
+                  <p>Chưa có đối tác giao vận nào trong hệ thống.</p>
+                  <button 
+                    className="btn-primary" 
+                    style={{ marginTop: '12px' }}
+                    onClick={() => navigate('/shipping/create')}
+                  >
+                    <FiPlus size={16} /> Thêm Đối Tác Vận Chuyển
+                  </button>
+                </td>
+              </tr>
+            ) : (
+              filteredShippers.map((s) => {
+                const code = s.maDonVi || `DV-${s.id}`;
+                const name = s.tenDonVi || 'Đơn vị vận chuyển';
+                const phone = s.thongTinLienHe || '1900 xxxx';
+                const website = s.website || '---';
+                const status = s.trangThai || 'HOAT_DONG';
+
+                return (
+                  <tr key={s.id}>
+                    <td>
+                      <span className="shipper-code-badge">{code}</span>
+                    </td>
+                    <td>
+                      <div className="shipper-name-box">
+                        <FiTruck size={16} style={{ color: '#4f46e5' }} />
+                        <strong>{name}</strong>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="contact-phone">
+                        <FiPhone size={13} style={{ color: '#64748b' }} />
+                        <span>{phone}</span>
+                      </div>
+                    </td>
+                    <td>
+                      {website !== '---' ? (
+                        <a 
+                          href={website.startsWith('http') ? website : `https://${website}`} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="website-link"
+                        >
+                          <FiGlobe size={13} /> {website.replace('https://', '').replace('http://', '')}
+                        </a>
+                      ) : (
+                        <span>---</span>
+                      )}
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className={`status-tag ${status === 'HOAT_DONG' ? 'active' : 'inactive'}`}>
+                        {status === 'HOAT_DONG' ? 'Đang kết nối' : 'Tạm ngắt'}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <div className="action-btns">
+                        <button 
+                          className="btn-icon edit" 
+                          title="Chỉnh sửa đơn vị"
+                          onClick={() => navigate(`/shipping/edit/${s.id}`)}
+                        >
+                          <FiEdit2 size={15} />
+                        </button>
+                        <button 
+                          className="btn-icon delete" 
+                          title="Xóa đơn vị"
+                          onClick={() => handleDelete(s.id, name)}
+                        >
+                          <FiTrash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="shipping-footer">
+        <span>Tổng cộng: <strong>{filteredShippers.length}</strong> hãng vận chuyển</span>
       </div>
     </div>
   );

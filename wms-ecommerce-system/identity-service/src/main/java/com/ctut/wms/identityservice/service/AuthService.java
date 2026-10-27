@@ -23,7 +23,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
-    private final RoleRepository    roleRepository;
+    private final RoleRepository roleRepository;
 
     @Transactional
     public String registerUser(RegisterRequest request){
@@ -43,11 +43,10 @@ public class AuthService {
         newuser.setNgayTao(LocalDateTime.now());
         newuser.setNgayCapNhat(LocalDateTime.now());
 
-        // 🌟 ĐÃ CẬP NHẬT: Xử lý gán quyền
-        // Nếu Frontend có gửi vaiTro (tạo nhân viên) thì lấy, nếu không thì mặc định là CUSTOMER (khách hàng đăng ký trên web)
+        // Gán quyền
         String maQuyen = (request.getVaiTro() != null && !request.getVaiTro().isEmpty()) ? request.getVaiTro() : "CUSTOMER";
+        newuser.setVaiTro(maQuyen);
 
-        // Tìm quyền dưới DB và gán cho User
         roleRepository.findByMaVaiTro(maQuyen).ifPresent(role -> {
             newuser.getRoles().add(role);
         });
@@ -82,14 +81,15 @@ public class AuthService {
         String hoTen = (userInfo != null && userInfo.getHoTen() != null) ? userInfo.getHoTen() : user.getTaiKhoan();
         String token = jwtService.generateToken(user.getTaiKhoan());
 
-        // 🌟 Đã sửa lỗi: Giữ lại cú pháp Builder hiện đại để trả về nhiều dữ liệu cho Frontend
+        String roleName = user.getRoles() != null && !user.getRoles().isEmpty() ? user.getRoles().iterator().next().getMaVaiTro() : user.getVaiTro();
+
         return AuthResponse.builder()
                 .token(token)
                 .message("Đăng nhập thành công!")
                 .id(user.getId())
                 .taiKhoan(user.getTaiKhoan())
                 .email(user.getEmail())
-                .vaiTro(user.getVaiTro())
+                .vaiTro(roleName)
                 .hoTen(hoTen)
                 .build();
     }
@@ -102,7 +102,7 @@ public class AuthService {
         userInfoRepository.findByUser(user)
                 .ifPresent(userInfo -> userInfoRepository.delete(userInfo));
 
-            userRepository.delete(user);
+        userRepository.delete(user);
         return "Xóa tài khoản thành công!";
     }
 
@@ -134,25 +134,22 @@ public class AuthService {
 
     @Transactional
     public String updateUser(Long id, UpdateUserRequest request) {
-        // 1. Tìm người dùng theo ID
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy người dùng!"));
 
-        // 2. Cập nhật Email
         user.setEmail(request.getEmail());
 
-        // 3. Cập nhật Thông tin cá nhân (Họ tên, SĐT)
         UserInfo userInfo = userInfoRepository.findByUser(user).orElse(new UserInfo());
         userInfo.setUser(user);
         userInfo.setHoTen(request.getHoTen());
         userInfo.setSoDienThoai(request.getSoDienThoai());
         userInfoRepository.save(userInfo);
 
-        // 4. Cập nhật Vai trò (Nếu có gửi vai trò mới)
         if (request.getVaiTro() != null && !request.getVaiTro().isEmpty()) {
-            user.getRoles().clear(); // Xóa vai trò cũ
+            user.setVaiTro(request.getVaiTro());
+            user.getRoles().clear();
             roleRepository.findByMaVaiTro(request.getVaiTro()).ifPresent(role -> {
-                user.getRoles().add(role); // Gán vai trò mới
+                user.getRoles().add(role);
             });
         }
 
@@ -175,27 +172,26 @@ public class AuthService {
 
         return "Đổi mật khẩu thành công!";
     }
+
     @Transactional
     public List<UserProfileResponse> getAllUsers() {
-        // Lấy tất cả user từ CSDL
         List<User> users = userRepository.findAll();
 
-        // Chuyển đổi từng User thành UserProfileResponse để gửi cho Frontend
         return users.stream().map(u -> {
-            // Tìm thông tin chi tiết, nếu chưa có (null) thì tạo một cái rỗng để khỏi bị lỗi
             UserInfo userInfo = userInfoRepository.findByUser(u).orElse(new UserInfo());
 
-            // Xử lý an toàn Vai trò: Nếu CSDL chưa có Role, trả về chuỗi tạm thời
-            String maVaiTro = "CHƯA PHÂN QUYỀN";
+            String maVaiTro = "CUSTOMER";
             if (u.getRoles() != null && !u.getRoles().isEmpty()) {
                 maVaiTro = u.getRoles().iterator().next().getMaVaiTro();
+            } else if (u.getVaiTro() != null) {
+                maVaiTro = u.getVaiTro();
             }
 
             return new UserProfileResponse(
                     u.getId(),
                     u.getTaiKhoan(),
                     u.getEmail(),
-                    maVaiTro, // Vai trò an toàn
+                    maVaiTro,
                     userInfo.getHoTen() != null ? userInfo.getHoTen() : u.getTaiKhoan(),
                     userInfo.getSoDienThoai(),
                     userInfo.getDiaChi(),
@@ -204,5 +200,15 @@ public class AuthService {
                     userInfo.getAnhDaiDien()
             );
         }).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public String toggleUserStatus(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy người dùng!"));
+        boolean current = user.getTrangThai() != null ? user.getTrangThai() : true;
+        user.setTrangThai(!current);
+        userRepository.save(user);
+        return user.getTrangThai() ? "Hoạt động" : "Đã khóa";
     }
 }

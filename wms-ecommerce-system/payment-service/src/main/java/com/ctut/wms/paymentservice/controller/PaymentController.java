@@ -1,12 +1,17 @@
 package com.ctut.wms.paymentservice.controller;
 
+import com.ctut.wms.paymentservice.dto.CryptoPaymentRequest;
 import com.ctut.wms.paymentservice.dto.MomoIpnRequest;
 import com.ctut.wms.paymentservice.dto.PaymentRequest;
 import com.ctut.wms.paymentservice.dto.PaymentResponse;
+import com.ctut.wms.paymentservice.entity.GiaoDichCrypto;
+import com.ctut.wms.paymentservice.service.CryptoPaymentService;
 import com.ctut.wms.paymentservice.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/payments")
@@ -14,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final CryptoPaymentService cryptoPaymentService;
 
     // 1. Khởi tạo giao dịch & liên kết thanh toán MoMo (hỗ trợ cả Cổng MoMo và Quét mã QR nhận tiền)
     @PostMapping("/create")
@@ -56,5 +62,27 @@ public class PaymentController {
     @PostMapping("/mock-success-order/{donHangId}")
     public ResponseEntity<PaymentResponse> mockPaymentSuccessByDonHangId(@PathVariable String donHangId) {
         return ResponseEntity.ok(paymentService.mockPaymentSuccessByDonHangId(donHangId));
+    }
+
+    // 7. Web3 / Crypto: Gửi xác nhận giao dịch thanh toán Crypto trên Blockchain
+    @PostMapping("/crypto/submit")
+    public ResponseEntity<?> submitCryptoPayment(@RequestBody CryptoPaymentRequest request) {
+        try {
+            return ResponseEntity.ok(cryptoPaymentService.submitCryptoPayment(request));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // 8. Web3 / Crypto: Tra cứu các giao dịch Crypto theo mã phiên Checkout gộp
+    @GetMapping("/crypto/session/{maGiaoDichGoc}")
+    public ResponseEntity<List<GiaoDichCrypto>> getCryptoTransactionsBySession(@PathVariable String maGiaoDichGoc) {
+        return ResponseEntity.ok(cryptoPaymentService.getTransactionsBySession(maGiaoDichGoc));
+    }
+
+    // 9. Web3 / Crypto: Lấy tất cả giao dịch Crypto
+    @GetMapping("/crypto")
+    public ResponseEntity<List<GiaoDichCrypto>> getAllCryptoTransactions() {
+        return ResponseEntity.ok(cryptoPaymentService.getAllTransactions());
     }
 }

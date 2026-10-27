@@ -17,6 +17,10 @@ public class Voucher extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Logical FK Nullable: Null nếu là Voucher Toàn Sàn (Admin tạo), có ID nếu là Voucher riêng của Shop
+    @Column(name = "cua_hang_id")
+    private Long cuaHangId;
+
     @Column(name = "ma_voucher", unique = true, nullable = false)
     private String maVoucher;
 

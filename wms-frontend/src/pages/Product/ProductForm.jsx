@@ -15,6 +15,7 @@ const ProductForm = () => {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const [formData, setFormData] = useState({
     sku: '',
@@ -36,7 +37,6 @@ const ProductForm = () => {
   const fetchInitialData = async () => {
     try {
       setIsLoading(true);
-      // Nạp danh mục sản phẩm
       const catData = await productService.getCategories();
       if (Array.isArray(catData)) {
         setCategories(catData);
@@ -49,7 +49,7 @@ const ProductForm = () => {
             sku: prod.sku || '',
             tenSanPham: prod.tenSanPham || prod.tenHangHoa || '',
             donViTinh: prod.donViTinh || 'Cái',
-            danhMucId: prod.danhMucId || catData?.find(c => c.tenDanhMuc === prod.tenDanhMuc)?.id || '',
+            danhMucId: prod.danhMucId || (catData?.find(c => c.tenDanhMuc === prod.tenDanhMuc)?.id) || '',
             giaBan: prod.giaBan || '',
             giaNhap: prod.giaNhap || '',
             khoiLuong: prod.khoiLuong || '',
@@ -59,11 +59,10 @@ const ProductForm = () => {
           });
         }
       } else {
-        // Sinh mã SKU mẫu khi thêm mới
         setFormData(prev => ({
           ...prev,
           sku: 'SP' + Math.floor(100 + Math.random() * 900),
-          danhMucId: catData?.[0]?.id || 1,
+          danhMucId: catData?.[0]?.id || '',
         }));
       }
     } catch (e) {
@@ -80,6 +79,8 @@ const ProductForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMsg('');
+
     if (!formData.sku.trim() || !formData.tenSanPham.trim()) {
       alert('Vui lòng điền đầy đủ Mã SKU và Tên sản phẩm!');
       return;
@@ -88,9 +89,9 @@ const ProductForm = () => {
     const payload = {
       ...formData,
       danhMucId: formData.danhMucId ? Number(formData.danhMucId) : null,
-      giaBan: formData.giaBan ? Number(formData.giaBan) : null,
-      giaNhap: formData.giaNhap ? Number(formData.giaNhap) : null,
-      khoiLuong: formData.khoiLuong ? Number(formData.khoiLuong) : null,
+      giaBan: formData.giaBan ? Number(formData.giaBan) : 0,
+      giaNhap: formData.giaNhap ? Number(formData.giaNhap) : 0,
+      khoiLuong: formData.khoiLuong ? Number(formData.khoiLuong) : 0,
     };
 
     try {
@@ -104,238 +105,150 @@ const ProductForm = () => {
       }
       navigate('/products');
     } catch (err) {
-      alert('Không thể lưu sản phẩm: ' + (err.response?.data || err.message));
+      const msg = err.response?.data || err.message || 'Lỗi khi lưu sản phẩm';
+      setErrorMsg(typeof msg === 'string' ? msg : JSON.stringify(msg));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="product-form-container" style={{ padding: '40px', textAlign: 'center' }}>
-        <p>Đang tải thông tin sản phẩm...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="product-form-container">
-      {/* Tiêu đề & Nút thao tác */}
       <div className="form-header">
-        <div className="form-header-title">
-          <button 
-            type="button" 
-            className="btn-back" 
-            onClick={() => navigate('/products')}
-            title="Quay lại danh sách"
-          >
-            <FiArrowLeft size={18} />
-          </button>
-          <div>
-            <h2>{isEditMode ? 'Chỉnh Sửa Thông Tin Hàng Hóa' : 'Thêm Mới Hàng Hóa Vào Kho'}</h2>
-            <p>Quản lý danh mục Master SKU trong hệ thống WMS</p>
-          </div>
-        </div>
-
-        <div className="form-header-actions">
-          <button 
-            type="button" 
-            className="btn-cancel" 
-            onClick={() => navigate('/products')}
-          >
-            Hủy Bỏ
-          </button>
-          <button 
-            type="button" 
-            className="btn-submit" 
-            onClick={handleSubmit} 
-            disabled={isSubmitting}
-          >
-            <FiSave size={16} /> {isSubmitting ? 'Đang lưu...' : (isEditMode ? 'Cập Nhật' : 'Lưu Hàng Hóa')}
-          </button>
-        </div>
+        <button className="btn-back" onClick={() => navigate('/products')}>
+          <FiArrowLeft size={18} /> Quay lại
+        </button>
+        <h2>{isEditMode ? 'Chỉnh Sửa Hàng Hóa' : 'Thêm Mới Hàng Hóa Vào Kho'}</h2>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        {/* Phần 1: Thông tin cơ bản */}
-        <div className="form-card">
-          <div className="form-card-title">
-            <FiBox size={18} />
-            <span>Thông Tin Cơ Bản Sản Phẩm</span>
-          </div>
+      {errorMsg && (
+        <div style={{ background: '#fff5f5', color: '#c53030', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px' }}>
+          {errorMsg}
+        </div>
+      )}
 
-          <div className="form-grid-3">
+      {isLoading ? (
+        <div style={{ padding: '40px', textAlign: 'center' }}>Đang nạp thông tin...</div>
+      ) : (
+        <form onSubmit={handleSubmit} className="product-form-grid">
+          <div className="form-card">
+            <h3><FiBox /> Thông Tin Cơ Bản</h3>
             <div className="form-group">
-              <label>Mã Hàng Hóa (SKU) <span className="required">*</span></label>
+              <label>Mã SKU (*):</label>
               <input 
                 type="text" 
-                name="sku"
-                value={formData.sku}
-                onChange={handleChange}
-                placeholder="VD: SP001"
-                required
+                name="sku" 
+                value={formData.sku} 
+                onChange={handleChange} 
+                required 
+                placeholder="VD: SP001" 
               />
             </div>
 
             <div className="form-group">
-              <label>Danh Mục Phân Loại <span className="required">*</span></label>
-              <select 
-                name="danhMucId"
-                value={formData.danhMucId}
-                onChange={handleChange}
-                required
-              >
-                <option value="">-- Chọn danh mục --</option>
-                {categories.map(c => (
-                  <option key={c.id} value={c.id}>{c.tenDanhMuc}</option>
-                ))}
-                {categories.length === 0 && (
-                  <>
-                    <option value={1}>Điện thoại & Tablet</option>
-                    <option value={2}>Laptop & Máy tính</option>
-                    <option value={3}>Phụ kiện công nghệ</option>
-                  </>
-                )}
+              <label>Tên Sản Phẩm (*):</label>
+              <input 
+                type="text" 
+                name="tenSanPham" 
+                value={formData.tenSanPham} 
+                onChange={handleChange} 
+                required 
+                placeholder="VD: iPhone 15 Pro Max 256GB" 
+              />
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Đơn Vị Tính:</label>
+                <select name="donViTinh" value={formData.donViTinh} onChange={handleChange}>
+                  <option value="Cái">Cái</option>
+                  <option value="Hộp">Hộp</option>
+                  <option value="Bộ">Bộ</option>
+                  <option value="Chiếc">Chiếc</option>
+                  <option value="Kiện">Kiện</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Danh Mục Hàng Hóa:</label>
+                <select name="danhMucId" value={formData.danhMucId} onChange={handleChange}>
+                  <option value="">-- Chọn danh mục --</option>
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id}>{c.tenDanhMuc}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Khối Lượng (kg):</label>
+              <input 
+                type="number" 
+                step="0.01" 
+                name="khoiLuong" 
+                value={formData.khoiLuong} 
+                onChange={handleChange} 
+                placeholder="VD: 0.25" 
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Mô Tả Sản Phẩm:</label>
+              <textarea 
+                name="moTa" 
+                rows="4" 
+                value={formData.moTa} 
+                onChange={handleChange} 
+                placeholder="Mô tả thông số hoặc quy cách đóng gói..." 
+              />
+            </div>
+          </div>
+
+          <div className="form-card">
+            <h3><FiDollarSign /> Giá Cả & Trạng Thái</h3>
+            <div className="form-group">
+              <label>Giá Bán Niêm Yết (VNĐ):</label>
+              <input 
+                type="number" 
+                name="giaBan" 
+                value={formData.giaBan} 
+                onChange={handleChange} 
+                placeholder="VD: 29990000" 
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Giá Nhập Tham Khảo (VNĐ):</label>
+              <input 
+                type="number" 
+                name="giaNhap" 
+                value={formData.giaNhap} 
+                onChange={handleChange} 
+                placeholder="VD: 25000000" 
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Trạng Thái Kinh Doanh:</label>
+              <select name="trangThai" value={formData.trangThai} onChange={handleChange}>
+                <option value="DANG_KINH_DOANH">Đang kinh doanh</option>
+                <option value="NGUNG_KINH_DOANH">Ngừng kinh doanh</option>
               </select>
             </div>
 
-            <div className="form-group">
-              <label>Đơn Vị Tính <span className="required">*</span></label>
-              <select 
-                name="donViTinh"
-                value={formData.donViTinh}
-                onChange={handleChange}
+            <div className="form-actions" style={{ marginTop: '24px' }}>
+              <button 
+                type="submit" 
+                className="btn-primary" 
+                disabled={isSubmitting}
+                style={{ width: '100%', justifyContent: 'center' }}
               >
-                <option value="Cái">Cái</option>
-                <option value="Chiếc">Chiếc</option>
-                <option value="Hộp">Hộp</option>
-                <option value="Thùng">Thùng</option>
-                <option value="Bộ">Bộ</option>
-                <option value="Kg">Kg</option>
-              </select>
+                <FiSave size={16} /> {isSubmitting ? 'Đang lưu...' : (isEditMode ? 'Cập Nhật' : 'Tạo Hàng Hóa')}
+              </button>
             </div>
           </div>
-
-          <div className="form-group" style={{ marginTop: '12px' }}>
-            <label>Tên Sản Phẩm / Tên Hàng Hóa <span className="required">*</span></label>
-            <input 
-              type="text" 
-              name="tenSanPham"
-              value={formData.tenSanPham}
-              onChange={handleChange}
-              placeholder="VD: iPhone 15 Pro Max 256GB - Titan Tự Nhiên"
-              required
-            />
-          </div>
-        </div>
-
-        {/* Phần 2: Giá & Thuộc tính vật lý */}
-        <div className="form-card">
-          <div className="form-card-title">
-            <FiDollarSign size={18} />
-            <span>Giá Cả & Thuộc Tính Vận Chuyển</span>
-          </div>
-
-          <div className="form-grid-3">
-            <div className="form-group">
-              <label>Giá Bán Niêm Yết (VNĐ)</label>
-              <input 
-                type="number" 
-                name="giaBan"
-                value={formData.giaBan}
-                onChange={handleChange}
-                placeholder="VD: 29990000"
-                min="0"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Giá Nhập Dự Kiến (VNĐ)</label>
-              <input 
-                type="number" 
-                name="giaNhap"
-                value={formData.giaNhap}
-                onChange={handleChange}
-                placeholder="VD: 24500000"
-                min="0"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Khối Lượng Đóng Gói (gram)</label>
-              <input 
-                type="number" 
-                name="khoiLuong"
-                value={formData.khoiLuong}
-                onChange={handleChange}
-                placeholder="VD: 500"
-                min="0"
-              />
-            </div>
-          </div>
-
-          <div className="form-group" style={{ marginTop: '12px' }}>
-            <label>Trạng Thái Kinh Doanh</label>
-            <select 
-              name="trangThai"
-              value={formData.trangThai}
-              onChange={handleChange}
-            >
-              <option value="DANG_KINH_DOANH">Đang kinh doanh / Sẵn sàng nhập xuất</option>
-              <option value="NGUNG_KINH_DOANH">Ngưng kinh doanh</option>
-              <option value="HET_HANG">Hết hàng tạm thời</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Phần 3: Hình ảnh & Mô tả */}
-        <div className="form-card">
-          <div className="form-card-title">
-            <FiFileText size={18} />
-            <span>Hình Ảnh & Mô Tả Chi Tiết</span>
-          </div>
-
-          <div className="form-group">
-            <label>Đường Dẫn Hình Ảnh Sản Phẩm (URL)</label>
-            <input 
-              type="url" 
-              name="hinhAnh"
-              value={formData.hinhAnh}
-              onChange={handleChange}
-              placeholder="https://example.com/images/iphone-15.png"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Mô Tả Quy Cách & Đặc Tính Sản Phẩm</label>
-            <textarea 
-              name="moTa"
-              value={formData.moTa}
-              onChange={handleChange}
-              rows="4"
-              placeholder="Nhập thông số kỹ thuật, quy cách đóng gói, xuất xứ và điều kiện bảo quản tại kho..."
-            />
-          </div>
-        </div>
-
-        {/* Nút lưu cuối trang */}
-        <div className="form-footer">
-          <button 
-            type="button" 
-            className="btn-cancel" 
-            onClick={() => navigate('/products')}
-          >
-            Hủy Bỏ
-          </button>
-          <button 
-            type="submit" 
-            className="btn-submit" 
-            disabled={isSubmitting}
-          >
-            <FiCheckCircle size={16} /> {isSubmitting ? 'Đang lưu...' : (isEditMode ? 'Cập Nhật Hàng Hóa' : 'Xác Nhận Thêm Mới')}
-          </button>
-        </div>
-      </form>
+        </form>
+      )}
     </div>
   );
 };

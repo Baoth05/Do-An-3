@@ -17,11 +17,11 @@ public class BinhLuanService {
     public BinhLuan themBinhLuan(BinhLuanRequest request) {
         BinhLuan binhLuan = new BinhLuan();
         binhLuan.setNguoiDungId(request.getNguoiDungId());
+        binhLuan.setCuaHangId(request.getCuaHangId());
         binhLuan.setMaHangHoa(request.getMaHangHoa());
         binhLuan.setNoiDung(request.getNoiDung());
-        binhLuan.setTrangThai("ĐÃ DUYỆT"); // Tạm để "Đã duyệt" để cậu dễ test hiển thị
+        binhLuan.setTrangThai("ĐÃ DUYỆT");
 
-        // 🌟 Xử lý logic nối bình luận (Reply)
         if (request.getParentId() != null) {
             BinhLuan parent = binhLuanRepository.findById(request.getParentId())
                     .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy bình luận gốc để trả lời!"));
@@ -32,8 +32,10 @@ public class BinhLuanService {
     }
 
     public List<BinhLuan> layBinhLuanGoc(String maHangHoa) {
-        // Trả về danh sách bình luận gốc.
-        // Nhờ tính năng JPA, các câu "replies" sẽ tự động được kéo lên nằm bên trong thuộc tính "replies" của từng bình luận gốc.
         return binhLuanRepository.findByMaHangHoaAndParentCommentIsNull(maHangHoa);
+    }
+
+    public List<BinhLuan> layBinhLuanTheoShop(Long cuaHangId) {
+        return binhLuanRepository.findByCuaHangIdAndParentCommentIsNull(cuaHangId);
     }
 }

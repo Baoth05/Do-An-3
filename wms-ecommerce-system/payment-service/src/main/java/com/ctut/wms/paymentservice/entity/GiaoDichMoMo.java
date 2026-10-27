@@ -16,8 +16,11 @@ public class GiaoDichMoMo extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "don_hang_id", nullable = false)
+    @Column(name = "don_hang_id")
     private String donHangId; // Mã đơn hàng từ E-commerce / Order Service
+
+    @Column(name = "ma_giao_dich_goc", length = 50)
+    private String maGiaoDichGoc; // Mã phiên Checkout gộp đa shop
 
     @Column(name = "momo_order_id", unique = true, nullable = false)
     private String momoOrderId; // Mã giao dịch định danh phía MoMo
@@ -52,7 +55,7 @@ public class GiaoDichMoMo extends BaseEntity {
     @Column(name = "ten_nguoi_nhan")
     private String tenNguoiNhan;
 
-    // PENDING (Chờ thanh toán), SUCCESS (Đã nhận tiền thành công), FAILED (Thất bại), AMOUNT_MISMATCH (Gian lận số tiền)
+    // PENDING, SUCCESS, FAILED, AMOUNT_MISMATCH
     @Column(name = "trang_thai")
     private String trangThai = "PENDING";
 }

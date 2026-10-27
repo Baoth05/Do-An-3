@@ -22,17 +22,27 @@ public class ExportNote extends BaseEntity {
     @Column(name = "ma_phieu_xuat", unique = true, nullable = false)
     private String maPhieuXuat;
 
-    // Chỉ lưu String mã đơn hàng từ E-commerce truyền sang, không ràng buộc khóa ngoại
+    @Column(name = "loai_xuat", length = 30)
+    private String loaiXuat = "XUAT_CUNG_UNG_CUA_HANG"; // XUAT_CUNG_UNG_CUA_HANG hoặc XUAT_BAN_LE_SAN_TMDT
+
+    // Chỉ lưu String mã đơn hàng từ E-commerce truyền sang khi xuất bán lẻ
     @Column(name = "don_hang_id")
     private String donHangId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "kho_hang_id", nullable = false)
-    private Warehouse khoHang; // Xuất từ kho nào
+    private Warehouse khoHang; // Kho xuất hàng (Kho Tổng hoặc Kho Cửa Hàng)
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "kho_nhan_id")
+    private Warehouse khoNhan; // Kho nhận khi Kho Tổng xuất cung ứng cho Cửa hàng
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "don_vi_van_chuyen_id")
-    private ShippingProvider donViVanChuyen; // Giao cho bưu tá nào
+    private ShippingProvider donViVanChuyen; // Giao cho bưu tá / đơn vị nào
+
+    @Column(name = "nhan_vien_id")
+    private Long nhanVienId; // Logical FK người thực hiện xuất
 
     @Column(name = "nguoi_tao")
     private String nguoiTao;

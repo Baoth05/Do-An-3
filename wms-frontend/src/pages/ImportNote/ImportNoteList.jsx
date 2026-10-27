@@ -7,12 +7,7 @@ import './ImportNoteList.css';
 const ImportNoteList = () => {
   const navigate = useNavigate();
 
-  const initialMockNotes = [
-    { id: 1, maPhieuNhap: 'PN-2610-001', nhaCungCap: { tenNhaCungCap: 'Công ty TNHH Apple Việt Nam' }, khoHang: { tenKho: 'Kho Tổng Trung Tâm' }, ngayNhap: '10/10/2026', tongTienNhap: 85000000, trangThai: 'ĐÃ NHẬP', nguoiTao: 'Nguyễn Văn Kho' },
-    { id: 2, maPhieuNhap: 'PN-2610-002', nhaCungCap: { tenNhaCungCap: 'Công ty Cổ phần Digiworld' }, khoHang: { tenKho: 'Kho Tổng Trung Tâm' }, ngayNhap: '11/10/2026', tongTienNhap: 42500000, trangThai: 'ĐÃ NHẬP', nguoiTao: 'Trần Thủ Kho' },
-  ];
-
-  const [importNotes, setImportNotes] = useState(initialMockNotes);
+  const [importNotes, setImportNotes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
 
@@ -20,9 +15,11 @@ const ImportNoteList = () => {
     try {
       setIsLoading(true);
       const notesRes = await wmsCoreService.getImportNotes();
-      if (Array.isArray(notesRes) && notesRes.length > 0) {
+      if (Array.isArray(notesRes)) {
         setImportNotes(notesRes);
         setIsBackendConnected(true);
+      } else {
+        setImportNotes([]);
       }
     } catch (e) {
       console.warn('Lỗi lấy dữ liệu phiếu nhập từ Backend:', e.message);
@@ -53,67 +50,96 @@ const ImportNoteList = () => {
             <FiRefreshCw className={isLoading ? 'spin-icon' : ''} /> {isBackendConnected ? 'Backend Live' : 'Đồng bộ'}
           </button>
           <button 
-            className="btn-primary" 
+            className="btn-primary"
             onClick={() => navigate('/import-notes/create')}
           >
-            <FiPlus size={16} /> Tạo Phiếu Nhập
+            <FiPlus size={16} /> Lập Phiếu Nhập Kho
           </button>
         </div>
       </div>
 
-      <div className="import-table-wrapper">
-        <table className="wms-data-table">
-          <thead>
-            <tr>
-              <th>Mã Phiếu</th>
-              <th>Nhà Cung Cấp</th>
-              <th>Kho Nhận Hàng</th>
-              <th>Người Lập</th>
-              <th>Tổng Tiền Nhập</th>
-              <th>Trạng Thái</th>
-              <th>Chi Tiết</th>
-            </tr>
-          </thead>
-          <tbody>
-            {importNotes.map((note) => {
-              const code = note.maPhieuNhap || 'PN-' + note.id;
-              const supplierName = note.nhaCungCap?.tenNhaCungCap || note.nhaCungCap || 'Đối tác phân phối';
-              const whName = note.khoHang?.tenKho || 'Kho Tổng Trung Tâm';
-              const total = note.tongTienNhap || note.tongTien || 0;
-
-              return (
-                <tr key={note.id}>
-                  <td className="font-mono text-bold">
-                    <FiFileText style={{ marginRight: '6px', color: '#3b82f6' }} />
-                    {code}
+      <div className="import-table-card">
+        <div className="table-responsive">
+          <table className="import-table">
+            <thead>
+              <tr>
+                <th>Mã Chứng Từ</th>
+                <th>Nhà Cung Cấp</th>
+                <th>Kho Nhận Hàng</th>
+                <th>Ngày Nhập</th>
+                <th style={{ textAlign: 'right' }}>Tổng Giá Trị</th>
+                <th style={{ textAlign: 'center' }}>Trạng Thái</th>
+                <th>Người Lập</th>
+                <th style={{ textAlign: 'center' }}>Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '40px' }}>
+                    <FiRefreshCw className="spin-icon" size={24} style={{ color: '#4f46e5' }} />
+                    <p style={{ marginTop: '8px', color: '#64748b' }}>Đang nạp danh sách phiếu nhập kho...</p>
                   </td>
-                  <td>{supplierName}</td>
-                  <td>{whName}</td>
-                  <td>{note.nguoiTao || 'Thủ kho'}</td>
-                  <td className="text-bold text-blue">{formatCurrency(total)}</td>
-                  <td>
-                    <span className="badge safe">{note.trangThai || 'ĐÃ NHẬP'}</span>
-                  </td>
-                  <td>
+                </tr>
+              ) : importNotes.length === 0 ? (
+                <tr>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                    <FiFileText size={36} style={{ marginBottom: '8px', opacity: 0.5 }} />
+                    <p>Chưa có phiếu nhập kho nào.</p>
                     <button 
-                      className="btn-icon text-blue" 
-                      title="Xem chi tiết phiếu nhập trên trang riêng" 
-                      onClick={() => navigate(`/import-notes/${note.id}`)}
+                      className="btn-primary" 
+                      style={{ marginTop: '12px' }}
+                      onClick={() => navigate('/import-notes/create')}
                     >
-                      <FiEye />
+                      <FiPlus size={16} /> Lập Phiếu Nhập Đầu Tiên
                     </button>
                   </td>
                 </tr>
-              );
-            })}
+              ) : (
+                importNotes.map((note) => {
+                  const code = note.maPhieuNhap || `PN-${note.id}`;
+                  const supplierName = note.tenNhaCungCap || note.nhaCungCap?.tenNhaCungCap || 'Chưa xác định';
+                  const warehouseName = note.tenKhoHang || note.khoHang?.tenKho || 'Kho Tổng Trung Tâm';
+                  const dateStr = note.ngayNhap ? new Date(note.ngayNhap).toLocaleDateString('vi-VN') : '---';
+                  const creator = note.nguoiTao || 'Thủ kho';
+                  const total = note.tongTienNhap || 0;
+                  const status = note.trangThai || 'ĐÃ NHẬP KHO';
 
-            {importNotes.length === 0 && (
-              <tr>
-                <td colSpan="7" className="text-center">Chưa có phiếu nhập kho nào.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                  return (
+                    <tr key={note.id}>
+                      <td>
+                        <span className="code-badge">{code}</span>
+                      </td>
+                      <td>
+                        <strong>{supplierName}</strong>
+                      </td>
+                      <td>{warehouseName}</td>
+                      <td>{dateStr}</td>
+                      <td style={{ textAlign: 'right', fontWeight: 600, color: '#0f172a' }}>
+                        {formatCurrency(total)}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span className="status-tag success">
+                          {status}
+                        </span>
+                      </td>
+                      <td>{creator}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        <button 
+                          className="btn-icon" 
+                          title="Xem chi tiết phiếu nhập"
+                          onClick={() => navigate(`/import-notes/${note.id}`)}
+                        >
+                          <FiEye size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
-  FiArrowLeft, FiSave, FiTruck, FiPhoneCall, 
-  FiGlobe, FiMapPin, FiFileText, FiCheckCircle 
+  FiArrowLeft, FiSave, FiTruck, FiPhone, 
+  FiGlobe, FiCheckCircle 
 } from 'react-icons/fi';
 import { wmsCoreService } from '../../services/wmsCoreService';
 import './ShippingForm.css';
@@ -14,21 +14,19 @@ const ShippingForm = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const [formData, setFormData] = useState({
     maDonVi: '',
     tenDonVi: '',
     thongTinLienHe: '',
-    email: '',
     website: '',
-    diaChi: '',
     trangThai: 'HOAT_DONG',
-    ghiChu: '',
   });
 
   useEffect(() => {
     if (isEditMode) {
-      loadShipperDetails(id);
+      fetchShipperDetail();
     } else {
       setFormData(prev => ({
         ...prev,
@@ -37,30 +35,22 @@ const ShippingForm = () => {
     }
   }, [id, isEditMode]);
 
-  const loadShipperDetails = async (shipperId) => {
+  const fetchShipperDetail = async () => {
     try {
       setIsLoading(true);
-      const data = await wmsCoreService.getShipperById(shipperId);
-      if (data) {
+      const shipper = await wmsCoreService.getShipperById(id);
+      if (shipper) {
         setFormData({
-          maDonVi: data.maDonVi || data.maDV || `DV-00${data.id}`,
-          tenDonVi: data.tenDonVi || data.tenDV || '',
-          thongTinLienHe: data.thongTinLienHe || data.hotline || '',
-          email: data.email || '',
-          website: data.website || '',
-          diaChi: data.diaChi || '',
-          trangThai: data.trangThai || 'HOAT_DONG',
-          ghiChu: data.ghiChu || '',
+          maDonVi: shipper.maDonVi || '',
+          tenDonVi: shipper.tenDonVi || '',
+          thongTinLienHe: shipper.thongTinLienHe || '',
+          website: shipper.website || '',
+          trangThai: shipper.trangThai || 'HOAT_DONG',
         });
       }
     } catch (e) {
-      console.warn('Lỗi nạp chi tiết đơn vị vận chuyển:', e.message);
-      // Fallback mock
-      setFormData(prev => ({
-        ...prev,
-        tenDonVi: 'Đơn vị vận chuyển #' + shipperId,
-        thongTinLienHe: 'Hotline: 1900 1234',
-      }));
+      console.warn('Lỗi lấy chi tiết hãng giao vận:', e.message);
+      setErrorMsg('Không thể nạp thông tin đơn vị giao vận!');
     } finally {
       setIsLoading(false);
     }
@@ -73,8 +63,10 @@ const ShippingForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.tenDonVi.trim()) {
-      alert('Vui lòng nhập tên đơn vị vận chuyển!');
+    setErrorMsg('');
+
+    if (!formData.maDonVi.trim() || !formData.tenDonVi.trim()) {
+      alert('Vui lòng điền đầy đủ Mã và Tên đơn vị vận chuyển!');
       return;
     }
 
@@ -85,202 +77,110 @@ const ShippingForm = () => {
         alert('Cập nhật đơn vị vận chuyển thành công!');
       } else {
         await wmsCoreService.createShipper(formData);
-        alert('Thêm mới đối tác vận chuyển thành công!');
+        alert('Thêm mới đơn vị vận chuyển thành công!');
       }
       navigate('/shipping');
     } catch (err) {
-      alert('Không thể lưu thông tin: ' + (err.response?.data || err.message));
+      const msg = err.response?.data || err.message || 'Lỗi khi lưu đơn vị vận chuyển';
+      setErrorMsg(typeof msg === 'string' ? msg : JSON.stringify(msg));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="shipping-form-container" style={{ padding: '40px', textAlign: 'center' }}>
-        <p>Đang tải thông tin đối tác vận chuyển...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="shipping-form-container">
-      {/* Tiêu đề & Breadcrumb */}
       <div className="form-header">
-        <div className="form-header-title">
-          <button 
-            type="button" 
-            className="btn-back" 
-            onClick={() => navigate('/shipping')}
-            title="Quay lại danh sách"
-          >
-            <FiArrowLeft size={18} />
-          </button>
-          <div>
-            <h2>{isEditMode ? 'Chỉnh Sửa Đơn Vị Vận Chuyển' : 'Thêm Mới Đơn Vị Vận Chuyển'}</h2>
-            <p>Tích hợp đối tác giao vận và điều phối bưu tá</p>
-          </div>
-        </div>
-
-        <div className="form-header-actions">
-          <button 
-            type="button" 
-            className="btn-cancel" 
-            onClick={() => navigate('/shipping')}
-          >
-            Hủy Bỏ
-          </button>
-          <button 
-            type="button" 
-            className="btn-submit" 
-            onClick={handleSubmit} 
-            disabled={isSubmitting}
-          >
-            <FiSave size={16} /> {isSubmitting ? 'Đang lưu...' : (isEditMode ? 'Cập Nhật' : 'Lưu Đối Tác')}
-          </button>
-        </div>
+        <button 
+          type="button" 
+          className="btn-back" 
+          onClick={() => navigate('/shipping')}
+        >
+          <FiArrowLeft size={18} /> Quay lại
+        </button>
+        <h2>{isEditMode ? 'Chỉnh Sửa Hãng Vận Chuyển' : 'Thêm Mới Hãng Vận Chuyển'}</h2>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        {/* Phần 1: Thông tin pháp nhân */}
-        <div className="form-card">
-          <div className="form-card-title">
-            <FiTruck size={18} />
-            <span>Thông Tin Đơn Vị Giao Nhận</span>
-          </div>
+      {errorMsg && (
+        <div style={{ background: '#fff5f5', color: '#c53030', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px' }}>
+          {errorMsg}
+        </div>
+      )}
 
-          <div className="form-grid-3">
+      {isLoading ? (
+        <div style={{ padding: '40px', textAlign: 'center' }}>Đang nạp dữ liệu hãng giao vận...</div>
+      ) : (
+        <form onSubmit={handleSubmit} className="shipping-form-grid" style={{ maxWidth: '640px' }}>
+          <div className="form-card">
+            <h3><FiTruck /> Thông Tin Đơn Vị Giao Vận</h3>
+            
             <div className="form-group">
-              <label>Mã Đơn Vị <span className="required">*</span></label>
+              <label>Mã Đơn Vị (*):</label>
               <input 
                 type="text" 
-                name="maDonVi"
-                value={formData.maDonVi}
-                onChange={handleChange}
-                placeholder="VD: DV-GHTK"
-                required
+                name="maDonVi" 
+                value={formData.maDonVi} 
+                onChange={handleChange} 
+                required 
+                placeholder="VD: DV-GHTK" 
               />
             </div>
 
             <div className="form-group">
-              <label>Tên Đơn Vị Vận Chuyển <span className="required">*</span></label>
+              <label>Tên Đơn Vị Giao Vận (*):</label>
               <input 
                 type="text" 
-                name="tenDonVi"
-                value={formData.tenDonVi}
-                onChange={handleChange}
-                placeholder="VD: Giao Hàng Tiết Kiệm (GHTK)"
-                required
+                name="tenDonVi" 
+                value={formData.tenDonVi} 
+                onChange={handleChange} 
+                required 
+                placeholder="VD: Giao Hàng Tiết Kiệm (GHTK)" 
               />
             </div>
 
             <div className="form-group">
-              <label>Trạng Thái Hợp Tác</label>
-              <select 
-                name="trangThai"
-                value={formData.trangThai}
-                onChange={handleChange}
-              >
-                <option value="HOAT_DONG">Đang Hợp Tác / Sẵn Sàng Giao</option>
-                <option value="TAM_NGUNG">Tạm Ngưng Điều Phối</option>
-                <option value="NGUNG_HOP_TAC">Ngưng Hợp Tác</option>
+              <label>Hotline / Điện Thoại Liên Hệ:</label>
+              <input 
+                type="text" 
+                name="thongTinLienHe" 
+                value={formData.thongTinLienHe} 
+                onChange={handleChange} 
+                placeholder="VD: 1900 6092" 
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Trang Web / Tra Cứu Vận Đơn (URL):</label>
+              <input 
+                type="text" 
+                name="website" 
+                value={formData.website} 
+                onChange={handleChange} 
+                placeholder="VD: https://ghtk.vn" 
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Trạng Thái Kết Nối:</label>
+              <select name="trangThai" value={formData.trangThai} onChange={handleChange}>
+                <option value="HOAT_DONG">Đang hoạt động / Kết nối</option>
+                <option value="TAM_DUNG">Tạm dừng kết nối</option>
               </select>
             </div>
-          </div>
-        </div>
 
-        {/* Phần 2: Kênh liên lạc & Tra cứu */}
-        <div className="form-card">
-          <div className="form-card-title">
-            <FiPhoneCall size={18} />
-            <span>Kênh Tra Cứu Vận Đơn & Hỗ Trợ</span>
-          </div>
-
-          <div className="form-grid-3">
-            <div className="form-group">
-              <label>Hotline / SĐT Điều Phối <span className="required">*</span></label>
-              <input 
-                type="text" 
-                name="thongTinLienHe"
-                value={formData.thongTinLienHe}
-                onChange={handleChange}
-                placeholder="VD: 1900 6092"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Email Hỗ Trợ CSKH / Bưu Cục</label>
-              <input 
-                type="email" 
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="VD: support@ghtk.vn"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Website / Cổng API Tra Cứu</label>
-              <input 
-                type="url" 
-                name="website"
-                value={formData.website}
-                onChange={handleChange}
-                placeholder="https://i.ghtk.vn"
-              />
+            <div className="form-actions" style={{ marginTop: '24px' }}>
+              <button 
+                type="submit" 
+                className="btn-primary" 
+                disabled={isSubmitting}
+                style={{ width: '100%', justifyContent: 'center' }}
+              >
+                <FiSave size={16} /> {isSubmitting ? 'Đang lưu...' : (isEditMode ? 'Cập Nhật' : 'Lưu Đơn Vị Giao Vận')}
+              </button>
             </div>
           </div>
-
-          <div className="form-group" style={{ marginTop: '12px' }}>
-            <label>Địa Chỉ Bưu Cục Tiếp Nhận Hàng Hoặc Kho Trung Chuyển</label>
-            <input 
-              type="text" 
-              name="diaChi"
-              value={formData.diaChi}
-              onChange={handleChange}
-              placeholder="VD: Hub Miền Nam, Khu công nghiệp Tân Bình, TP.HCM"
-            />
-          </div>
-        </div>
-
-        {/* Phần 3: Ghi chú vận hành */}
-        <div className="form-card">
-          <div className="form-card-title">
-            <FiFileText size={18} />
-            <span>Chính Sách Giao Nhận & Ghi Chú</span>
-          </div>
-
-          <div className="form-group">
-            <label>Ghi Chú Vận Hành Kho (Thời gian lấy hàng, chính sách bồi thường...)</label>
-            <textarea 
-              name="ghiChu"
-              value={formData.ghiChu}
-              onChange={handleChange}
-              rows="4"
-              placeholder="VD: Bưu tá gom hàng cố định vào 10:00 sáng và 16:30 chiều hàng ngày. Hỗ trợ giao hỏa tốc nội thành 2h..."
-            />
-          </div>
-        </div>
-
-        {/* Nút lưu cuối trang */}
-        <div className="form-footer">
-          <button 
-            type="button" 
-            className="btn-cancel" 
-            onClick={() => navigate('/shipping')}
-          >
-            Hủy Bỏ
-          </button>
-          <button 
-            type="submit" 
-            className="btn-submit" 
-            disabled={isSubmitting}
-          >
-            <FiCheckCircle size={16} /> {isSubmitting ? 'Đang lưu...' : (isEditMode ? 'Cập Nhật Đối Tác' : 'Xác Nhận Thêm ĐVVC')}
-          </button>
-        </div>
-      </form>
+        </form>
+      )}
     </div>
   );
 };

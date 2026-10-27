@@ -42,9 +42,10 @@ public class PaymentService {
         long amount = request.getSoTien().longValue();
         String momoOrderId = "MOMO" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 4).toUpperCase();
         String requestId = String.valueOf(System.currentTimeMillis());
+        String targetIdentifier = request.getDonHangId() != null ? request.getDonHangId() : request.getMaGiaoDichGoc();
         String orderInfo = (request.getThongTinDonHang() != null && !request.getThongTinDonHang().isBlank())
                 ? request.getThongTinDonHang()
-                : "Thanh toan don hang " + request.getDonHangId();
+                : "Thanh toan don hang " + targetIdentifier;
         String redirectUrl = (request.getRedirectUrl() != null && !request.getRedirectUrl().isBlank())
                 ? request.getRedirectUrl()
                 : momoConfig.getRedirectUrl();
@@ -68,7 +69,7 @@ public class PaymentService {
         Map<String, Object> momoRequestBody = new LinkedHashMap<>();
         momoRequestBody.put("partnerCode", momoConfig.getPartnerCode());
         momoRequestBody.put("partnerName", momoConfig.getAccountName());
-        momoRequestBody.put("storeId", "MomoStore");
+        momoRequestBody.put("storeId", momoConfig.getPartnerCode());
         momoRequestBody.put("requestId", requestId);
         momoRequestBody.put("amount", amount);
         momoRequestBody.put("orderId", momoOrderId);
@@ -80,40 +81,40 @@ public class PaymentService {
         momoRequestBody.put("requestType", "captureWallet");
         momoRequestBody.put("signature", signature);
 
+        // 3. Gọi trực tiếp API MoMo Gateway
         String payUrl = null;
         String qrCodeUrl = null;
         String deeplink = null;
 
-        // 3. Gửi yêu cầu khởi tạo thanh toán sang MoMo Gateway
         try {
-            log.info("Đang kết nối Cổng thanh toán MoMo: {}", momoConfig.getApiUrl());
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(momoRequestBody, headers);
 
+            log.info("Đang kết nối tới MoMo API Gateway: {}", momoConfig.getApiUrl());
             ResponseEntity<Map> response = restTemplate.postForEntity(momoConfig.getApiUrl(), entity, Map.class);
+
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> body = response.getBody();
-                Integer resultCode = (Integer) body.get("resultCode");
-                if (resultCode != null && resultCode == 0) {
+                Map body = response.getBody();
+                Object resultCode = body.get("resultCode");
+                if (resultCode != null && (resultCode.toString().equals("0") || resultCode.toString().equals("9000"))) {
                     payUrl = (String) body.get("payUrl");
                     qrCodeUrl = (String) body.get("qrCodeUrl");
                     deeplink = (String) body.get("deeplink");
-                    log.info("Khởi tạo liên kết thanh toán MoMo Gateway thành công: {}", payUrl);
+                    log.info("Kết nối MoMo API Gateway thành công! PayUrl: {}", payUrl);
                 } else {
-                    log.warn("MoMo Gateway trả về mã lỗi: {} - {}", resultCode, body.get("message"));
+                    log.warn("MoMo Gateway phản hồi mã: {} - {}", resultCode, body.get("message"));
                 }
             }
         } catch (Exception e) {
-            log.warn("Không thể kết nối MoMo Gateway Server (Đang dùng chế độ mã QR MoMo trực tiếp): {}", e.getMessage());
+            log.warn("Cảnh báo: Không thể gọi trực tiếp MoMo Gateway: {}. Hệ thống tự động chuyển sang chế độ quét QR MoMo trực tiếp (VietQR).", e.getMessage());
         }
 
-        // 4. Nếu chưa có link từ Gateway (ví dụ chế độ offline / test sandbox), tạo link mã QR MoMo và VietQR trực tiếp
+        // 4. Fallback: Sinh link chuyển tiền và QR Code trực tiếp vào Số Điện Thoại MoMo
         if (payUrl == null || payUrl.isEmpty()) {
             payUrl = "https://me.momo.vn/" + momoConfig.getAccountNumber();
         }
         if (qrCodeUrl == null || qrCodeUrl.isEmpty()) {
-            // Chuẩn VietQR dành cho Ví điện tử MoMo (Mã ngân hàng MoMo: 970422)
             try {
                 String encodedInfo = URLEncoder.encode(orderInfo, StandardCharsets.UTF_8);
                 String encodedName = URLEncoder.encode(momoConfig.getAccountName(), StandardCharsets.UTF_8);
@@ -128,7 +129,8 @@ public class PaymentService {
 
         // 5. Lưu thông tin giao dịch vào Cơ Sở Dữ Liệu
         GiaoDichMoMo giaoDich = new GiaoDichMoMo();
-        giaoDich.setDonHangId(request.getDonHangId());
+        giaoDich.setDonHangId(targetIdentifier);
+        giaoDich.setMaGiaoDichGoc(request.getMaGiaoDichGoc());
         giaoDich.setMomoOrderId(momoOrderId);
         giaoDich.setMomoRequestId(requestId);
         giaoDich.setSoTien(request.getSoTien());
@@ -147,7 +149,8 @@ public class PaymentService {
                 .qrCodeUrl(qrCodeUrl)
                 .deeplink(deeplink)
                 .momoOrderId(momoOrderId)
-                .donHangId(request.getDonHangId())
+                .donHangId(giaoDich.getDonHangId())
+                .maGiaoDichGoc(giaoDich.getMaGiaoDichGoc())
                 .soTien(request.getSoTien())
                 .trangThai("PENDING")
                 .message("Khởi tạo liên kết và mã QR thanh toán MoMo thành công!")
@@ -167,13 +170,11 @@ public class PaymentService {
         GiaoDichMoMo giaoDich = repository.findByMomoOrderId(ipnRequest.getOrderId())
                 .orElseThrow(() -> new RuntimeException("Lỗ hổng: Không tìm thấy giao dịch tương ứng với orderId: " + ipnRequest.getOrderId()));
 
-        // Kiểm tra Idempotency: Tránh xử lý lặp lại nếu MoMo retry IPN
         if ("SUCCESS".equalsIgnoreCase(giaoDich.getTrangThai())) {
             log.info("Giao dịch {} đã được ghi nhận thành công trước đó, bỏ qua lặp lại.", ipnRequest.getOrderId());
             return "SUCCESS_ALREADY_PROCESSED";
         }
 
-        // Kiểm tra chữ ký HMAC-SHA256 từ MoMo nếu có
         if (ipnRequest.getSignature() != null && !ipnRequest.getSignature().isEmpty()) {
             String rawSignature = "accessKey=" + momoConfig.getAccessKey()
                     + "&amount=" + ipnRequest.getAmount().longValue()
@@ -198,7 +199,6 @@ public class PaymentService {
             }
         }
 
-        // Kiểm tra chống gian lận số tiền: Đối soát số tiền MoMo báo về với số tiền lưu trong DB
         if (ipnRequest.getAmount() != null && ipnRequest.getAmount().compareTo(giaoDich.getSoTien()) != 0) {
             log.error("CẢNH BÁO BẢO MẬT: Gian lận số tiền! DB yêu cầu: {}, MoMo báo về: {}", giaoDich.getSoTien(), ipnRequest.getAmount());
             giaoDich.setTrangThai("AMOUNT_MISMATCH");
@@ -211,8 +211,6 @@ public class PaymentService {
         if (ipnRequest.getResultCode() != null && ipnRequest.getResultCode() == 0) {
             giaoDich.setTrangThai("SUCCESS");
             repository.save(giaoDich);
-
-            // 🌟 Tự động đồng bộ sang Order Service để chuyển Đơn Hàng sang ĐÃ THANH TOÁN
             syncOrderStatus(giaoDich.getDonHangId(), "ĐÃ THANH TOÁN");
             log.info("Tiền đã vào tài khoản MoMo! Đã đồng bộ đơn hàng {} sang trạng thái ĐÃ THANH TOÁN", giaoDich.getDonHangId());
         } else {
@@ -224,9 +222,6 @@ public class PaymentService {
         return "Processed IPN";
     }
 
-    /**
-     * Xác nhận thanh toán trực tiếp qua chuyển khoản MoMo cá nhân (Thủ kho / Kế toán đối soát nhận tiền)
-     */
     @Transactional
     public PaymentResponse confirmManualPayment(String donHangId, Long transId, String ghiChu) {
         GiaoDichMoMo giaoDich = repository.findByDonHangId(donHangId)
@@ -239,15 +234,15 @@ public class PaymentService {
         }
         repository.save(giaoDich);
 
-        // Đồng bộ trạng thái đơn hàng sang order-service
         syncOrderStatus(giaoDich.getDonHangId(), "ĐÃ THANH TOÁN");
-        log.info("Thủ kho xác nhận đã nhận tiền MoMo cho đơn hàng {}. Đã chuyển đơn sang ĐÃ THANH TOÁN.", donHangId);
+        log.info("Xác nhận đã nhận tiền MoMo cho đơn hàng {}. Đã chuyển đơn sang ĐÃ THANH TOÁN.", donHangId);
 
         return PaymentResponse.builder()
                 .paymentUrl(giaoDich.getPayUrl())
                 .qrCodeUrl(giaoDich.getQrCodeUrl())
                 .momoOrderId(giaoDich.getMomoOrderId())
                 .donHangId(giaoDich.getDonHangId())
+                .maGiaoDichGoc(giaoDich.getMaGiaoDichGoc())
                 .soTien(giaoDich.getSoTien())
                 .trangThai("SUCCESS")
                 .message("Đã xác nhận tiền vào tài khoản MoMo và hoàn tất đơn hàng!")
@@ -256,9 +251,6 @@ public class PaymentService {
                 .build();
     }
 
-    /**
-     * Tiện ích Mock giả lập thanh toán thành công (Phục vụ Demo / Test nội bộ)
-     */
     @Transactional
     public PaymentResponse mockPaymentSuccess(String momoOrderId) {
         GiaoDichMoMo giaoDich = repository.findByMomoOrderId(momoOrderId)
@@ -268,7 +260,6 @@ public class PaymentService {
         giaoDich.setTrangThai("SUCCESS");
         repository.save(giaoDich);
 
-        // Đồng bộ trạng thái đơn hàng sang order-service
         syncOrderStatus(giaoDich.getDonHangId(), "ĐÃ THANH TOÁN");
 
         return PaymentResponse.builder()
@@ -276,6 +267,7 @@ public class PaymentService {
                 .qrCodeUrl(giaoDich.getQrCodeUrl())
                 .momoOrderId(momoOrderId)
                 .donHangId(giaoDich.getDonHangId())
+                .maGiaoDichGoc(giaoDich.getMaGiaoDichGoc())
                 .soTien(giaoDich.getSoTien())
                 .trangThai("SUCCESS")
                 .message("Giả lập nhận tiền MoMo thành công!")
@@ -291,21 +283,22 @@ public class PaymentService {
         return mockPaymentSuccess(giaoDich.getMomoOrderId());
     }
 
-    /**
-     * Lấy trạng thái thanh toán hiện tại của đơn hàng
-     */
     public GiaoDichMoMo getPaymentStatus(String donHangId) {
         return repository.findByDonHangId(donHangId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch cho đơn hàng: " + donHangId));
     }
 
-    /**
-     * Hàm gọi HTTP sang order-service để đồng bộ trạng thái đơn
-     */
     private void syncOrderStatus(String maDonHang, String paymentStatus) {
         try {
-            String orderUrl = "http://localhost:8082/orders/" + maDonHang + "/payment-status?paymentStatus=" + paymentStatus;
-            restTemplate.put(orderUrl, null);
+            if (maDonHang != null) {
+                if (maDonHang.startsWith("CHECKOUT-")) {
+                    String sessionUrl = "http://localhost:8082/orders/checkout-session/" + maDonHang + "/payment-status?paymentStatus=" + paymentStatus;
+                    restTemplate.put(sessionUrl, null);
+                } else {
+                    String orderUrl = "http://localhost:8082/orders/" + maDonHang + "/payment-status?paymentStatus=" + paymentStatus;
+                    restTemplate.put(orderUrl, null);
+                }
+            }
         } catch (Exception e) {
             log.warn("Không thể gọi sang order-service để đồng bộ đơn {}: {}", maDonHang, e.getMessage());
         }

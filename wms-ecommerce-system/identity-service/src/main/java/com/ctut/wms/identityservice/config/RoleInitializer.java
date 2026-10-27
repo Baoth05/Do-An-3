@@ -18,18 +18,24 @@ public class RoleInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Kiểm tra xem bảng vai_tro có đang trống không
-        if (roleRepository.count() == 0) {
-            log.info("Bảng Vai Trò đang trống. Bắt đầu tự động nạp dữ liệu...");
+        // Khởi tạo các vai trò chuẩn theo tài liệu V2.0 (B2B2C Sàn Tập Trung & Kho 2 Tầng)
+        initRoleIfNotExists("ADMIN", "Quản trị viên");
+        initRoleIfNotExists("STORE_OWNER", "Chủ cửa hàng");
+        initRoleIfNotExists("WAREHOUSE_MANAGER", "Thủ kho trung tâm");
+        initRoleIfNotExists("WAREHOUSE_STAFF", "Nhân viên kho vận");
+        initRoleIfNotExists("CUSTOMER", "Khách hàng");
+        // Giữ tương thích ngược cho mã vai trò cũ nếu có
+        initRoleIfNotExists("THUKHO", "Thủ kho");
+        initRoleIfNotExists("NVKHO", "Nhân viên kho");
+    }
 
-            Role admin = new Role(); admin.setMaVaiTro("ADMIN"); admin.setTenVaiTro("Quản trị viên");
-            Role thuKho = new Role(); thuKho.setMaVaiTro("THUKHO"); thuKho.setTenVaiTro("Thủ kho");
-            Role nvKho = new Role(); nvKho.setMaVaiTro("NVKHO"); nvKho.setTenVaiTro("Nhân viên kho");
-            Role customer = new Role(); customer.setMaVaiTro("CUSTOMER"); customer.setTenVaiTro("Khách hàng");
-
-            // Lưu tất cả xuống CSDL
-            roleRepository.saveAll(Arrays.asList(admin, thuKho, nvKho, customer));
-            log.info("Khởi tạo 4 vai trò mặc định thành công!");
+    private void initRoleIfNotExists(String maVaiTro, String tenVaiTro) {
+        if (!roleRepository.existsByMaVaiTro(maVaiTro)) {
+            Role role = new Role();
+            role.setMaVaiTro(maVaiTro);
+            role.setTenVaiTro(tenVaiTro);
+            roleRepository.save(role);
+            log.info("-> Đã khởi tạo vai trò: {} ({})", maVaiTro, tenVaiTro);
         }
     }
 }

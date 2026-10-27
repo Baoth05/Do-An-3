@@ -1,0 +1,483 @@
+/* src/pages/Checkout.css */
+.checkout-page {
+  padding: 32px 0 60px 0;
+}
+
+.checkout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.checkout-header h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.secure-checkout-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 28px;
+  align-items: start;
+}
+
+.checkout-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.card-header-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 12px;
+}
+
+.card-icon {
+  font-size: 20px;
+  color: #2563eb;
+}
+
+.card-header-line h3 {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.form-group input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Shipping Options */
+.shipping-options-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.shipping-option-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.shipping-option-card.active, .shipping-option-card:hover {
+  border-color: #2563eb;
+  background: #f8fafc;
+}
+
+.ship-meta {
+  flex: 1;
+}
+
+.ship-meta strong {
+  display: block;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.ship-time {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.ship-price {
+  font-size: 12px;
+  font-weight: 800;
+  color: #059669;
+  background: #ecfdf5;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+/* Payment Methods */
+.payment-methods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.payment-method-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.payment-method-item.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.method-logo-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.momo-badge {
+  background: #a50064;
+}
+
+.crypto-badge {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.cod-badge {
+  background: #475569;
+}
+
+.method-details strong {
+  display: block;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.method-details p {
+  font-size: 12px;
+  color: #64748b;
+  margin: 4px 0 0 0;
+}
+
+/* Side Summary */
+.checkout-summary-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  position: sticky;
+  top: 90px;
+}
+
+.checkout-summary-card h3 {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 0 0 16px 0;
+}
+
+.split-orders-preview {
+  margin-bottom: 20px;
+}
+
+.split-shop-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.split-shop-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.split-shop-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.split-items-mini {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+  color: #475569;
+}
+
+.split-items-mini li {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.summary-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #475569;
+}
+
+.breakdown-row.discount {
+  color: #059669;
+  font-weight: 600;
+}
+
+.breakdown-row.total {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.total-highlight {
+  font-size: 22px;
+  font-weight: 800;
+  color: #dc2626;
+}
+
+.btn-submit-order {
+  width: 100%;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);
+  transition: all 0.2s;
+}
+
+.btn-submit-order:hover:not(:disabled) {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.terms-agree {
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: center;
+  margin-top: 14px;
+  line-height: 1.4;
+}
+
+/* MODAL STYLES */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.payment-modal-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.momo-modal-badge {
+  background: #a50064;
+  color: #ffffff;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.crypto-modal-badge {
+  background: #f59e0b;
+  color: #ffffff;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.modal-header h4 {
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0 0 16px 0;
+}
+
+.qr-container {
+  margin-bottom: 16px;
+}
+
+.qr-image {
+  width: 200px;
+  height: 200px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
+.qr-instruction {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.transfer-info-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  text-align: left;
+}
+
+.t-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.amount-highlight {
+  color: #dc2626;
+  font-size: 15px;
+}
+
+.code-highlight {
+  color: #2563eb;
+  font-family: monospace;
+}
+
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-confirm-paid {
+  width: 100%;
+  background: #10b981;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-open-momo-link {
+  color: #a50064;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.wallet-address-box {
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+  padding: 10px;
+  border-radius: 6px;
+  word-break: break-all;
+  font-size: 12px;
+  margin: 10px 0;
+}
+
+.crypto-amount-box {
+  font-size: 15px;
+  color: #d97706;
+  margin-bottom: 14px;
+}
+
+.txhash-group input {
+  font-family: monospace;
+}
+
+.btn-cancel-modal {
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+

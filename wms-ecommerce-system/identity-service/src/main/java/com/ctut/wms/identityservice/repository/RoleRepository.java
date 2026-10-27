@@ -12,4 +12,5 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
     // Spring Boot sẽ tự động dịch tên hàm này thành câu lệnh SQL:
     // SELECT * FROM vai_tro WHERE ma_vai_tro = ?
     Optional<Role> findByMaVaiTro(String maVaiTro);
+    boolean existsByMaVaiTro(String maVaiTro);
 }

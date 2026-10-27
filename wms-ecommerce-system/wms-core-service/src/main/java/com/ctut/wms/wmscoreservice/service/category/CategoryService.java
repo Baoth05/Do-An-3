@@ -4,6 +4,7 @@ import com.ctut.wms.wmscoreservice.entity.category.Category;
 import com.ctut.wms.wmscoreservice.repository.category.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -12,13 +13,36 @@ import java.util.List;
 public class CategoryService {
     private final CategoryRepository categoryRepository;
 
-    // Hàm tạo danh mục mới
     public Category createCategory(Category category) {
         return categoryRepository.save(category);
     }
 
-    // Hàm lấy tất cả danh mục
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();
+    }
+
+    public Category getCategoryById(Long id) {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy danh mục có ID = " + id));
+    }
+
+    @Transactional
+    public Category updateCategory(Long id, Category category) {
+        Category existing = getCategoryById(id);
+        if (category.getTenDanhMuc() != null) {
+            existing.setTenDanhMuc(category.getTenDanhMuc());
+        }
+        if (category.getMoTa() != null) {
+            existing.setMoTa(category.getMoTa());
+        }
+        return categoryRepository.save(existing);
+    }
+
+    @Transactional
+    public void deleteCategory(Long id) {
+        if (!categoryRepository.existsById(id)) {
+            throw new RuntimeException("Lỗi: Không tìm thấy danh mục có ID = " + id);
+        }
+        categoryRepository.deleteById(id);
     }
 }

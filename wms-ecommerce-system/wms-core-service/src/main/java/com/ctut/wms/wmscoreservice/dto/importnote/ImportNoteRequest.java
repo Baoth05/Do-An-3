@@ -7,6 +7,7 @@ import java.util.List;
 public class ImportNoteRequest {
     private Long nhaCungCapId;
     private Long khoHangId;
-    private String nguoiTao; // Tên tài khoản thủ kho
-    private List<ImportNoteDetailRequest> danhSachHangHoa; // Danh sách các món hàng cần nhập
+    private Long donViVanChuyenId;
+    private String nguoiTao;
+    private List<ImportNoteDetailRequest> danhSachHangHoa;
 }

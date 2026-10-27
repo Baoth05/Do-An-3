@@ -1,220 +1,90 @@
-/* src/pages/Product/ProductManagement.css */
+/* src/pages/Product/ProductManagement.css - Clean Enterprise UI */
 
 .product-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
-/* 1. Phần Tiêu đề Trang */
+/* 1. Tiêu đề */
 .product-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .product-header h2 {
-  font-size: 22px;
-  color: #0f172a !important; /* Chữ xanh đen đậm nét */
-  margin-bottom: 4px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
 }
 
 .product-header p {
   font-size: 13px;
-  color: #475569 !important; /* Chữ mô tả rõ ràng */
+  color: #64748b;
+  margin-top: 2px;
 }
 
-/* 2. Thanh công cụ & Ô tìm kiếm */
+/* 2. Toolbar & Tìm kiếm */
 .product-toolbar {
   display: flex;
   gap: 12px;
   align-items: center;
+  background: #ffffff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
-.search-box {
+.product-toolbar .search-box {
   flex: 1;
-  position: relative;
-  max-width: 420px;
+  max-width: 450px;
 }
 
-.search-box .search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
+/* 3. Bảng Dữ Liệu */
+.prod-name-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.prod-name-box strong {
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.prod-sub {
   color: #64748b;
-  z-index: 2;
-}
-
-/* Ô tìm kiếm nền trắng */
-.search-box input {
-  width: 100%;
-  padding: 10px 12px 10px 38px;
-  background-color: #ffffff !important;
-  border: 1px solid #cbd5e1 !important;
-  border-radius: 8px;
-  color: #0f172a !important;
-  font-size: 13px;
-  font-weight: 500;
-  outline: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.search-box input::placeholder {
-  color: #94a3b8 !important;
-}
-
-.search-box input:focus {
-  border-color: #2563eb !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
-}
-
-/* Nút Thêm Hàng Hóa */
-.btn-primary {
-  background-color: #dc2626 !important; /* Màu đỏ thương hiệu CTUT WMS */
-  color: #ffffff !important;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
-}
-
-.btn-primary:hover {
-  background-color: #b91c1c !important;
-  transform: translateY(-1px);
-}
-
-/* 3. Khung Bảng Dữ Liệu Hàng Hóa */
-.product-table-wrapper {
-  background-color: #ffffff !important; /* Nền trắng tinh */
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-}
-
-.product-code-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Thẻ Danh Mục (Bàn phím, Chuột, Màn hình...) */
-.category-tag {
-  background-color: #f1f5f9 !important;
-  color: #334155 !important;
-  padding: 4px 10px;
-  border-radius: 6px;
   font-size: 11px;
-  font-weight: 700;
-  border: 1px solid #cbd5e1 !important;
 }
 
-/* 4. Quy tắc hiển thị nội dung Bảng WMS */
-.wms-data-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.wms-data-table th {
-  text-align: left;
-  padding: 14px 16px;
-  background-color: #f8fafc !important; /* Nền tiêu đề xám cực nhạt */
-  border-bottom: 2px solid #e2e8f0 !important;
-  font-size: 12px;
-  font-weight: 800;
-  color: #334155 !important;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.wms-data-table td {
-  padding: 14px 16px;
-  border-bottom: 1px solid #f1f5f9 !important;
-  font-size: 13px;
-  color: #0f172a !important; /* Đen đậm rõ nét tuyệt đối */
-  font-weight: 600;
-}
-
-.wms-data-table tr:hover td {
-  background-color: #f8fafc !important; /* Hiệu ứng hover dòng */
-}
-
-/* Nút thao tác (Sửa / Xóa) */
-.action-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.btn-icon {
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  padding: 6px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-icon:hover {
-  background-color: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
-}
-
-.text-blue { color: #2563eb !important; }
-.text-red { color: #dc2626 !important; }
-
-/* Huy hiệu Trạng thái Kinh doanh */
-.badge {
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 700;
+.status-tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
 }
 
-.badge.safe {
-  background-color: #dcfce7 !important;
-  color: #15803d !important;
-  border: 1px solid #86efac !important;
+.status-tag.active {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
 }
 
-.badge.warning {
-  background-color: #fee2e2 !important;
-  color: #dc2626 !important;
-  border: 1px solid #fca5a5 !important;
+.status-tag.inactive {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
 }
 
-/* Utility Classes */
-.text-center {
-  text-align: center;
-  color: #64748b !important;
-  padding: 24px !important;
-}
-
-.text-bold {
-  font-weight: 800 !important;
-  color: #0f172a !important;
-}
-
-.text-muted {
-  color: #64748b !important;
-}
-
-.font-mono {
-  font-family: monospace;
-  font-weight: 800 !important;
-  color: #1e293b !important;
+.product-footer {
+  padding: 10px 16px;
+  background: #ffffff;
+  border-top: 1px solid #f1f5f9;
+  font-size: 12px;
+  color: #64748b;
 }

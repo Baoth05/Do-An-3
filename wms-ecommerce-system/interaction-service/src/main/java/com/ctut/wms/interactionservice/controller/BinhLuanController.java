@@ -28,5 +28,10 @@ public class BinhLuanController {
     public ResponseEntity<?> layBinhLuan(@PathVariable String maHangHoa) {
         return ResponseEntity.ok(binhLuanService.layBinhLuanGoc(maHangHoa));
     }
-}
 
+    // API lấy bình luận theo Gian hàng trên Sàn
+    @GetMapping("/shop/{cuaHangId}")
+    public ResponseEntity<?> layBinhLuanTheoShop(@PathVariable Long cuaHangId) {
+        return ResponseEntity.ok(binhLuanService.layBinhLuanTheoShop(cuaHangId));
+    }
+}

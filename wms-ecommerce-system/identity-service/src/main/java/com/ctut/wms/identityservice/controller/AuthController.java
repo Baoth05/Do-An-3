@@ -2,15 +2,14 @@ package com.ctut.wms.identityservice.controller;
 
 import com.ctut.wms.identityservice.dto.*;
 import com.ctut.wms.identityservice.service.AuthService;
-import jakarta.validation.Valid; // Thư viện bắt buộc để kích hoạt Validation
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*; // Dùng RestController thay cho Controller
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController // Đánh dấu đây là API trả về dữ liệu (JSON)
+@RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
@@ -21,14 +20,14 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request){
         String result = authService.registerUser(request);
-        return ResponseEntity.ok(result); // Không cần if(Lỗi), Trạm thu gom lỗi sẽ lo việc đó
+        return ResponseEntity.ok(result);
     }
 
     // --- API ĐĂNG NHẬP ---
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
-        return ResponseEntity.ok(response); // Đã dọn dẹp sạch try-catch
+        return ResponseEntity.ok(response);
     }
 
     // --- API XÓA TÀI KHOẢN ---
@@ -59,6 +58,13 @@ public class AuthController {
         return ResponseEntity.ok(result);
     }
 
+    // --- API KHÓA / MỞ KHÓA TÀI KHOẢN ---
+    @PutMapping("/users/{id}/toggle-status")
+    public ResponseEntity<String> toggleUserStatus(@PathVariable Long id) {
+        String result = authService.toggleUserStatus(id);
+        return ResponseEntity.ok(result);
+    }
+
     // --- API ĐỔI MẬT KHẨU ---
     @PutMapping("/change-password/{taiKhoan}")
     public ResponseEntity<String> changePassword(
@@ -67,6 +73,8 @@ public class AuthController {
         String response = authService.changePassword(taiKhoan, request);
         return ResponseEntity.ok(response);
     }
+
+    // --- API LẤY TOÀN BỘ NGƯỜI DÙNG ---
     @GetMapping("/users")
     public ResponseEntity<List<UserProfileResponse>> getAllUsers() {
         List<UserProfileResponse> userList = authService.getAllUsers();

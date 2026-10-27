@@ -13,6 +13,7 @@ const ImportNoteDetail = () => {
 
   const [note, setNote] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     fetchNoteDetail();
@@ -21,38 +22,14 @@ const ImportNoteDetail = () => {
   const fetchNoteDetail = async () => {
     try {
       setIsLoading(true);
-      const allNotes = await wmsCoreService.getImportNotes();
-      if (Array.isArray(allNotes)) {
-        const found = allNotes.find(n => String(n.id) === String(id));
-        if (found) {
-          setNote(found);
-          return;
-        }
+      setErrorMsg('');
+      const noteRes = await wmsCoreService.getImportNoteById(id);
+      if (noteRes) {
+        setNote(noteRes);
       }
-      // Fallback data
-      setNote({
-        id: id,
-        maPhieuNhap: `PN-2026-00${id}`,
-        ngayNhap: '10/10/2026',
-        nguoiTao: 'Nguyễn Văn Thủ Kho',
-        nhaCungCap: {
-          tenNhaCungCap: 'Công ty TNHH Logitech Việt Nam',
-          diaChi: 'Tầng 5, Tòa nhà Bitexco, Q.1, TP.HCM',
-          soDienThoai: '0901234567',
-        },
-        khoHang: {
-          tenKho: 'Kho Tổng Trung Tâm (KHO-01)',
-          diaChi: 'Lô A2, KCN Tân Bình, TP.HCM',
-        },
-        trangThai: 'ĐÃ NHẬP KHO',
-        tongTienNhap: 85000000,
-        items: [
-          { sku: 'SP001', tenSanPham: 'iPhone 15 Pro Max 256GB', donViTinh: 'Cái', soLuong: 20, donGia: 2500000, thanhTien: 50000000 },
-          { sku: 'SP003', tenSanPham: 'Tai nghe Sony WH-1000XM5', donViTinh: 'Cái', soLuong: 10, donGia: 3500000, thanhTien: 35000000 },
-        ],
-      });
     } catch (e) {
       console.warn('Lỗi lấy chi tiết phiếu nhập:', e.message);
+      setErrorMsg('Không thể nạp chứng từ phiếu nhập từ máy chủ.');
     } finally {
       setIsLoading(false);
     }
@@ -62,7 +39,7 @@ const ImportNoteDetail = () => {
     window.print();
   };
 
-  if (isLoading || !note) {
+  if (isLoading) {
     return (
       <div className="import-form-container" style={{ padding: '40px', textAlign: 'center' }}>
         <p>Đang tải chi tiết phiếu nhập kho #{id}...</p>
@@ -70,12 +47,26 @@ const ImportNoteDetail = () => {
     );
   }
 
-  const code = note.maPhieuNhap || `PN-2026-00${note.id}`;
-  const supplierName = note.nhaCungCap?.tenNhaCungCap || note.nhaCungCap || 'Đối tác phân phối';
-  const supplierPhone = note.nhaCungCap?.soDienThoai || '0901234567';
-  const supplierAddress = note.nhaCungCap?.diaChi || 'Toàn quốc';
-  const warehouseName = note.khoHang?.tenKho || 'Kho Tổng Trung Tâm';
-  const totalAmount = note.tongTienNhap || 85000000;
+  if (errorMsg || !note) {
+    return (
+      <div className="import-form-container" style={{ padding: '40px', textAlign: 'center' }}>
+        <p style={{ color: '#c53030' }}>{errorMsg || 'Không tìm thấy phiếu nhập này!'}</p>
+        <button className="btn-secondary" onClick={() => navigate('/import-notes')} style={{ marginTop: '16px' }}>
+          Quay lại danh sách
+        </button>
+      </div>
+    );
+  }
+
+  const code = note.maPhieuNhap || `PN-${note.id}`;
+  const supplierName = note.tenNhaCungCap || 'Chưa xác định';
+  const supplierPhone = note.sdtNhaCungCap || '---';
+  const supplierAddress = note.diaChiNhaCungCap || 'Toàn quốc';
+  const warehouseName = note.tenKhoHang || 'Kho Tổng Trung Tâm';
+  const warehouseAddress = note.diaChiKho || '';
+  const totalAmount = note.tongTienNhap || 0;
+  const items = note.danhSachHangHoa || [];
+  const dateFormatted = note.ngayNhap ? new Date(note.ngayNhap).toLocaleString('vi-VN') : '---';
 
   return (
     <div className="import-form-container">
@@ -99,125 +90,114 @@ const ImportNoteDetail = () => {
         <div className="form-header-actions">
           <button 
             type="button" 
-            className="btn-submit" 
+            className="btn-print" 
             onClick={handlePrint}
-            style={{ backgroundColor: '#0f172a' }}
           >
-            <FiPrinter size={16} /> In Phiếu Nhập Kho
+            <FiPrinter size={16} /> In Phiếu Nhập
           </button>
         </div>
       </div>
 
-      {/* Tờ Phiếu Nhập Chuẩn In Ấn */}
-      <div className="voucher-paper">
-        <div className="voucher-header">
-          <div className="voucher-title">
-            <h1>PHIẾU NHẬP KHO HÀNG HÓA</h1>
-            <p>CTUT WMS SYSTEM • BỘ PHẬN QUẢN LÝ KHO BÃI & CHUỖI CUNG ỨNG</p>
+      {/* Tờ Phiếu Nhập Kho A4 Chuẩn */}
+      <div className="receipt-paper">
+        <div className="receipt-header">
+          <div>
+            <h1>HỆ THỐNG PHÂN HỆ QUẢN LÝ KHO CTUT WMS</h1>
+            <p>Đồ án tốt nghiệp / Phân hệ Lõi Kho Bãi wms-core-service (Port 8081)</p>
           </div>
-          <div className="voucher-meta">
-            <div>Mã số phiếu: <span className="voucher-code">{code}</span></div>
-            <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>
-              Ngày nhập: <strong>{note.ngayNhap || new Date().toLocaleDateString('vi-VN')}</strong>
-            </div>
-            <div style={{ marginTop: '6px' }}>
-              <span className="badge safe"><FiCheckCircle size={12} /> {note.trangThai || 'ĐÃ NHẬP KHO'}</span>
-            </div>
+          <div className="receipt-meta">
+            <h3>PHIẾU NHẬP KHO</h3>
+            <span className="code-text">Mã: {code}</span>
+            <span className="date-text">Ngày: {dateFormatted}</span>
           </div>
         </div>
 
-        {/* Thông tin đối tác & kho nhận */}
-        <div className="voucher-info-grid">
-          <div>
-            <p style={{ margin: '0 0 6px 0', fontSize: '14px' }}>
-              <strong><FiTruck /> Đơn vị giao hàng / Nhà cung cấp:</strong> {supplierName}
-            </p>
-            <p style={{ margin: '0 0 6px 0', fontSize: '13px', color: '#475569' }}>
-              <strong>Số điện thoại liên hệ:</strong> {supplierPhone}
-            </p>
-            <p style={{ margin: '0', fontSize: '13px', color: '#475569' }}>
-              <strong>Địa chỉ xuất kho giao:</strong> {supplierAddress}
-            </p>
+        <hr className="receipt-divider" />
+
+        <div className="receipt-info-grid">
+          <div className="info-block">
+            <h4><FiTruck /> ĐƠN VỊ CUNG CẤP HÀNG</h4>
+            <p><strong>{supplierName}</strong></p>
+            <p><FiMapPin size={12} /> Địa chỉ: {supplierAddress}</p>
+            <p>Điện thoại: {supplierPhone}</p>
           </div>
 
-          <div>
-            <p style={{ margin: '0 0 6px 0', fontSize: '14px' }}>
-              <strong><FiMapPin /> Kho nhập hàng:</strong> {warehouseName}
-            </p>
-            <p style={{ margin: '0 0 6px 0', fontSize: '13px', color: '#475569' }}>
-              <strong>Người lập chứng từ:</strong> {note.nguoiTao || 'Thủ kho trưởng'}
-            </p>
-            <p style={{ margin: '0', fontSize: '13px', color: '#475569' }}>
-              <strong>Lý do nhập:</strong> Nhập hàng bổ sung tồn kho định kỳ
-            </p>
+          <div className="info-block">
+            <h4><FiMapPin /> KHO NHẬN HÀNG</h4>
+            <p><strong>{warehouseName}</strong></p>
+            {warehouseAddress && <p>Địa chỉ: {warehouseAddress}</p>}
+            <p><FiUser size={12} /> Người lập chứng từ: {note.nguoiTao || 'Thủ kho'}</p>
+            <p>Trạng thái: <strong style={{ color: '#16a34a' }}>{note.trangThai || 'ĐÃ NHẬP KHO'}</strong></p>
           </div>
         </div>
 
-        {/* Danh sách mặt hàng */}
-        <div className="items-table-wrapper" style={{ marginTop: '20px' }}>
-          <table className="items-table">
-            <thead>
+        {/* Bảng kê danh mục sản phẩm */}
+        <table className="receipt-table">
+          <thead>
+            <tr>
+              <th style={{ width: '40px' }}>STT</th>
+              <th>Mã SKU</th>
+              <th>Tên Hàng Hóa / Thiết Bị</th>
+              <th>Đơn Vị Tính</th>
+              <th style={{ textAlign: 'center' }}>Số Lượng</th>
+              <th style={{ textAlign: 'right' }}>Đơn Giá Nhập</th>
+              <th style={{ textAlign: 'right' }}>Thành Tiền</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.length === 0 ? (
               <tr>
-                <th style={{ width: '40px', textAlign: 'center' }}>STT</th>
-                <th>Tên Hàng Hóa & Quy Cách</th>
-                <th style={{ width: '100px', textAlign: 'center' }}>Đơn Vị Tính</th>
-                <th style={{ width: '120px', textAlign: 'right' }}>Số Lượng</th>
-                <th style={{ width: '160px', textAlign: 'right' }}>Đơn Giá Nhập</th>
-                <th style={{ width: '180px', textAlign: 'right' }}>Thành Tiền (VNĐ)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(note.items || [
-                { sku: 'SP001', tenSanPham: 'iPhone 15 Pro Max 256GB', donViTinh: 'Cái', soLuong: 20, donGia: 2500000, thanhTien: 50000000 },
-                { sku: 'SP002', tenSanPham: 'MacBook Pro 14 M3 Pro', donViTinh: 'Cái', soLuong: 10, donGia: 3500000, thanhTien: 35000000 },
-              ]).map((it, idx) => (
-                <tr key={idx}>
-                  <td style={{ textAlign: 'center' }}>{idx + 1}</td>
-                  <td>
-                    <strong>{it.tenSanPham}</strong>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>Mã SKU: {it.sku}</div>
-                  </td>
-                  <td style={{ textAlign: 'center' }}>{it.donViTinh || 'Cái'}</td>
-                  <td style={{ textAlign: 'right', fontWeight: 'bold' }}>{it.soLuong}</td>
-                  <td style={{ textAlign: 'right' }}>{Number(it.donGia).toLocaleString('vi-VN')} đ</td>
-                  <td style={{ textAlign: 'right', fontWeight: 'bold', color: '#1d4ed8' }}>
-                    {Number(it.thanhTien).toLocaleString('vi-VN')} đ
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr style={{ backgroundColor: '#f8fafc', fontWeight: 'bold' }}>
-                <td colSpan="5" style={{ textAlign: 'right', padding: '12px' }}>TỔNG CỘNG TIỀN THANH TOÁN:</td>
-                <td style={{ textAlign: 'right', padding: '12px', fontSize: '16px', color: '#1d4ed8' }}>
-                  {Number(totalAmount).toLocaleString('vi-VN')} đ
+                <td colSpan="7" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>
+                  Không có mặt hàng nào trong phiếu.
                 </td>
               </tr>
-            </tfoot>
-          </table>
-        </div>
+            ) : (
+              items.map((it, idx) => {
+                const sku = it.sku || `SP-${it.sanPhamId}`;
+                const name = it.tenSanPham || 'Sản phẩm';
+                const unit = it.donViTinh || 'Cái';
+                const price = Number(it.giaNhap || 0);
+                const qty = Number(it.soLuong || 0);
+                const total = Number(it.thanhTien || price * qty);
+
+                return (
+                  <tr key={it.id || idx}>
+                    <td style={{ textAlign: 'center' }}>{idx + 1}</td>
+                    <td><strong>{sku}</strong></td>
+                    <td>{name}</td>
+                    <td>{unit}</td>
+                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{qty}</td>
+                    <td style={{ textAlign: 'right' }}>{price.toLocaleString('vi-VN')} đ</td>
+                    <td style={{ textAlign: 'right', fontWeight: 600 }}>{total.toLocaleString('vi-VN')} đ</td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan="6" style={{ textAlign: 'right', fontWeight: 700 }}>TỔNG CỘNG TIỀN NHẬP:</td>
+              <td style={{ textAlign: 'right', fontWeight: 800, fontSize: '15px', color: '#0f172a' }}>
+                {Number(totalAmount).toLocaleString('vi-VN')} đ
+              </td>
+            </tr>
+          </tfoot>
+        </table>
 
         {/* Chữ ký xác nhận */}
-        <div className="voucher-signatures">
-          <div className="signature-block">
-            <p className="sign-title">Người Lập Phiếu</p>
-            <p className="sign-sub">(Ký, ghi rõ họ tên)</p>
-            <div className="sign-space"></div>
-            <p style={{ fontWeight: '600' }}>{note.nguoiTao || 'Nguyễn Văn Kho'}</p>
+        <div className="receipt-signatures">
+          <div className="sign-box">
+            <strong>Người Giao Hàng</strong>
+            <small>(Ký và ghi rõ họ tên)</small>
           </div>
-
-          <div className="signature-block">
-            <p className="sign-title">Người Giao Hàng</p>
-            <p className="sign-sub">(Ký, ghi rõ họ tên)</p>
-            <div className="sign-space"></div>
-            <p style={{ fontWeight: '600' }}>Đại diện NCC</p>
+          <div className="sign-box">
+            <strong>Thủ Kho Nhận Hàng</strong>
+            <small>(Ký và ghi rõ họ tên)</small>
+            <p style={{ marginTop: '50px' }}>{note.nguoiTao || 'Thủ kho'}</p>
           </div>
-
-          <div className="signature-block">
-            <p className="sign-title">Thủ Kho Tiếp Nhận</p>
-            <p className="sign-sub">(Ký, đóng dấu xác nhận)</p>
-            <div className="sign-space"></div>
-            <p style={{ fontWeight: '600' }}>Trần Văn Kiểm Kê</p>
+          <div className="sign-box">
+            <strong>Kế Toán Trưởng</strong>
+            <small>(Ký và ghi rõ họ tên)</small>
           </div>
         </div>
       </div>

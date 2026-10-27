@@ -1,180 +1,114 @@
-/* src/pages/Dashboard/WmsDashboard.css */
-.wms-dashboard {
+/* src/pages/Dashboard/WmsDashboard.css - Clean Enterprise Dashboard */
+
+.dashboard-container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
-.wms-dashboard-header h1 {
-  font-size: 22px;
-  font-weight: 800;
-  color: #0f172a; /* Đổi thành đen sẫm */
-  margin-bottom: 4px;
-}
-
-.wms-dashboard-header p {
-  font-size: 13px;
-  color: #64748b;
-}
-
-/* Thống kê */
-.wms-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-.wms-stat-card {
-  background-color: #ffffff; /* Nền trắng */
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); /* Đổ bóng tạo khối 3D */
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.wms-stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-}
-
-.wms-stat-header {
+.dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 11px;
-  font-weight: 800;
-  color: #64748b;
-  letter-spacing: 0.5px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.wms-icon-box {
-  width: 36px;
-  height: 36px;
+.dashboard-header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dashboard-header p {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* Stat Cards Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.stat-icon-wrapper {
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-/* Điều chỉnh màu icon sáng sủa hơn */
-.wms-icon-box.import { background-color: #dcfce7; color: #16a34a; }
-.wms-icon-box.export { background-color: #dbeafe; color: #2563eb; }
-.wms-icon-box.warning { background-color: #fef2f2; color: #dc2626; }
-.wms-icon-box.box { background-color: #f3e8ff; color: #9333ea; }
+.stat-icon-wrapper.blue { background-color: #eff6ff; color: #2563eb; }
+.stat-icon-wrapper.orange { background-color: #fff7ed; color: #ea580c; }
+.stat-icon-wrapper.green { background-color: #f0fdf4; color: #16a34a; }
+.stat-icon-wrapper.purple { background-color: #faf5ff; color: #9333ea; }
 
-.wms-stat-value {
-  font-size: 26px;
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.wms-stat-value small {
-  font-size: 13px;
-  font-weight: 500;
-  color: #64748b;
-}
-
-.wms-stat-sub {
-  font-size: 12px;
-  color: #64748b;
-}
-
-.text-green { color: #16a34a !important; }
-.text-red { color: #dc2626 !important; }
-
-/* Bảng dữ liệu WMS Light Theme */
-.wms-table-container {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-}
-
-.wms-table-header {
+.stat-info {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.wms-table-header h3 {
-  font-size: 15px;
-  font-weight: 700;
-  color: #0f172a;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.wms-btn-outline {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #475569;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s;
-}
-
-.wms-btn-outline:hover {
-  background-color: #f1f5f9;
-  color: #0f172a;
-}
-
-.wms-data-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.wms-data-table th {
-  text-align: left;
-  padding: 12px;
-  border-bottom: 2px solid #e2e8f0; /* Viền tiêu đề bảng dày hơn chút */
+.stat-label {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   color: #64748b;
   text-transform: uppercase;
-  background-color: #f8fafc; /* Nền nhạt cho dòng tiêu đề */
+  letter-spacing: 0.5px;
 }
 
-.wms-data-table td {
-  padding: 14px 12px;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 13px;
-  color: #334155;
+.stat-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.1;
+  margin: 0;
 }
 
-.wms-data-table tr:hover td {
-  background-color: #f8fafc; /* Đổi màu nhẹ khi di chuột qua hàng */
+.stat-meta {
+  font-size: 11px;
+  color: #94a3b8;
 }
 
-.font-mono { font-family: monospace; font-weight: 700; color: #2563eb; }
-.text-bold { font-weight: 700; color: #0f172a; }
-.text-muted { color: #64748b; font-size: 12px; }
-
-.wms-badge {
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
+.stock-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
 }
 
-/* Badge sáng màu, viền mỏng */
-.badge-import { background-color: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
-.badge-export { background-color: #dbeafe; color: #2563eb; border: 1px solid #bfdbfe; }
+.stock-badge.success {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
 
-.status-text { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; }
-.status-text.green { color: #16a34a; }
-.status-text.yellow { color: #ca8a04; }
-.status-text.blue { color: #2563eb; }
+.stock-badge.warning {
+  background-color: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}

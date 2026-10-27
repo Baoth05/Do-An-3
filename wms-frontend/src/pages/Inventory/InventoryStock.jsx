@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
-  FiSearch, FiFilter, FiList, FiAlertCircle, FiRefreshCw, 
-  FiPlus, FiBox, FiCheckCircle, FiMapPin, FiLayers 
+  FiSearch, FiRefreshCw, FiPlus, FiBox, FiCheckCircle, 
+  FiMapPin, FiLayers, FiAlertTriangle, FiList, FiX, FiCheck, FiArrowDownRight, FiArrowUpRight
 } from 'react-icons/fi';
 import { wmsCoreService } from '../../services/wmsCoreService';
 import { productService } from '../../services/productService';
@@ -9,62 +9,12 @@ import Modal from '../../components/Common/Modal';
 import './InventoryStock.css';
 
 const InventoryStock = () => {
-  const initialMockItems = [
-    { 
-      id: 1, 
-      sanPhamId: 1,
-      khoHangId: 1,
-      sku: 'SP001', 
-      tenHangHoa: 'iPhone 15 Pro Max 256GB', 
-      tenKho: 'Kho Tổng Trung Tâm',
-      donViTinh: 'Cái', 
-      soLuongThucTe: 50, 
-      soLuongKhaDung: 48, 
-      soLuongCanhBao: 20 
-    },
-    { 
-      id: 2, 
-      sanPhamId: 2,
-      khoHangId: 1,
-      sku: 'SP002', 
-      tenHangHoa: 'MacBook Pro 14 M3 Pro 18GB/512GB', 
-      tenKho: 'Kho Tổng Trung Tâm',
-      donViTinh: 'Cái', 
-      soLuongThucTe: 8, 
-      soLuongKhaDung: 6, 
-      soLuongCanhBao: 15 
-    },
-    { 
-      id: 3, 
-      sanPhamId: 3,
-      khoHangId: 1,
-      sku: 'SP003', 
-      tenHangHoa: 'Tai nghe Sony WH-1000XM5', 
-      tenKho: 'Kho Tổng Trung Tâm',
-      donViTinh: 'Cái', 
-      soLuongThucTe: 100, 
-      soLuongKhaDung: 95, 
-      soLuongCanhBao: 30 
-    },
-    { 
-      id: 4, 
-      sanPhamId: 4,
-      khoHangId: 1,
-      sku: 'SP004', 
-      tenHangHoa: 'Chuột không dây Logitech MX Master 3S', 
-      tenKho: 'Kho Tổng Trung Tâm',
-      donViTinh: 'Cái', 
-      soLuongThucTe: 5, 
-      soLuongKhaDung: 3, 
-      soLuongCanhBao: 10 
-    },
-  ];
-
-  const [inventoryList, setInventoryList] = useState(initialMockItems);
+  const [inventoryList, setInventoryList] = useState([]);
   const [products, setProducts] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [onlyLowStock, setOnlyLowStock] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('ALL'); // 'ALL' | 'LOW' | 'OUT' | 'SAFE'
+  const [selectedWarehouse, setSelectedWarehouse] = useState('ALL');
   const [isLoading, setIsLoading] = useState(false);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
 
@@ -72,6 +22,8 @@ const InventoryStock = () => {
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
   const [selectedStock, setSelectedStock] = useState(null);
+  const [stockCards, setStockCards] = useState([]);
+  const [isLoadingCards, setIsLoadingCards] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -89,58 +41,36 @@ const InventoryStock = () => {
         wmsCoreService.getWarehouses(),
       ]);
 
-      let backendConnected = false;
-      let rawProducts = [];
-      let rawWarehouses = [];
-
       if (prodRes.status === 'fulfilled' && Array.isArray(prodRes.value)) {
-        rawProducts = prodRes.value;
-        setProducts(rawProducts);
+        setProducts(prodRes.value);
       }
       if (whRes.status === 'fulfilled' && Array.isArray(whRes.value)) {
-        rawWarehouses = whRes.value;
-        setWarehouses(rawWarehouses);
+        setWarehouses(whRes.value);
       }
 
-      // Xử lý tồn kho từ WMS Core
-      if (invRes.status === 'fulfilled' && Array.isArray(invRes.value) && invRes.value.length > 0) {
-        backendConnected = true;
+      if (invRes.status === 'fulfilled' && Array.isArray(invRes.value)) {
+        setIsBackendConnected(true);
         const mapped = invRes.value.map(inv => ({
           id: inv.id,
-          sanPhamId: inv.sanPham?.id,
-          khoHangId: inv.khoHang?.id,
-          sku: inv.sanPham?.sku || `SP${inv.sanPham?.id || inv.id}`,
-          tenHangHoa: inv.sanPham?.tenSanPham || 'Sản phẩm ' + inv.id,
-          tenKho: inv.khoHang?.tenKho || 'Kho Tổng',
-          donViTinh: inv.sanPham?.donViTinh || 'Cái',
+          sanPhamId: inv.sanPhamId || inv.sanPham?.id,
+          khoHangId: inv.khoHangId || inv.khoHang?.id,
+          sku: inv.sku || inv.sanPham?.sku || `SP${inv.id}`,
+          tenHangHoa: inv.tenSanPham || inv.sanPham?.tenSanPham || 'Sản phẩm ' + inv.id,
+          tenKho: inv.tenKho || inv.khoHang?.tenKho || 'Kho Tổng Trung Tâm',
+          donViTinh: inv.donViTinh || inv.sanPham?.donViTinh || 'Cái',
           soLuongThucTe: inv.soLuongThucTe ?? 0,
           soLuongKhaDung: inv.soLuongKhaDung ?? 0,
-          soLuongCanhBao: inv.soLuongToiThieu || 10,
-          soLuongToiDa: inv.soLuongToiDa || 1000,
+          soLuongCanhBao: inv.soLuongToiThieu ?? 10,
+          soLuongToiDa: inv.soLuongToiDa ?? 1000,
+          giaBanHienTai: inv.giaBanHienTai || 0,
         }));
         setInventoryList(mapped);
-      } else if (rawProducts.length > 0) {
-        backendConnected = true;
-        // Nếu bảng tồn kho chưa có nhưng danh sách sản phẩm có
-        const mappedFromProd = rawProducts.map(p => ({
-          id: p.id,
-          sanPhamId: p.id,
-          khoHangId: 1,
-          sku: p.sku || `SP00${p.id}`,
-          tenHangHoa: p.tenSanPham || p.tenHangHoa,
-          tenKho: 'Kho Tổng Trung Tâm',
-          donViTinh: p.donViTinh || 'Cái',
-          soLuongThucTe: p.soLuongTonKho ?? 25,
-          soLuongKhaDung: p.soLuongTonKho ?? 25,
-          soLuongCanhBao: p.soLuongCanhBao || 10,
-          soLuongToiDa: 1000,
-        }));
-        setInventoryList(mappedFromProd);
+      } else {
+        setInventoryList([]);
       }
-
-      setIsBackendConnected(backendConnected);
     } catch (e) {
-      console.warn('Lỗi lấy dữ liệu tồn kho từ Backend:', e.message);
+      console.warn('Lỗi lấy dữ liệu tồn kho:', e.message);
+      setIsBackendConnected(false);
     } finally {
       setIsLoading(false);
     }
@@ -150,278 +80,479 @@ const InventoryStock = () => {
     fetchStock();
   }, []);
 
-  // Mở modal điều chỉnh / thêm tồn kho
-  const handleOpenAdjust = (prefillItem = null) => {
+  // KPIs
+  const stats = useMemo(() => {
+    const totalSKUs = inventoryList.length;
+    const totalItems = inventoryList.reduce((acc, i) => acc + (i.soLuongThucTe || 0), 0);
+    const lowStockCount = inventoryList.filter(i => i.soLuongThucTe > 0 && i.soLuongThucTe <= i.soLuongCanhBao).length;
+    const outOfStockCount = inventoryList.filter(i => i.soLuongThucTe <= 0).length;
+    const safeStockCount = inventoryList.filter(i => i.soLuongThucTe > i.soLuongCanhBao).length;
+
+    return { totalSKUs, totalItems, lowStockCount, outOfStockCount, safeStockCount };
+  }, [inventoryList]);
+
+  // Lọc dữ liệu
+  const filteredItems = useMemo(() => {
+    return inventoryList.filter(item => {
+      const q = searchTerm.toLowerCase();
+      const matchSearch = 
+        (item.tenHangHoa || '').toLowerCase().includes(q) ||
+        (item.sku || '').toLowerCase().includes(q) ||
+        (item.tenKho || '').toLowerCase().includes(q);
+
+      if (!matchSearch) return false;
+
+      // Lọc theo kho
+      if (selectedWarehouse !== 'ALL' && String(item.khoHangId) !== String(selectedWarehouse)) {
+        return false;
+      }
+
+      // Lọc theo trạng thái
+      if (filterStatus === 'LOW') {
+        return item.soLuongThucTe > 0 && item.soLuongThucTe <= item.soLuongCanhBao;
+      }
+      if (filterStatus === 'OUT') {
+        return item.soLuongThucTe <= 0;
+      }
+      if (filterStatus === 'SAFE') {
+        return item.soLuongThucTe > item.soLuongCanhBao;
+      }
+
+      return true;
+    });
+  }, [inventoryList, searchTerm, selectedWarehouse, filterStatus]);
+
+  const handleOpenAdjust = (stock) => {
+    setSelectedStock(stock);
     setFormData({
-      sanPhamId: prefillItem?.sanPhamId || products[0]?.id || 1,
-      khoHangId: prefillItem?.khoHangId || warehouses[0]?.id || 1,
+      sanPhamId: stock.sanPhamId || products[0]?.id || '',
+      khoHangId: stock.khoHangId || warehouses[0]?.id || '',
       soLuong: 10,
     });
     setIsAdjustModalOpen(true);
   };
 
-  // Submit điều chỉnh tồn kho
-  const handleAdjustSubmit = async (e) => {
+  const handleOpenNewStock = () => {
+    setSelectedStock(null);
+    setFormData({
+      sanPhamId: products[0]?.id || '',
+      khoHangId: warehouses[0]?.id || '',
+      soLuong: 10,
+    });
+    setIsAdjustModalOpen(true);
+  };
+
+  const handleOpenCard = async (stock) => {
+    setSelectedStock(stock);
+    setIsCardModalOpen(true);
+    setStockCards([]);
+    if (stock.sanPhamId) {
+      try {
+        setIsLoadingCards(true);
+        const res = await wmsCoreService.getStockCards({ 
+          sanPhamId: stock.sanPhamId,
+          khoHangId: stock.khoHangId 
+        });
+        if (Array.isArray(res)) {
+          setStockCards(res);
+        }
+      } catch (err) {
+        console.warn('Lỗi tải thẻ kho:', err.message);
+      } finally {
+        setIsLoadingCards(false);
+      }
+    }
+  };
+
+  const handleSubmitAdjust = async (e) => {
     e.preventDefault();
-    const payload = {
-      sanPhamId: Number(formData.sanPhamId),
-      khoHangId: Number(formData.khoHangId),
-      soLuong: Number(formData.soLuong),
-    };
+    if (!formData.sanPhamId || !formData.khoHangId) {
+      alert('Vui lòng chọn sản phẩm và kho hàng!');
+      return;
+    }
 
     try {
+      const payload = {
+        sanPhamId: Number(formData.sanPhamId),
+        khoHangId: Number(formData.khoHangId),
+        soLuong: Number(formData.soLuong),
+      };
+
       await wmsCoreService.addStock(payload);
       alert('Cập nhật tồn kho thành công!');
       setIsAdjustModalOpen(false);
       fetchStock();
     } catch (err) {
-      alert('Không thể cập nhật tồn kho: ' + (err.response?.data || err.message));
-      // Fallback local UI
-      setInventoryList(prev => prev.map(item => {
-        if (item.sanPhamId === payload.sanPhamId) {
-          const newActual = item.soLuongThucTe + payload.soLuong;
-          const newAvail = item.soLuongKhaDung + payload.soLuong;
-          return { ...item, soLuongThucTe: newActual, soLuongKhaDung: newAvail };
-        }
-        return item;
-      }));
-      setIsAdjustModalOpen(false);
+      alert('Lỗi khi cập nhật tồn kho: ' + (err.response?.data || err.message));
     }
   };
-
-  // Mở xem thẻ kho
-  const handleViewCard = (item) => {
-    setSelectedStock(item);
-    setIsCardModalOpen(true);
-  };
-
-  // Lọc dữ liệu
-  const filteredInventory = inventoryList.filter(item => {
-    const code = item.sku || '';
-    const name = item.tenHangHoa || '';
-    const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          code.toLowerCase().includes(searchTerm.toLowerCase());
-    if (onlyLowStock) {
-      return matchesSearch && item.soLuongThucTe <= item.soLuongCanhBao;
-    }
-    return matchesSearch;
-  });
 
   return (
-    <div className="inventory-stock-container">
-      <div className="inventory-header">
+    <div className="inv-page">
+      {/* 1. Header tinh gọn */}
+      <div className="inv-top-bar">
         <div>
-          <h2>Quản Lý Tồn Kho & Cảnh Báo</h2>
-          <p>Theo dõi số lượng hàng hóa thực tế trên kệ, hàng khả dụng và định mức cảnh báo</p>
+          <h1 className="inv-title">Quản Lý Tồn Kho & Thẻ Kho</h1>
+          <p className="inv-subtitle">
+            Theo dõi thời gian thực số lượng tồn thực tế, khả dụng và biến động thẻ kho
+          </p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="btn-secondary" onClick={fetchStock} disabled={isLoading} title="Làm mới tồn kho">
-            <FiRefreshCw className={isLoading ? 'spin-icon' : ''} /> {isBackendConnected ? 'Backend Live' : 'Đồng bộ'}
+        <div className="inv-top-actions">
+          <button 
+            className="btn-secondary" 
+            onClick={fetchStock} 
+            disabled={isLoading}
+            title="Đồng bộ dữ liệu"
+          >
+            <FiRefreshCw className={isLoading ? 'spin-icon' : ''} size={14} /> 
+            <span>{isBackendConnected ? 'Đã Kết Nối (8081)' : 'Đồng Bộ'}</span>
           </button>
-          <button className="btn-primary" onClick={() => handleOpenAdjust(null)}>
-            <FiPlus size={16} /> Bổ Sung Tồn Kho
+          <button className="btn-primary" onClick={handleOpenNewStock}>
+            <FiPlus size={16} /> 
+            <span>Nhập Thêm Tồn Kho</span>
           </button>
         </div>
       </div>
 
-      <div className="inventory-toolbar">
-        <div className="search-box">
-          <FiSearch className="search-icon" />
+      {/* 2. KPI Cards gọn gàng, hiệu suất cao */}
+      <div className="inv-kpi-grid">
+        <div className="inv-kpi-card">
+          <div className="inv-kpi-info">
+            <span className="inv-kpi-label">Tổng Mặt Hàng (SKU)</span>
+            <div className="inv-kpi-val">{stats.totalSKUs}</div>
+          </div>
+          <div className="inv-kpi-icon icon-box">
+            <FiBox size={18} />
+          </div>
+        </div>
+
+        <div className="inv-kpi-card">
+          <div className="inv-kpi-info">
+            <span className="inv-kpi-label">Tổng Sản Lượng Tồn</span>
+            <div className="inv-kpi-val">{stats.totalItems.toLocaleString('vi-VN')}</div>
+          </div>
+          <div className="inv-kpi-icon icon-layers">
+            <FiLayers size={18} />
+          </div>
+        </div>
+
+        <div className="inv-kpi-card">
+          <div className="inv-kpi-info">
+            <span className="inv-kpi-label">Tồn Kho Đủ Định Mức</span>
+            <div className="inv-kpi-val text-success">{stats.safeStockCount}</div>
+          </div>
+          <div className="inv-kpi-icon icon-check">
+            <FiCheckCircle size={18} />
+          </div>
+        </div>
+
+        <div className="inv-kpi-card">
+          <div className="inv-kpi-info">
+            <span className="inv-kpi-label">Cần Bổ Sung Gấp</span>
+            <div className={`inv-kpi-val ${stats.lowStockCount > 0 ? 'text-danger' : 'text-muted'}`}>
+              {stats.lowStockCount + stats.outOfStockCount}
+            </div>
+          </div>
+          <div className={`inv-kpi-icon ${stats.lowStockCount > 0 ? 'icon-alert' : 'icon-muted'}`}>
+            <FiAlertTriangle size={18} />
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Toolbar: Tìm kiếm + Lọc trạng thái + Lọc kho */}
+      <div className="inv-toolbar">
+        <div className="inv-search-wrap">
+          <FiSearch className="search-icon" size={15} />
           <input 
             type="text" 
-            placeholder="Tìm theo mã SKU hoặc tên hàng hóa..." 
+            placeholder="Tìm theo SKU, tên sản phẩm hoặc kho..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+          {searchTerm && (
+            <button className="clear-search-btn" onClick={() => setSearchTerm('')}>
+              <FiX size={14} />
+            </button>
+          )}
         </div>
-        <button 
-          className={`btn-filter ${onlyLowStock ? 'active-filter' : ''}`}
-          onClick={() => setOnlyLowStock(!onlyLowStock)}
-          style={{ backgroundColor: onlyLowStock ? '#fee2e2' : undefined, color: onlyLowStock ? '#b91c1c' : undefined }}
-        >
-          <FiFilter /> {onlyLowStock ? 'Đang lọc: Cần nhập thêm' : 'Lọc Cảnh Báo'}
-        </button>
+
+        <div className="inv-filter-pills">
+          <button 
+            className={`pill-btn ${filterStatus === 'ALL' ? 'active' : ''}`}
+            onClick={() => setFilterStatus('ALL')}
+          >
+            Tất Cả ({inventoryList.length})
+          </button>
+          <button 
+            className={`pill-btn ${filterStatus === 'SAFE' ? 'active' : ''}`}
+            onClick={() => setFilterStatus('SAFE')}
+          >
+            An Toàn ({stats.safeStockCount})
+          </button>
+          <button 
+            className={`pill-btn warn ${filterStatus === 'LOW' ? 'active' : ''}`}
+            onClick={() => setFilterStatus('LOW')}
+          >
+            Dưới Ngưỡng ({stats.lowStockCount})
+          </button>
+          <button 
+            className={`pill-btn danger ${filterStatus === 'OUT' ? 'active' : ''}`}
+            onClick={() => setFilterStatus('OUT')}
+          >
+            Hết Hàng ({stats.outOfStockCount})
+          </button>
+        </div>
+
+        <div className="inv-warehouse-select">
+          <select 
+            value={selectedWarehouse}
+            onChange={(e) => setSelectedWarehouse(e.target.value)}
+          >
+            <option value="ALL">Tất cả kho bãi ({warehouses.length})</option>
+            {warehouses.map(w => (
+              <option key={w.id} value={w.id}>{w.tenKho}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <div className="inventory-table-wrapper">
-        <table className="wms-data-table">
+      {/* 4. Bảng Dữ Liệu Tồn Kho Tinh Gọn */}
+      <div className="inv-table-card">
+        <table className="inv-data-table">
           <thead>
             <tr>
-              <th>Mã SKU</th>
-              <th>Tên Hàng Hóa</th>
-              <th>Kho Lưu Trữ</th>
-              <th>ĐVT</th>
-              <th>Tồn Thực Tế</th>
-              <th>Khả Dụng</th>
-              <th>Mức Tối Thiểu</th>
-              <th>Trạng Thái</th>
-              <th>Hành Động</th>
+              <th style={{ width: '130px' }}>Mã SKU</th>
+              <th>Tên Hàng Hóa & ĐVT</th>
+              <th>Vị Trí Kho Lưu Trữ</th>
+              <th style={{ textAlign: 'center', width: '120px' }}>Tồn Thực Tế</th>
+              <th style={{ textAlign: 'center', width: '120px' }}>Khả Dụng</th>
+              <th style={{ textAlign: 'center', width: '110px' }}>Ngưỡng T.Thiểu</th>
+              <th style={{ textAlign: 'center', width: '140px' }}>Trạng Thái Kệ</th>
+              <th style={{ textAlign: 'right', width: '110px' }}>Thao Tác</th>
             </tr>
           </thead>
           <tbody>
-            {filteredInventory.map((item) => {
-              const isWarning = item.soLuongThucTe <= item.soLuongCanhBao;
-
-              return (
-                <tr key={item.id} className={isWarning ? 'row-warning' : ''}>
-                  <td className="font-mono text-bold">
-                    <FiBox style={{ marginRight: '6px', color: '#6366f1' }} />
-                    {item.sku}
-                  </td>
-                  <td className="text-bold">{item.tenHangHoa}</td>
-                  <td><FiMapPin className="text-muted"/> {item.tenKho || 'Kho Tổng'}</td>
-                  <td>{item.donViTinh}</td>
-                  <td className={`stock-level ${isWarning ? 'text-red text-bold' : 'text-green text-bold'}`}>
-                    {item.soLuongThucTe}
-                  </td>
-                  <td className="text-bold text-blue">{item.soLuongKhaDung}</td>
-                  <td className="text-muted">{item.soLuongCanhBao}</td>
-                  <td>
-                    {isWarning ? (
-                      <span className="badge warning"><FiAlertCircle /> Cần nhập thêm</span>
-                    ) : (
-                      <span className="badge safe"><FiCheckCircle /> Đủ hàng</span>
-                    )}
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      <button 
-                        className="btn-action" 
-                        title="Bổ sung nhanh tồn kho"
-                        onClick={() => handleOpenAdjust(item)}
-                      >
-                        <FiPlus size={13} /> Nhập
-                      </button>
-                      <button 
-                        className="btn-action" 
-                        title="Xem Thẻ Kho" 
-                        onClick={() => handleViewCard(item)}
-                      >
-                        <FiList size={13} /> Thẻ Kho
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-            
-            {filteredInventory.length === 0 && (
+            {isLoading ? (
               <tr>
-                <td colSpan="9" className="text-center">Không tìm thấy hàng hóa nào phù hợp.</td>
+                <td colSpan="8" className="empty-cell">
+                  <FiRefreshCw className="spin-icon" size={20} />
+                  <p>Đang tải dữ liệu tồn kho...</p>
+                </td>
               </tr>
+            ) : filteredItems.length === 0 ? (
+              <tr>
+                <td colSpan="8" className="empty-cell">
+                  <FiBox size={32} style={{ opacity: 0.4 }} />
+                  <p>Không tìm thấy mặt hàng nào phù hợp với bộ lọc.</p>
+                </td>
+              </tr>
+            ) : (
+              filteredItems.map((item) => {
+                const isOutOfStock = item.soLuongThucTe <= 0;
+                const isUnderMin = !isOutOfStock && item.soLuongThucTe <= item.soLuongCanhBao;
+                const isOverMax = item.soLuongThucTe >= item.soLuongToiDa;
+
+                return (
+                  <tr key={item.id} className={isOutOfStock ? 'row-out' : isUnderMin ? 'row-warn' : ''}>
+                    <td>
+                      <span className="sku-pill">{item.sku}</span>
+                    </td>
+                    <td>
+                      <div className="product-info-cell">
+                        <span className="product-name">{item.tenHangHoa}</span>
+                        <span className="product-unit">ĐVT: {item.donViTinh}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="warehouse-cell">
+                        <FiMapPin size={13} className="wh-icon" />
+                        <span>{item.tenKho}</span>
+                      </div>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className="stock-qty-actual">{item.soLuongThucTe}</span>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className="stock-qty-avail">{item.soLuongKhaDung}</span>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className="stock-qty-min">{item.soLuongCanhBao}</span>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      {isOutOfStock ? (
+                        <span className="status-badge badge-danger">Hết Hàng</span>
+                      ) : isUnderMin ? (
+                        <span className="status-badge badge-warning">Cạn Kho (Cần Nhập)</span>
+                      ) : isOverMax ? (
+                        <span className="status-badge badge-info">Quá Tải Kệ</span>
+                      ) : (
+                        <span className="status-badge badge-success">Đủ Hàng</span>
+                      )}
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <div className="action-btns">
+                        <button 
+                          className="btn-icon" 
+                          title="Cộng thêm số lượng vào kho này"
+                          onClick={() => handleOpenAdjust(item)}
+                        >
+                          <FiPlus size={15} />
+                        </button>
+                        <button 
+                          className="btn-icon" 
+                          title="Xem lịch sử thẻ kho"
+                          onClick={() => handleOpenCard(item)}
+                        >
+                          <FiList size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
+
+        <div className="inv-table-footer">
+          <span>Đang hiển thị <strong>{filteredItems.length}</strong> trên tổng số <strong>{inventoryList.length}</strong> mặt hàng</span>
+        </div>
       </div>
 
-      {/* Modal Bổ Sung / Điều Chỉnh Tồn Kho */}
-      <Modal
-        isOpen={isAdjustModalOpen}
+      {/* 5. Modal Cộng Thêm Tồn Kho */}
+      <Modal 
+        isOpen={isAdjustModalOpen} 
         onClose={() => setIsAdjustModalOpen(false)}
-        title="Bổ Sung / Điều Chỉnh Tồn Kho"
-        footer={
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', width: '100%' }}>
-            <button className="btn-secondary" onClick={() => setIsAdjustModalOpen(false)}>Hủy</button>
-            <button className="btn-primary" onClick={handleAdjustSubmit}>Xác Nhận Nhập</button>
-          </div>
-        }
+        title={selectedStock ? `Nhập Thêm Hàng: ${selectedStock.tenHangHoa}` : "Nhập Hàng Vào Kho"}
       >
-        <form onSubmit={handleAdjustSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Chọn Mặt Hàng:</label>
-            <select
-              style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc' }}
-              value={formData.sanPhamId}
-              onChange={(e) => setFormData({ ...formData, sanPhamId: e.target.value })}
+        <form onSubmit={handleSubmitAdjust} className="inv-modal-form">
+          <div className="form-item">
+            <label>Sản Phẩm (*)</label>
+            <select 
+              value={formData.sanPhamId} 
+              onChange={(e) => setFormData(prev => ({ ...prev, sanPhamId: e.target.value }))}
+              required
+              disabled={!!selectedStock}
             >
+              <option value="">-- Chọn sản phẩm --</option>
               {products.map(p => (
-                <option key={p.id} value={p.id}>{p.tenSanPham || p.tenHangHoa} ({p.sku || p.maHangHoa})</option>
+                <option key={p.id} value={p.id}>
+                  {p.tenSanPham || p.tenHangHoa} [{p.sku || `SP${p.id}`}]
+                </option>
               ))}
-              {products.length === 0 && (
-                <>
-                  <option value={1}>iPhone 15 Pro Max 256GB (SP001)</option>
-                  <option value={2}>MacBook Pro 14 M3 Pro (SP002)</option>
-                  <option value={3}>Tai nghe Sony WH-1000XM5 (SP003)</option>
-                  <option value={4}>Chuột Logitech MX Master 3S (SP004)</option>
-                </>
-              )}
             </select>
           </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Kho Lưu Trữ:</label>
-            <select
-              style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc' }}
-              value={formData.khoHangId}
-              onChange={(e) => setFormData({ ...formData, khoHangId: e.target.value })}
+          <div className="form-item">
+            <label>Kho Hàng Lưu Trữ (*)</label>
+            <select 
+              value={formData.khoHangId} 
+              onChange={(e) => setFormData(prev => ({ ...prev, khoHangId: e.target.value }))}
+              required
+              disabled={!!selectedStock}
             >
+              <option value="">-- Chọn kho lưu trữ --</option>
               {warehouses.map(w => (
                 <option key={w.id} value={w.id}>{w.tenKho} ({w.maKho})</option>
               ))}
-              {warehouses.length === 0 && (
-                <option value={1}>Kho Tổng Trung Tâm (KHO-01)</option>
-              )}
             </select>
           </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>Số Lượng Nhập Bổ Sung:</label>
+          <div className="form-item">
+            <label>Số Lượng Bổ Sung (*)</label>
             <input 
-              type="number"
+              type="number" 
               min="1"
-              style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc' }}
-              value={formData.soLuong}
-              onChange={(e) => setFormData({ ...formData, soLuong: e.target.value })}
+              value={formData.soLuong} 
+              onChange={(e) => setFormData(prev => ({ ...prev, soLuong: e.target.value }))}
+              required
+              placeholder="Nhập số lượng..."
             />
+          </div>
+
+          <div className="modal-actions">
+            <button type="button" className="btn-secondary" onClick={() => setIsAdjustModalOpen(false)}>
+              Hủy Bỏ
+            </button>
+            <button type="submit" className="btn-primary">
+              <FiCheck size={16} /> Lưu Vào Kho
+            </button>
           </div>
         </form>
       </Modal>
 
-      {/* Modal Xem Thẻ Kho */}
-      {selectedStock && (
-        <Modal
-          isOpen={isCardModalOpen}
-          onClose={() => setIsCardModalOpen(false)}
-          title={`Thẻ Kho: ${selectedStock.tenHangHoa}`}
-          footer={
-            <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-              <button className="btn-secondary" onClick={() => setIsCardModalOpen(false)}>Đóng</button>
+      {/* 6. Modal Thẻ Kho Chi Tiết */}
+      <Modal 
+        isOpen={isCardModalOpen} 
+        onClose={() => setIsCardModalOpen(false)}
+        title={`Thẻ Kho Vật Lý - ${selectedStock?.sku}`}
+      >
+        <div className="stock-card-modal">
+          <div className="stock-meta-box">
+            <div>
+              <span className="meta-label">Mặt Hàng</span>
+              <strong className="meta-val">{selectedStock?.tenHangHoa}</strong>
             </div>
-          }
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '14px' }}>
-            <div style={{ padding: '14px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <p><strong><FiBox /> Mã Hàng (SKU):</strong> <span className="font-mono text-bold">{selectedStock.sku}</span></p>
-              <p><strong><FiMapPin /> Vị Trí Kho:</strong> {selectedStock.tenKho}</p>
-              <p><strong><FiLayers /> Đơn Vị Tính:</strong> {selectedStock.donViTinh}</p>
+            <div>
+              <span className="meta-label">Kho Lưu Trữ</span>
+              <strong className="meta-val">{selectedStock?.tenKho}</strong>
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div style={{ padding: '12px', backgroundColor: '#ecfdf5', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
-                <div style={{ fontSize: '12px', color: '#065f46' }}>TỒN KHO THỰC TẾ</div>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#047857' }}>
-                  {selectedStock.soLuongThucTe} <small style={{ fontSize: '12px' }}>{selectedStock.donViTinh}</small>
-                </div>
-                <div style={{ fontSize: '11px', color: '#059669' }}>Hàng đang có trên kệ</div>
-              </div>
-
-              <div style={{ padding: '12px', backgroundColor: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
-                <div style={{ fontSize: '12px', color: '#1e40af' }}>TỒN KHO KHẢ DỤNG</div>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1d4ed8' }}>
-                  {selectedStock.soLuongKhaDung} <small style={{ fontSize: '12px' }}>{selectedStock.donViTinh}</small>
-                </div>
-                <div style={{ fontSize: '11px', color: '#2563eb' }}>Sẵn sàng bán và xuất giao</div>
-              </div>
+            <div>
+              <span className="meta-label">Tồn Thực Tế</span>
+              <span className="meta-val-badge">{selectedStock?.soLuongThucTe} {selectedStock?.donViTinh}</span>
             </div>
-
-            <div style={{ padding: '10px 14px', backgroundColor: '#fffbeb', borderRadius: '8px', border: '1px solid #fde68a' }}>
-              <p style={{ margin: 0, color: '#92400e', fontSize: '13px' }}>
-                <strong>Ngưỡng cảnh báo:</strong> Dưới {selectedStock.soLuongCanhBao} {selectedStock.donViTinh} hệ thống sẽ tự động kích hoạt cảnh báo bổ sung hàng.
-              </p>
+            <div>
+              <span className="meta-label">Khả Dụng Bán</span>
+              <span className="meta-val-badge green">{selectedStock?.soLuongKhaDung} {selectedStock?.donViTinh}</span>
             </div>
           </div>
-        </Modal>
-      )}
+
+          <div className="stock-logs-section">
+            <h4>Lịch Sử Biến Động Thẻ Kho</h4>
+            {isLoadingCards ? (
+              <p className="loading-text"><FiRefreshCw className="spin-icon" size={14} /> Đang tải lịch sử thẻ kho...</p>
+            ) : stockCards.length === 0 ? (
+              <div className="empty-logs">
+                <FiList size={22} />
+                <p>Chưa có bản ghi biến động xuất/nhập/điều chuyển trực tiếp cho mặt hàng này tại kho.</p>
+                <small>Hệ thống tự động ghi thẻ kho mỗi khi xác nhận Phiếu Nhập, Phiếu Xuất hoặc Điều Chuyển.</small>
+              </div>
+            ) : (
+              <div className="logs-table-wrap">
+                <table className="logs-table">
+                  <thead>
+                    <tr>
+                      <th>Thời Gian</th>
+                      <th>Loại Giao Dịch</th>
+                      <th>Chứng Từ</th>
+                      <th style={{ textAlign: 'right' }}>Thay Đổi</th>
+                      <th style={{ textAlign: 'right' }}>Tồn Sau</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stockCards.map(c => (
+                      <tr key={c.id}>
+                        <td>{c.ngayTao ? new Date(c.ngayTao).toLocaleString('vi-VN') : '—'}</td>
+                        <td>
+                          <span className={`log-type ${c.loaiGiaoDich === 'NHAP_KHO' ? 'in' : 'out'}`}>
+                            {c.loaiGiaoDich === 'NHAP_KHO' ? <FiArrowDownRight size={12} /> : <FiArrowUpRight size={12} />}
+                            {c.loaiGiaoDich}
+                          </span>
+                        </td>
+                        <td>{c.maChungTu || '—'}</td>
+                        <td style={{ textAlign: 'right', fontWeight: 600 }}>
+                          {c.loaiGiaoDich === 'NHAP_KHO' ? `+${c.soLuong}` : `-${c.soLuong}`}
+                        </td>
+                        <td style={{ textAlign: 'right', fontWeight: 700 }}>{c.tonCuoiKy}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

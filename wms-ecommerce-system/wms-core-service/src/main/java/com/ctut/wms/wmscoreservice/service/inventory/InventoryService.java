@@ -1,6 +1,7 @@
 package com.ctut.wms.wmscoreservice.service.inventory;
 
 import com.ctut.wms.wmscoreservice.dto.inventory.InventoryRequest;
+import com.ctut.wms.wmscoreservice.dto.inventory.InventoryResponse;
 import com.ctut.wms.wmscoreservice.entity.inventory.Inventory;
 import com.ctut.wms.wmscoreservice.entity.product.Product;
 import com.ctut.wms.wmscoreservice.entity.warehouse.Warehouse;
@@ -11,6 +12,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class InventoryService {
@@ -19,34 +24,103 @@ public class InventoryService {
     private final WarehouseRepository warehouseRepository;
 
     @Transactional
-    public Inventory addStock(InventoryRequest request) {
-        // 1. Tìm Sản phẩm và Kho hàng xem có tồn tại không
+    public InventoryResponse addStock(InventoryRequest request) {
         Product product = productRepository.findById(request.getSanPhamId())
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy sản phẩm!"));
 
         Warehouse warehouse = warehouseRepository.findById(request.getKhoHangId())
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy kho hàng!"));
 
-        // 2. Tìm xem sản phẩm này đã có trong kho này chưa
         Inventory inventory = inventoryRepository.findBySanPhamAndKhoHang(product, warehouse)
                 .orElse(new Inventory());
 
-        // 3. Nếu là lần đầu nhập (chưa có ID), thiết lập các liên kết
         if (inventory.getId() == null) {
             inventory.setSanPham(product);
             inventory.setKhoHang(warehouse);
             inventory.setSoLuongThucTe(0);
-            inventory.setSoLuongKhaDung(0); // Khởi tạo mốc 0
+            inventory.setSoLuongKhaDung(0);
+            if (product.getGiaBan() != null) {
+                inventory.setGiaBanHienTai(BigDecimal.valueOf(product.getGiaBan()));
+            }
         }
 
-        // 4. Cộng dồn số lượng mới vào số lượng hiện tại
         inventory.setSoLuongThucTe(inventory.getSoLuongThucTe() + request.getSoLuong());
         inventory.setSoLuongKhaDung(inventory.getSoLuongKhaDung() + request.getSoLuong());
-        // 5. Lưu xuống cơ sở dữ liệu
-        return inventoryRepository.save(inventory);
+        Inventory saved = inventoryRepository.save(inventory);
+
+        return mapToResponse(saved);
     }
 
-    public java.util.List<Inventory> getAllInventory() {
-        return inventoryRepository.findAll();
+    public List<InventoryResponse> getAllInventory() {
+        return inventoryRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<InventoryResponse> getInventoryByWarehouse(Long khoHangId) {
+        return inventoryRepository.findByKhoHangId(khoHangId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<InventoryResponse> getMarketplaceProducts() {
+        return inventoryRepository.findByDangBanTrueAndSoLuongThucTeGreaterThan(0).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public InventoryResponse updateThresholds(Long id, Integer min, Integer max) {
+        Inventory inv = inventoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy bản ghi tồn kho!"));
+        if (min != null) inv.setSoLuongToiThieu(min);
+        if (max != null) inv.setSoLuongToiDa(max);
+        return mapToResponse(inventoryRepository.save(inv));
+    }
+
+    @Transactional
+    public InventoryResponse publishToMarketplace(Long id, Boolean dangBan, BigDecimal giaBanHienTai, Integer soLuongCanhBao) {
+        Inventory inv = inventoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy bản ghi tồn kho có ID = " + id));
+        if (dangBan != null) {
+            inv.setDangBan(dangBan);
+        }
+        if (giaBanHienTai != null) {
+            inv.setGiaBanHienTai(giaBanHienTai);
+        }
+        if (soLuongCanhBao != null) {
+            inv.setSoLuongCanhBao(soLuongCanhBao);
+        }
+        return mapToResponse(inventoryRepository.save(inv));
+    }
+
+    private InventoryResponse mapToResponse(Inventory inv) {
+        Product p = inv.getSanPham();
+        Warehouse w = inv.getKhoHang();
+
+        return InventoryResponse.builder()
+                .id(inv.getId())
+                .sanPhamId(p != null ? p.getId() : null)
+                .sku(p != null ? p.getSku() : "")
+                .tenSanPham(p != null ? p.getTenSanPham() : "")
+                .donViTinh(p != null ? p.getDonViTinh() : "")
+                .giaBan(p != null ? p.getGiaBan() : null)
+                .khoHangId(w != null ? w.getId() : null)
+                .tenKho(w != null ? w.getTenKho() : "")
+                .maKho(w != null ? w.getMaKho() : "")
+                .tenShop(w != null ? w.getTenKho() : "")
+                .moTaShop(w != null ? w.getMoTaGianHang() : "")
+                .logoShop(w != null ? w.getAnhDaiDienShop() : "")
+                .soLuongThucTe(inv.getSoLuongThucTe())
+                .soLuongKhaDung(inv.getSoLuongKhaDung())
+                .soLuongToiThieu(inv.getSoLuongToiThieu())
+                .soLuongToiDa(inv.getSoLuongToiDa())
+                .giaBanHienTai(inv.getGiaBanHienTai() != null ? inv.getGiaBanHienTai() : (p != null && p.getGiaBan() != null ? BigDecimal.valueOf(p.getGiaBan()) : BigDecimal.ZERO))
+                .soLuongDaBan(inv.getSoLuongDaBan() != null ? inv.getSoLuongDaBan() : 0)
+                .dangBan(Boolean.TRUE.equals(inv.getDangBan()))
+                .hinhAnh(p != null ? p.getHinhAnh() : "")
+                .moTa(p != null ? p.getMoTa() : "")
+                .danhMuc(p != null && p.getDanhMuc() != null ? p.getDanhMuc().getTenDanhMuc() : "")
+                .build();
     }
 }

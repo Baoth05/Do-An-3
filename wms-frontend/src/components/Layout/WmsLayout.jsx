@@ -3,7 +3,8 @@ import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { 
   FiGrid, FiBox, FiArrowDownLeft, FiArrowUpRight, 
-  FiLayers, FiTruck, FiUsers, FiLogOut, FiPackage 
+  FiLayers, FiTruck, FiUsers, FiLogOut, FiPackage,
+  FiRepeat, FiHome, FiTag
 } from 'react-icons/fi';
 import './WmsLayout.css';
 
@@ -56,11 +57,26 @@ const WmsLayout = () => {
             <span>Quản Lý Xuất Kho</span>
           </Link>
 
+          <Link to="/transfers" className={`wms-menu-item ${isActive('transfers') ? 'active' : ''}`}>
+            <FiRepeat size={18} />
+            <span>Điều Chuyển Kho</span>
+          </Link>
+
           <div className="wms-menu-label">DANH MỤC MASTER</div>
 
           <Link to="/products" className={`wms-menu-item ${isActive('products') ? 'active' : ''}`}>
             <FiLayers size={18} />
-            <span>Hàng Hóa & Loại Hàng</span>
+            <span>Hàng Hóa & Sản Phẩm</span>
+          </Link>
+
+          <Link to="/categories" className={`wms-menu-item ${isActive('categories') ? 'active' : ''}`}>
+            <FiTag size={18} />
+            <span>Danh Mục Ngành Hàng</span>
+          </Link>
+
+          <Link to="/warehouses" className={`wms-menu-item ${isActive('warehouses') ? 'active' : ''}`}>
+            <FiHome size={18} />
+            <span>Kho Bãi Chi Nhánh</span>
           </Link>
 
           <Link to="/suppliers" className={`wms-menu-item ${isActive('suppliers') ? 'active' : ''}`}>
@@ -98,16 +114,14 @@ const WmsLayout = () => {
               <p className="wms-user-name">{user?.name || user?.taiKhoan || 'Nguyễn Văn Kho'}</p>
               <p className="wms-user-id">ID: #{user?.id || '01'} • @{user?.taiKhoan || 'admin'}</p>
             </div>
-            <div className="wms-user-avatar">
-              {(user?.name || user?.taiKhoan || 'K').charAt(0).toUpperCase()}
-            </div>
-            <button className="wms-logout-btn" onClick={handleLogout} title="Đăng xuất">
+            <button className="btn-logout" onClick={handleLogout} title="Đăng xuất">
               <FiLogOut size={16} />
             </button>
           </div>
         </header>
 
-        <main className="wms-content-area">
+        {/* Khu vực render nội dung Router con */}
+        <main className="wms-page-body">
           <Outlet />
         </main>
       </div>

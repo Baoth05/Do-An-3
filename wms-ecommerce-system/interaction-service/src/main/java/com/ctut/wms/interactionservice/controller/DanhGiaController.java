@@ -28,4 +28,10 @@ public class DanhGiaController {
     public ResponseEntity<?> layDanhGia(@PathVariable String maHangHoa) {
         return ResponseEntity.ok(danhGiaService.layDanhGiaTheoSanPham(maHangHoa));
     }
+
+    // API lấy đánh giá của 1 Gian hàng cụ thể (tính uy tín shop)
+    @GetMapping("/shop/{cuaHangId}")
+    public ResponseEntity<?> layDanhGiaTheoShop(@PathVariable Long cuaHangId) {
+        return ResponseEntity.ok(danhGiaService.layDanhGiaTheoShop(cuaHangId));
+    }
 }

@@ -1,77 +1,81 @@
-/* src/components/Common/Modal.css */
+/* src/components/Common/Modal.css - Clean Enterprise Light Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(4px);
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: fadeIn 0.2s ease-out;
+  animation: fadeIn 0.15s ease-out;
 }
 
 .modal-container {
-  background-color: #161b22;
-  border: 1px solid #30363d;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   width: 90%;
-  max-width: 550px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  max-width: 520px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: scaleUp 0.2s ease-out;
+  animation: scaleUp 0.15s ease-out;
 }
 
 .modal-header {
   padding: 16px 20px;
-  border-bottom: 1px solid #21262d;
+  border-bottom: 1px solid #f1f5f9;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: #f8fafc;
 }
 
 .modal-header h3 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
-  color: #f0f6fc;
+  color: #0f172a;
   margin: 0;
 }
 
 .modal-close-btn {
   background: transparent;
   border: none;
-  color: #8b949e;
+  color: #64748b;
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
 }
 
 .modal-close-btn:hover {
-  color: #ffffff;
-  background-color: #21262d;
+  color: #0f172a;
+  background-color: #e2e8f0;
 }
 
 .modal-body {
   padding: 20px;
-  max-height: 70vh;
   overflow-y: auto;
-  color: #c9d1d9;
+  max-height: 75vh;
+  color: #334155;
+  font-size: 13px;
 }
 
 .modal-footer {
   padding: 14px 20px;
-  border-top: 1px solid #21262d;
-  background-color: #0d1117;
+  border-top: 1px solid #f1f5f9;
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
+  background-color: #f8fafc;
 }
 
 @keyframes fadeIn {
@@ -80,6 +84,6 @@
 }
 
 @keyframes scaleUp {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
 }

@@ -11,4 +11,6 @@ import java.util.Optional;
 public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByNguoiDungIdOrderByCreatedAtDesc(Long nguoiDungId);
     Optional<Order> findByMaDonHang(String maDonHang);
+    List<Order> findByCuaHangIdOrderByCreatedAtDesc(Long cuaHangId);
+    List<Order> findByMaGiaoDichGoc(String maGiaoDichGoc);
 }

@@ -6,8 +6,11 @@ import java.math.BigDecimal;
 @Data
 public class OrderDetailRequest {
     private Long sanPhamId;
+    private Long cuaHangId; // Gian hàng bán sản phẩm này
     private String maHangHoa; // Mã SKU của sản phẩm
     private String tenHangHoaSnapshot; // Tên sản phẩm lúc khách bấm mua
     private BigDecimal giaMuaSnapshot; // Giá bán lúc khách bấm mua
     private Integer soLuong;
+}
+
 }

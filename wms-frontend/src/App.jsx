@@ -22,10 +22,17 @@ import SupplierForm from './pages/Supplier/SupplierForm';
 import ShippingManagement from './pages/Shipping/ShippingManagement';
 import ShippingForm from './pages/Shipping/ShippingForm';
 
+// Import các trang mới: Danh mục, Kho bãi, Điều chuyển
+import CategoryManagement from './pages/Category/CategoryManagement';
+import CategoryForm from './pages/Category/CategoryForm';
+import WarehouseManagement from './pages/Warehouse/WarehouseManagement';
+import WarehouseForm from './pages/Warehouse/WarehouseForm';
+import TransferList from './pages/Transfer/TransferList';
+import TransferCreate from './pages/Transfer/TransferCreate';
+
 // Component bảo vệ Route: Kiểm tra trạng thái đăng nhập
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useContext(AuthContext);
-  // Nếu chưa đăng nhập, tự động đẩy về trang /login
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return children;
 };
@@ -46,7 +53,6 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        {/* Tự động chuyển hướng từ gốc "/" sang "/dashboard" */}
         <Route index element={<Navigate to="/dashboard" replace />} />
         
         <Route path="dashboard" element={<WmsDashboard />} />
@@ -63,11 +69,25 @@ const AppRoutes = () => {
         <Route path="export-notes" element={<ExportNoteList />} />
         <Route path="export-notes/create" element={<ExportNoteCreate />} />
         <Route path="export-notes/:id" element={<ExportNoteDetail />} />
+
+        {/* Điều chuyển kho */}
+        <Route path="transfers" element={<TransferList />} />
+        <Route path="transfers/create" element={<TransferCreate />} />
         
         {/* Hàng hóa / Sản phẩm */}
         <Route path="products" element={<ProductManagement />} />
         <Route path="products/create" element={<ProductForm />} />
         <Route path="products/edit/:id" element={<ProductForm />} />
+
+        {/* Danh mục hàng hóa */}
+        <Route path="categories" element={<CategoryManagement />} />
+        <Route path="categories/create" element={<CategoryForm />} />
+        <Route path="categories/edit/:id" element={<CategoryForm />} />
+
+        {/* Kho bãi chi nhánh */}
+        <Route path="warehouses" element={<WarehouseManagement />} />
+        <Route path="warehouses/create" element={<WarehouseForm />} />
+        <Route path="warehouses/edit/:id" element={<WarehouseForm />} />
         
         {/* Nhà cung cấp */}
         <Route path="suppliers" element={<SupplierManagement />} />
@@ -80,13 +100,11 @@ const AppRoutes = () => {
         <Route path="shipping/edit/:id" element={<ShippingForm />} />
       </Route>
 
-      {/* Xử lý các đường dẫn không tồn tại (Lỗi 404) -> Đẩy về trang đăng nhập */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 };
 
-// Khởi tạo App với Context và Router
 function App() {
   return (
     <AuthProvider>

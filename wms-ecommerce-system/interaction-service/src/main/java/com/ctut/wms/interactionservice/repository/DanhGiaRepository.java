@@ -8,6 +8,6 @@ import java.util.List;
 
 @Repository
 public interface DanhGiaRepository extends JpaRepository<DanhGia, Long> {
-    // Hàm tìm tất cả đánh giá của một sản phẩm cụ thể
     List<DanhGia> findByMaHangHoa(String maHangHoa);
+    List<DanhGia> findByCuaHangId(Long cuaHangId);
 }
