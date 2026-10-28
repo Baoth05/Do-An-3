@@ -4,7 +4,7 @@ import axios from 'axios';
 // 1. Tạo một bản sao của axios với đường dẫn mặc định tới Backend (Gateway)
 const api = axios.create({
   // ĐÃ SỬA: Xóa chữ '/api' ở cuối để khớp với cấu hình API Gateway
-  baseURL: 'http://10.10.44.138:8080', // Thay bằng địa chỉ IP của máy chạy Backend
+  baseURL: 'http://10.10.48.122:8080', // Thay bằng địa chỉ IP của máy chạy Backend
   timeout: 10000, // Nếu quá 10 giây không có phản hồi thì báo lỗi
   headers: {
     'Content-Type': 'application/json',

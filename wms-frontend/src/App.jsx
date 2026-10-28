@@ -17,6 +17,7 @@ import ExportNoteCreate from './pages/ExportNote/ExportNoteCreate';
 import ExportNoteDetail from './pages/ExportNote/ExportNoteDetail';
 import ProductManagement from './pages/Product/ProductManagement';
 import ProductForm from './pages/Product/ProductForm';
+import ProductDetail from './pages/Product/ProductDetail';
 import SupplierManagement from './pages/Supplier/SupplierManagement';
 import SupplierCreate from './pages/Supplier/SupplierCreate';
 import SupplierEdit from './pages/Supplier/SupplierEdit';
@@ -25,7 +26,7 @@ import ShippingForm from './pages/Shipping/ShippingForm';
 
 // Import các trang mới: Danh mục, Kho bãi, Điều chuyển
 import CategoryManagement from './pages/Category/CategoryManagement';
-import CategoryForm from './pages/Category/CategoryForm';
+
 import WarehouseManagement from './pages/Warehouse/WarehouseManagement';
 import WarehouseForm from './pages/Warehouse/WarehouseForm';
 import TransferList from './pages/Transfer/TransferList';
@@ -79,11 +80,10 @@ const AppRoutes = () => {
         <Route path="products" element={<ProductManagement />} />
         <Route path="products/create" element={<ProductForm />} />
         <Route path="products/edit/:id" element={<ProductForm />} />
+        <Route path="products/:id" element={<ProductDetail />} />
 
         {/* Danh mục hàng hóa */}
         <Route path="categories" element={<CategoryManagement />} />
-        <Route path="categories/create" element={<CategoryForm />} />
-        <Route path="categories/edit/:id" element={<CategoryForm />} />
 
         {/* Kho bãi chi nhánh */}
         <Route path="warehouses" element={<WarehouseManagement />} />

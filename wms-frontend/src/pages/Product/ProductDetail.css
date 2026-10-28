@@ -1,0 +1,242 @@
+/* src/pages/Product/ProductDetail.css - UI Nâng Cấp */
+
+.product-detail-wrapper {
+  max-width: 1200px; /* Mở rộng không gian hiển thị */
+  margin: 0 auto;
+  padding-bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* 1. Header (Nút quay lại, Tiêu đề, Nút hành động) */
+.pd-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.pd-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pd-page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.pd-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.pd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.pd-btn-outline {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.pd-btn-outline:hover {
+  background-color: #f8fafc;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+.pd-btn-primary {
+  background-color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.pd-btn-primary:hover {
+  background-color: #1d4ed8;
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+}
+
+/* 2. Bố cục chính: Lưới 2 cột (Layout Grid) */
+.pd-grid {
+  display: grid;
+  grid-template-columns: 400px 1fr; /* Cột trái 400px, cột phải chiếm phần còn lại */
+  gap: 24px;
+  align-items: start;
+}
+
+/* Tự động chuyển thành 1 cột trên màn hình nhỏ */
+@media (max-width: 860px) {
+  .pd-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 3. Khối thẻ (Card) chung */
+.pd-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+}
+
+.pd-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-top: 0;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.pd-card-title svg {
+  color: #0f766e;
+  font-size: 20px;
+}
+
+/* 4. Cột hình ảnh */
+.pd-image-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 24px;
+  min-height: 350px;
+  border: 2px dashed #cbd5e1;
+}
+
+.pd-image-wrapper img {
+  max-width: 100%;
+  max-height: 350px;
+  object-fit: contain;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+}
+
+.pd-image-wrapper img:hover {
+  transform: scale(1.02); /* Phóng to nhẹ khi rê chuột */
+}
+
+.pd-no-image {
+  color: #94a3b8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 5. Danh sách Thông tin nổi bật */
+.pd-info-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Chia 2 cột nhỏ trong phần thông tin */
+  gap: 20px 24px;
+}
+
+.pd-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pd-info-item.full-width {
+  grid-column: span 2;
+}
+
+.pd-label {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pd-value {
+  font-size: 15px;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.pd-value.large {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.4;
+}
+
+.pd-value.sku {
+  font-family: monospace;
+  background: #f1f5f9;
+  padding: 4px 8px;
+  border-radius: 6px;
+  width: max-content;
+  border: 1px solid #e2e8f0;
+}
+
+.pd-value.price {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ef4444; /* Màu đỏ cho giá bán */
+}
+
+.pd-value.price-import {
+  font-size: 16px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Trạng thái */
+.pd-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  width: max-content;
+}
+
+.pd-status.active {
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.pd-status.inactive {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+/* 6. Phần Mô tả */
+.pd-desc-content {
+  font-size: 15px;
+  color: #334155;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  background: #f8fafc;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}

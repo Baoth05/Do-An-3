@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   FiArrowLeft, FiSave, FiBox, FiDollarSign, 
-  FiFileText, FiCheckCircle, FiLayers 
+  FiFileText, FiLayers, FiImage, FiRefreshCw 
 } from 'react-icons/fi';
 import { productService } from '../../services/productService';
 import './ProductForm.css';
@@ -67,6 +67,7 @@ const ProductForm = () => {
       }
     } catch (e) {
       console.warn('Lỗi tải dữ liệu sản phẩm:', e.message);
+      setErrorMsg('Không thể nạp thông tin sản phẩm từ Backend.');
     } finally {
       setIsLoading(false);
     }
@@ -114,138 +115,197 @@ const ProductForm = () => {
 
   return (
     <div className="product-form-container">
-      <div className="form-header">
-        <button className="btn-back" onClick={() => navigate('/products')}>
-          <FiArrowLeft size={18} /> Quay lại
-        </button>
-        <h2>{isEditMode ? 'Chỉnh Sửa Hàng Hóa' : 'Thêm Mới Hàng Hóa Vào Kho'}</h2>
+      {/* 1. Header & Điều hướng Quay lại */}
+      <div className="pf-header">
+        <div className="pf-header-left">
+          <button type="button" className="pf-btn-back" onClick={() => navigate('/products')}>
+            <FiArrowLeft size={18} /> Quay lại
+          </button>
+          <div className="pf-header-title">
+            <h2>{isEditMode ? 'Chỉnh Sửa Hàng Hóa (Master SKU)' : 'Thêm Hàng Hóa Mới'}</h2>
+            <p>Cập nhật quy cách đóng gói, thông số và giá cả sản phẩm trong chuỗi kho</p>
+          </div>
+        </div>
       </div>
 
-      {errorMsg && (
-        <div style={{ background: '#fff5f5', color: '#c53030', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px' }}>
-          {errorMsg}
-        </div>
-      )}
+      {errorMsg && <div className="pf-alert-error">{errorMsg}</div>}
 
       {isLoading ? (
-        <div style={{ padding: '40px', textAlign: 'center' }}>Đang nạp thông tin...</div>
+        <div style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>
+          <FiRefreshCw className="spin-icon" size={32} style={{ color: '#2563eb', marginBottom: '12px' }} />
+          <p>Đang tải dữ liệu sản phẩm...</p>
+        </div>
       ) : (
-        <form onSubmit={handleSubmit} className="product-form-grid">
-          <div className="form-card">
-            <h3><FiBox /> Thông Tin Cơ Bản</h3>
-            <div className="form-group">
-              <label>Mã SKU (*):</label>
-              <input 
-                type="text" 
-                name="sku" 
-                value={formData.sku} 
-                onChange={handleChange} 
-                required 
-                placeholder="VD: SP001" 
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Tên Sản Phẩm (*):</label>
-              <input 
-                type="text" 
-                name="tenSanPham" 
-                value={formData.tenSanPham} 
-                onChange={handleChange} 
-                required 
-                placeholder="VD: iPhone 15 Pro Max 256GB" 
-              />
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>Đơn Vị Tính:</label>
-                <select name="donViTinh" value={formData.donViTinh} onChange={handleChange}>
-                  <option value="Cái">Cái</option>
-                  <option value="Hộp">Hộp</option>
-                  <option value="Bộ">Bộ</option>
-                  <option value="Chiếc">Chiếc</option>
-                  <option value="Kiện">Kiện</option>
-                </select>
+        <form onSubmit={handleSubmit} className="pf-form-layout">
+          {/* CỘT TRÁI: Thông tin chính & Mô tả */}
+          <div className="pf-main-column">
+            {/* Card 1: Thông tin cơ bản */}
+            <div className="pf-card">
+              <div className="pf-card-header">
+                <FiBox />
+                <h3>Thông Tin Sản Phẩm</h3>
               </div>
+              <div className="pf-card-body">
+                <div className="pf-form-row">
+                  <div className="pf-form-group">
+                    <label>Mã SKU <span className="pf-required">*</span></label>
+                    <input 
+                      type="text" 
+                      name="sku" 
+                      value={formData.sku} 
+                      onChange={handleChange} 
+                      required 
+                      placeholder="VD: SP001" 
+                    />
+                  </div>
+                  <div className="pf-form-group">
+                    <label>Khối Lượng (kg)</label>
+                    <input 
+                      type="number" 
+                      step="0.01" 
+                      name="khoiLuong" 
+                      value={formData.khoiLuong} 
+                      onChange={handleChange} 
+                      placeholder="VD: 0.25" 
+                    />
+                  </div>
+                </div>
 
-              <div className="form-group">
-                <label>Danh Mục Hàng Hóa:</label>
-                <select name="danhMucId" value={formData.danhMucId} onChange={handleChange}>
-                  <option value="">-- Chọn danh mục --</option>
-                  {categories.map(c => (
-                    <option key={c.id} value={c.id}>{c.tenDanhMuc}</option>
-                  ))}
-                </select>
+                <div className="pf-form-group">
+                  <label>Tên Sản Phẩm / Hàng Hóa <span className="pf-required">*</span></label>
+                  <input 
+                    type="text" 
+                    name="tenSanPham" 
+                    value={formData.tenSanPham} 
+                    onChange={handleChange} 
+                    required 
+                    placeholder="VD: Laptop Asus TUF Gaming..." 
+                  />
+                </div>
+
+                <div className="pf-form-row">
+                  <div className="pf-form-group">
+                    <label>Đơn Vị Tính</label>
+                    <select name="donViTinh" value={formData.donViTinh} onChange={handleChange}>
+                      <option value="Cái">Cái</option>
+                      <option value="Chiếc">Chiếc</option>
+                      <option value="Hộp">Hộp</option>
+                      <option value="Thùng">Thùng</option>
+                      <option value="Bộ">Bộ</option>
+                      <option value="Kg">Kg</option>
+                    </select>
+                  </div>
+
+                  <div className="pf-form-group">
+                    <label>Danh Mục Ngành Hàng</label>
+                    <select name="danhMucId" value={formData.danhMucId} onChange={handleChange}>
+                      <option value="">-- Chọn danh mục --</option>
+                      {categories.map(c => (
+                        <option key={c.id} value={c.id}>{c.tenDanhMuc}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="form-group">
-              <label>Khối Lượng (kg):</label>
-              <input 
-                type="number" 
-                step="0.01" 
-                name="khoiLuong" 
-                value={formData.khoiLuong} 
-                onChange={handleChange} 
-                placeholder="VD: 0.25" 
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Mô Tả Sản Phẩm:</label>
-              <textarea 
-                name="moTa" 
-                rows="4" 
-                value={formData.moTa} 
-                onChange={handleChange} 
-                placeholder="Mô tả thông số hoặc quy cách đóng gói..." 
-              />
+            {/* Card 2: Mô tả chi tiết */}
+            <div className="pf-card">
+              <div className="pf-card-header">
+                <FiFileText />
+                <h3>Mô Tả & Quy Cách Đóng Gói</h3>
+              </div>
+              <div className="pf-card-body">
+                <div className="pf-form-group">
+                  <textarea 
+                    name="moTa" 
+                    rows="5" 
+                    value={formData.moTa} 
+                    onChange={handleChange} 
+                    placeholder="Nhập thông số kỹ thuật chi tiết hoặc quy cách đóng gói hàng hóa..." 
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="form-card">
-            <h3><FiDollarSign /> Giá Cả & Trạng Thái</h3>
-            <div className="form-group">
-              <label>Giá Bán Niêm Yết (VNĐ):</label>
-              <input 
-                type="number" 
-                name="giaBan" 
-                value={formData.giaBan} 
-                onChange={handleChange} 
-                placeholder="VD: 29990000" 
-              />
+          {/* CỘT PHẢI: Giá cả, Trạng thái & Hình ảnh */}
+          <div className="pf-side-column">
+            {/* Card 3: Giá cả & Kinh doanh */}
+            <div className="pf-card">
+              <div className="pf-card-header">
+                <FiDollarSign />
+                <h3>Thiết Lập Giá & Trạng Thái</h3>
+              </div>
+              <div className="pf-card-body">
+                <div className="pf-form-group">
+                  <label>Giá Bán Niêm Yết (VNĐ)</label>
+                  <input 
+                    type="number" 
+                    name="giaBan" 
+                    value={formData.giaBan} 
+                    onChange={handleChange} 
+                    placeholder="0" 
+                  />
+                </div>
+
+                <div className="pf-form-group">
+                  <label>Giá Nhập Tham Khảo (VNĐ)</label>
+                  <input 
+                    type="number" 
+                    name="giaNhap" 
+                    value={formData.giaNhap} 
+                    onChange={handleChange} 
+                    placeholder="0" 
+                  />
+                </div>
+
+                <div className="pf-form-group">
+                  <label>Trạng Thái Kinh Doanh</label>
+                  <select name="trangThai" value={formData.trangThai} onChange={handleChange}>
+                    <option value="DANG_KINH_DOANH">Đang kinh doanh</option>
+                    <option value="NGUNG_KINH_DOANH">Ngừng kinh doanh</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
-            <div className="form-group">
-              <label>Giá Nhập Tham Khảo (VNĐ):</label>
-              <input 
-                type="number" 
-                name="giaNhap" 
-                value={formData.giaNhap} 
-                onChange={handleChange} 
-                placeholder="VD: 25000000" 
-              />
+            {/* Card 4: Hình ảnh đại diện */}
+            <div className="pf-card">
+              <div className="pf-card-header">
+                <FiImage />
+                <h3>Hình Ảnh Sản Phẩm</h3>
+              </div>
+              <div className="pf-card-body">
+                <div className="pf-form-group">
+                  <label>Đường dẫn ảnh (URL)</label>
+                  <input 
+                    type="text" 
+                    name="hinhAnh" 
+                    value={formData.hinhAnh} 
+                    onChange={handleChange} 
+                    placeholder="https://example.com/image.png" 
+                  />
+                </div>
+
+                <div className="pf-image-preview">
+                  {formData.hinhAnh ? (
+                    <img src={formData.hinhAnh} alt="Preview" onError={(e) => { e.target.style.display='none'; }} />
+                  ) : (
+                    <div className="pf-image-placeholder">
+                      <FiImage size={32} />
+                      <span>Chưa có hình ảnh</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div className="form-group">
-              <label>Trạng Thái Kinh Doanh:</label>
-              <select name="trangThai" value={formData.trangThai} onChange={handleChange}>
-                <option value="DANG_KINH_DOANH">Đang kinh doanh</option>
-                <option value="NGUNG_KINH_DOANH">Ngừng kinh doanh</option>
-              </select>
-            </div>
-
-            <div className="form-actions" style={{ marginTop: '24px' }}>
-              <button 
-                type="submit" 
-                className="btn-primary" 
-                disabled={isSubmitting}
-                style={{ width: '100%', justifyContent: 'center' }}
-              >
-                <FiSave size={16} /> {isSubmitting ? 'Đang lưu...' : (isEditMode ? 'Cập Nhật' : 'Tạo Hàng Hóa')}
-              </button>
-            </div>
+            {/* Nút Submit chính */}
+            <button type="submit" className="pf-btn-submit" disabled={isSubmitting}>
+              <FiSave size={18} />
+              {isSubmitting ? 'Đang lưu dữ liệu...' : (isEditMode ? 'Cập Nhật Hàng Hóa' : 'Tạo Hàng Hóa')}
+            </button>
           </div>
         </form>
       )}

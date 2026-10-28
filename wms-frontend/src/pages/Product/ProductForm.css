@@ -1,149 +1,229 @@
-/* src/pages/Product/ProductForm.css */
+/* src/pages/Product/ProductForm.css - Modern Enterprise Edit Layout */
 
 .product-form-container {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding-bottom: 40px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  max-width: 1000px;
-  margin: 0 auto;
 }
 
-.product-form-container .form-header {
+/* 1. Header & Điều hướng Quay lại */
+.pf-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 8px;
+  padding-bottom: 16px;
   border-bottom: 1px solid #e2e8f0;
 }
 
-.product-form-container .form-header-title {
+.pf-header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
-.product-form-container .btn-back {
+.pf-btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background-color: #ffffff;
   border: 1px solid #cbd5e1;
-  color: #334155;
-  width: 38px;
-  height: 38px;
+  color: #475569;
+  padding: 8px 16px;
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.product-form-container .btn-back:hover {
+.pf-btn-back:hover {
   background-color: #f1f5f9;
   color: #0f172a;
   border-color: #94a3b8;
 }
 
-.product-form-container .form-header h2 {
-  font-size: 20px;
-  font-weight: 800;
+.pf-header-title h2 {
+  font-size: 22px;
+  font-weight: 700;
   color: #0f172a;
+  margin: 0 0 2px 0;
+}
+
+.pf-header-title p {
+  font-size: 13px;
+  color: #64748b;
   margin: 0;
 }
 
-.product-form-container .form-header p {
-  font-size: 13px;
-  color: #64748b;
-  margin: 2px 0 0 0;
+/* 2. Bố cục Form 2 Cột (Responsive Grid) */
+.pf-form-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
 }
 
-.product-form-container .form-header-actions {
+@media (max-width: 900px) {
+  .pf-form-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pf-main-column,
+.pf-side-column {
   display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 3. Khối Card */
+.pf-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+}
+
+.pf-card-header {
+  background: #f8fafc;
+  padding: 14px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
   gap: 10px;
 }
 
-.product-form-container .form-card {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.product-form-container .form-card-title {
+.pf-card-header h3 {
+  margin: 0;
   font-size: 15px;
   font-weight: 700;
   color: #1e293b;
-  margin-bottom: 16px;
+}
+
+.pf-card-header svg {
+  color: #3b82f6;
+  font-size: 18px;
+}
+
+.pf-card-body {
+  padding: 20px;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 10px;
-}
-
-.product-form-container .form-card-title svg {
-  color: #2563eb;
-}
-
-.product-form-container .form-grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  flex-direction: column;
   gap: 16px;
 }
 
-.product-form-container .form-grid-3 {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
-}
-
-.product-form-container .form-group {
+/* 4. Định dạng các nhóm Input */
+.pf-form-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 14px;
 }
 
-.product-form-container .form-group:last-child {
-  margin-bottom: 0;
-}
-
-.product-form-container .form-group label {
+.pf-form-group label {
   font-size: 13px;
   font-weight: 600;
   color: #334155;
 }
 
-.product-form-container .form-group label .required {
-  color: #dc2626;
-  margin-left: 2px;
+.pf-required {
+  color: #ef4444;
 }
 
-.product-form-container .form-group input,
-.product-form-container .form-group select,
-.product-form-container .form-group textarea {
+.pf-form-group input,
+.pf-form-group select,
+.pf-form-group textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px 14px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 14px;
   color: #0f172a;
   background-color: #ffffff;
-  font-family: inherit;
   transition: all 0.2s;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
 }
 
-.product-form-container .form-group input:focus,
-.product-form-container .form-group select:focus,
-.product-form-container .form-group textarea:focus {
+.pf-form-group input:focus,
+.pf-form-group select:focus,
+.pf-form-group textarea:focus {
   outline: none;
   border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
-.product-form-container .form-footer {
+.pf-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* 5. Khung Preview Hình ảnh */
+.pf-image-preview {
+  margin-top: 8px;
+  width: 100%;
+  height: 160px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 8px;
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 0 32px 0;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  overflow: hidden;
+}
+
+.pf-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pf-image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+/* 6. Nút bấm Hành động */
+.pf-btn-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.pf-btn-submit:hover:not(:disabled) {
+  background: #1d4ed8;
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+}
+
+.pf-btn-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.pf-alert-error {
+  background-color: #fef2f2;
+  border: 1px solid #f87171;
+  color: #b91c1c;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
 }

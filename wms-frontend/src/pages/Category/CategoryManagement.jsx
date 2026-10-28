@@ -1,16 +1,24 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiLayers, FiRefreshCw } from 'react-icons/fi';
+import { FiLayers, FiTag, FiAlignLeft, FiPlus, FiEdit2, FiTrash2, FiSave, FiX } from 'react-icons/fi';
 import { wmsCoreService } from '../../services/wmsCoreService';
-import '../Product/ProductManagement.css';
+// Import file CSS riêng biệt vừa tạo
+import './CategoryManagement.css';
 
 const CategoryManagement = () => {
-  const navigate = useNavigate();
-
   const [categories, setCategories] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isBackendConnected, setIsBackendConnected] = useState(false);
+
+  // --- STATE CHO FORM INLINE ---
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Dữ liệu form (Thêm trường maLoai để giống UI thiết kế)
+  const [formData, setFormData] = useState({
+    maLoai: '',
+    tenDanhMuc: '',
+    moTa: ''
+  });
 
   const fetchCategories = async () => {
     try {
@@ -18,13 +26,11 @@ const CategoryManagement = () => {
       const data = await wmsCoreService.getCategories();
       if (Array.isArray(data)) {
         setCategories(data);
-        setIsBackendConnected(true);
       } else {
         setCategories([]);
       }
     } catch (e) {
       console.warn('Lỗi lấy danh mục từ Backend:', e.message);
-      setIsBackendConnected(false);
     } finally {
       setIsLoading(false);
     }
@@ -34,6 +40,66 @@ const CategoryManagement = () => {
     fetchCategories();
   }, []);
 
+  // --- XỬ LÝ NHẬP FORM ---
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const resetForm = () => {
+    setFormData({ maLoai: '', tenDanhMuc: '', moTa: '' });
+    setIsEditing(false);
+    setEditId(null);
+  };
+
+  // --- XỬ LÝ LƯU (THÊM / SỬA) ---
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.tenDanhMuc.trim()) {
+      alert('Vui lòng nhập Tên ngành hàng!');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      // Dữ liệu gửi đi (Nếu backend chưa hỗ trợ maLoai, bạn có thể chỉ gửi tenDanhMuc và moTa)
+      const payload = {
+        tenDanhMuc: formData.tenDanhMuc,
+        moTa: formData.moTa,
+        maLoai: formData.maLoai // Gửi kèm mã loại
+      };
+
+      if (isEditing && editId) {
+        await wmsCoreService.updateCategory(editId, payload);
+        alert('Cập nhật danh mục thành công!');
+      } else {
+        await wmsCoreService.createCategory(payload);
+        alert('Thêm mới danh mục thành công!');
+      }
+      
+      resetForm();
+      fetchCategories();
+    } catch (err) {
+      alert('Lỗi lưu danh mục: ' + (err.response?.data || err.message));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // --- XỬ LÝ CHỌN ĐỂ SỬA ---
+  const handleEditClick = (category) => {
+    setIsEditing(true);
+    setEditId(category.id);
+    setFormData({
+      maLoai: category.maLoai || `TH0${category.id}`, // Hiển thị giả lập nếu backend chưa có
+      tenDanhMuc: category.tenDanhMuc || '',
+      moTa: category.moTa || ''
+    });
+    // Cuộn lên đầu trang chỗ form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // --- XỬ LÝ XÓA ---
   const handleDelete = async (id, name) => {
     if (window.confirm(`Bạn có chắc chắn muốn xóa danh mục "${name}"?`)) {
       try {
@@ -46,102 +112,125 @@ const CategoryManagement = () => {
     }
   };
 
-  const filteredCategories = categories.filter(c => {
-    const name = c.tenDanhMuc || '';
-    const desc = c.moTa || '';
-    return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           desc.toLowerCase().includes(searchTerm.toLowerCase());
-  });
-
   return (
-    <div className="product-container">
-      <div className="product-header">
-        <div>
-          <h2>Quản Lý Danh Mục Ngành Hàng</h2>
-          <p>Phân loại hàng hóa và cấu trúc sản phẩm trong toàn bộ hệ thống kho</p>
-        </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="btn-secondary" onClick={fetchCategories} disabled={isLoading} title="Làm mới">
-            <FiRefreshCw className={isLoading ? 'spin-icon' : ''} /> {isBackendConnected ? 'Backend Live' : 'Đồng bộ'}
-          </button>
-          <button 
-            className="btn-primary" 
-            onClick={() => navigate('/categories/create')}
-          >
-            <FiPlus size={16} /> Thêm Danh Mục
-          </button>
-        </div>
+    <div className="category-container">
+      {/* 1. Phần Tiêu đề (Header) */}
+      <div className="category-header">
+        <h2 className="category-header-title">
+          <FiLayers size={28} /> Quản Lý Danh Mục & Ngành Hàng
+        </h2>
+        <p>Phân loại và tổ chức hệ thống hàng hóa chuyên nghiệp</p>
       </div>
 
-      <div className="product-toolbar">
-        <div className="search-box">
-          <FiSearch className="search-icon" />
-          <input 
-            type="text" 
-            placeholder="Tìm theo tên hoặc mô tả danh mục..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+      {/* 2. Phần Form Nhập Liệu (Inline Form) */}
+      <div className="category-form-card">
+        <h3 className="form-title">
+          <span className="title-bar"></span> 
+          {isEditing ? 'Cập Nhật Danh Mục' : 'Thêm Danh Mục Mới'}
+        </h3>
+        
+        <form className="category-form" onSubmit={handleSubmit}>
+          <div className="form-row">
+            <div className="form-group">
+              <label><FiTag size={14} /> Mã Loại</label>
+              <input 
+                type="text" 
+                name="maLoai"
+                value={formData.maLoai}
+                onChange={handleChange}
+                placeholder="VD: AUTO, FOOD..." 
+              />
+            </div>
+            <div className="form-group">
+              <label><FiLayers size={14} /> Tên Ngành Hàng</label>
+              <input 
+                type="text" 
+                name="tenDanhMuc"
+                value={formData.tenDanhMuc}
+                onChange={handleChange}
+                required
+                placeholder="VD: Phụ tùng ô tô..." 
+              />
+            </div>
+          </div>
+          
+          <div className="form-group">
+            <label><FiAlignLeft size={14} /> Mô Tả Chi Tiết</label>
+            <input 
+              type="text" 
+              name="moTa"
+              value={formData.moTa}
+              onChange={handleChange}
+              placeholder="Nhập mô tả ngắn gọn cho ngành hàng này..." 
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+            <button type="submit" className="btn-add-green" disabled={isSubmitting}>
+              {isSubmitting ? <FiLayers className="spin-icon" /> : (isEditing ? <FiSave /> : <FiPlus />)} 
+              {isEditing ? 'Lưu Thay Đổi' : 'Thêm Danh Mục'}
+            </button>
+            {isEditing && (
+              <button type="button" className="btn-add-green" style={{ backgroundColor: '#94a3b8' }} onClick={resetForm}>
+                <FiX /> Hủy Sửa
+              </button>
+            )}
+          </div>
+        </form>
       </div>
 
-      <div className="table-responsive">
-        <table className="product-table">
+      {/* 3. Phần Bảng Dữ Liệu */}
+      <div className="category-table-wrapper">
+        <table className="cat-table">
           <thead>
             <tr>
-              <th style={{ width: '80px' }}>ID</th>
-              <th>Tên Danh Mục</th>
-              <th>Mô Tả Chi Tiết</th>
-              <th style={{ textAlign: 'right', width: '120px' }}>Hành Động</th>
+              <th style={{ width: '150px' }}>Mã Loại</th>
+              <th style={{ width: '30%' }}>Tên Ngành Hàng</th>
+              <th>Mô Tả</th>
+              <th style={{ width: '120px', textAlign: 'center' }}>Thao Tác</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="4" style={{ textAlign: 'center', padding: '40px' }}>
-                  <FiRefreshCw className="spin-icon" size={24} style={{ color: '#4f46e5' }} />
-                  <p style={{ marginTop: '8px', color: '#64748b' }}>Đang nạp danh mục...</p>
+                <td colSpan="4" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                  Đang nạp dữ liệu...
                 </td>
               </tr>
-            ) : filteredCategories.length === 0 ? (
+            ) : categories.length === 0 ? (
               <tr>
                 <td colSpan="4" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-                  <FiLayers size={36} style={{ marginBottom: '8px', opacity: 0.5 }} />
-                  <p>Chưa có danh mục ngành hàng nào.</p>
-                  <button 
-                    className="btn-primary" 
-                    style={{ marginTop: '12px' }}
-                    onClick={() => navigate('/categories/create')}
-                  >
-                    <FiPlus size={16} /> Thêm Danh Mục Mới
-                  </button>
+                  Chưa có danh mục ngành hàng nào.
                 </td>
               </tr>
             ) : (
-              filteredCategories.map((c) => (
+              categories.map((c) => (
                 <tr key={c.id}>
-                  <td><strong>#{c.id}</strong></td>
                   <td>
-                    <span className="cat-badge" style={{ fontSize: '13px', padding: '4px 10px' }}>
-                      {c.tenDanhMuc}
-                    </span>
+                    {/* Hiển thị Mã Loại. Nếu backend chưa lưu maLoai, tạm dùng ID để giống thiết kế */}
+                    <span className="code-badge">{c.maLoai || `TH0${c.id}`}</span>
                   </td>
-                  <td>{c.moTa || '—'}</td>
-                  <td style={{ textAlign: 'right' }}>
-                    <div className="action-btns">
+                  <td>
+                    <span className="cat-name">{c.tenDanhMuc}</span>
+                  </td>
+                  <td>
+                    <span className="cat-desc">{c.moTa || '—'}</span>
+                  </td>
+                  <td>
+                    <div className="action-cell" style={{ justifyContent: 'center' }}>
                       <button 
-                        className="btn-icon edit" 
-                        title="Sửa danh mục"
-                        onClick={() => navigate(`/categories/edit/${c.id}`)}
+                        className="btn-action edit" 
+                        title="Chỉnh sửa"
+                        onClick={() => handleEditClick(c)}
                       >
-                        <FiEdit2 size={15} />
+                        <FiEdit2 size={16} />
                       </button>
                       <button 
-                        className="btn-icon delete" 
-                        title="Xóa danh mục"
+                        className="btn-action delete" 
+                        title="Xóa"
                         onClick={() => handleDelete(c.id, c.tenDanhMuc)}
                       >
-                        <FiTrash2 size={15} />
+                        <FiTrash2 size={16} />
                       </button>
                     </div>
                   </td>
@@ -151,13 +240,8 @@ const CategoryManagement = () => {
           </tbody>
         </table>
       </div>
-
-      <div className="product-footer">
-        <span>Tổng cộng: <strong>{filteredCategories.length}</strong> danh mục</span>
-      </div>
     </div>
   );
 };
 
 export default CategoryManagement;
-

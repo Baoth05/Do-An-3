@@ -1,9 +1,10 @@
-/* src/pages/Product/ProductManagement.css - Clean Enterprise UI */
+/* src/pages/Product/ProductManagement.css - Modern Enterprise UI */
 
 .product-container {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 24px;
+  padding-bottom: 20px;
 }
 
 /* 1. Tiêu đề */
@@ -12,79 +13,293 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 16px;
 }
 
 .product-header h2 {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   color: #0f172a;
+  margin: 0 0 4px 0;
 }
 
 .product-header p {
-  font-size: 13px;
+  font-size: 14px;
   color: #64748b;
-  margin-top: 2px;
+  margin: 0;
 }
 
-/* 2. Toolbar & Tìm kiếm */
+.product-header .btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 8px 16px;
+  border-radius: 8px;
+  color: #334155;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.product-header .btn-secondary:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* 2. Khối Container (Card) */
+.pm-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 3. Toolbar & Tìm kiếm */
 .product-toolbar {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.search-box {
+  display: flex;
   align-items: center;
   background: #ffffff;
-  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
+  padding: 8px 12px;
+  width: 100%;
+  max-width: 400px;
+  transition: all 0.2s ease;
+}
+
+.search-box:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-icon {
+  color: #64748b;
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.search-box input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.search-box input::placeholder {
+  color: #94a3b8;
+}
+
+/* 4. Bảng Dữ Liệu (Table) - Sửa lỗi Layout */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto; /* Tự động xuất hiện thanh cuộn ngang khi màn hình hẹp */
+}
+
+.product-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1000px; /* Đảm bảo bảng không bị bóp méo quá mức trên màn hình nhỏ */
+}
+
+.product-table th {
+  background: #ffffff;
+  padding: 14px 20px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap; /* Tuyệt đối không cho tiêu đề rớt dòng */
+}
+
+.th-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.product-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 14px;
+  color: #334155;
+  transition: background-color 0.2s;
+}
+
+.product-table tbody tr:hover td {
+  background-color: #f8fafc;
+}
+
+/* SỬA LỖI MÃ SKU RỚT DÒNG */
+.sku-badge {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 600;
   border: 1px solid #e2e8f0;
+  white-space: nowrap; /* Không cho mã SKU rớt dòng */
+  display: inline-block;
 }
 
-.product-toolbar .search-box {
-  flex: 1;
-  max-width: 450px;
+/* Cột Tên sản phẩm - Cho phép rớt dòng nhưng giới hạn độ rộng để đẹp hơn */
+.product-table td:nth-child(2) {
+  min-width: 280px;
+  max-width: 400px;
+  line-height: 1.5;
 }
 
-/* 3. Bảng Dữ Liệu */
 .prod-name-box {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .prod-name-box strong {
   color: #0f172a;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .prod-sub {
   color: #64748b;
-  font-size: 11px;
+  font-size: 12px;
+}
+
+/* Giữ không rớt dòng cho các cột dữ liệu ngắn */
+.product-table td:nth-child(3),
+.product-table td:nth-child(4),
+.product-table td:nth-child(5),
+.product-table td:nth-child(6),
+.product-table td:nth-child(7),
+.product-table td:nth-child(8) {
+  white-space: nowrap;
+}
+
+.cat-badge {
+  color: #3b82f6;
+  font-weight: 500;
 }
 
 .status-tag {
   display: inline-flex;
   align-items: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
 }
 
 .status-tag.active {
   background-color: #dcfce7;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
+  color: #166534;
 }
 
 .status-tag.inactive {
   background-color: #f1f5f9;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
+  color: #475569;
 }
 
+.action-btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+/* BỔ SUNG: Màu sắc cho nút Xem chi tiết (Màu xám đen/Teal) */
+.btn-icon.view { color: #0f766e; }
+.btn-icon.view:hover { background: #ccfbf1; }
+
+.btn-icon.edit { color: #3b82f6; }
+.btn-icon.edit:hover { background: #dbeafe; }
+
+.btn-icon.delete { color: #ef4444; }
+.btn-icon.delete:hover { background: #fee2e2; }
+
+/* 5. Footer & Phân Trang (Pagination) */
 .product-footer {
-  padding: 10px 16px;
-  background: #ffffff;
-  border-top: 1px solid #f1f5f9;
-  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: #f8fafc;
+  font-size: 13px;
   color: #64748b;
+  border-top: 1px solid #e2e8f0;
+}
+
+.product-footer strong {
+  color: #0f172a;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-page {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-page:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.btn-page:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-weight: 600;
+  color: #0f172a;
 }

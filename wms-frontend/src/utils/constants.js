@@ -1,7 +1,7 @@
 // src/utils/constants.js
 
 // URL của API Gateway (Chạy ở cổng 8080)
-export const API_BASE_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://10.10.44.138:8080';
+export const API_BASE_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://10.10.48.122:8080';
 
 // Trạng thái phiếu nhập/xuất kho
 export const NOTE_STATUS = {

@@ -102,45 +102,48 @@ const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!formData.maNhaCungCap.trim() || !formData.tenNhaCungCap.trim()) {
+    if (!formData.maNhaCungCap?.trim() || !formData.tenNhaCungCap?.trim()) {
       alert('Vui lòng điền đầy đủ Mã và Tên nhà cung cấp!');
       return;
     }
 
     // 1. Lọc và chuẩn hóa dữ liệu sản phẩm
     const validProducts = products
-      .filter(p => p.sku.trim() !== '' || p.tenSanPham.trim() !== '')
+      .filter(p => p.sku?.trim() !== '' || p.tenSanPham?.trim() !== '')
       .map(p => ({
-        sku: p.sku.trim(),
-        tenSanPham: p.tenSanPham.trim(),
-        // Nếu người dùng không nhập donViTinh, tự động gán là "Cái"
+        id: p.id || null,
+        sku: p.sku?.trim(),
+        tenSanPham: p.tenSanPham?.trim(),
         donViTinh: p.donViTinh && p.donViTinh.trim() !== '' ? p.donViTinh.trim() : 'Cái', 
         giaNhap: p.giaNhap !== '' ? Number(p.giaNhap) : null,
         giaBan: p.giaBan !== '' ? Number(p.giaBan) : null
       }));
 
-    // 2. Đóng gói Payload theo đúng định dạng Supplier.java
+    // 2. Đóng gói Payload an toàn (sử dụng ?.trim() để tránh lỗi nếu biến bị null)
     const payload = {
-      maNhaCungCap: formData.maNhaCungCap.trim(),
-      tenNhaCungCap: formData.tenNhaCungCap.trim(),
-      nguoiLienHe: formData.nguoiLienHe.trim() || null,
-      chucVuNguoiLienHe: formData.chucVuNguoiLienHe.trim() || null,
-      soDienThoai: formData.soDienThoai.trim() || null,
-      email: formData.email.trim() || null,
-      diaChi: formData.diaChi.trim() || null,
-      maSoThue: formData.maSoThue.trim() || null,
-      ghiChu: formData.ghiChu.trim() || null,
+      maNhaCungCap: formData.maNhaCungCap?.trim(),
+      tenNhaCungCap: formData.tenNhaCungCap?.trim(),
+      nguoiLienHe: formData.nguoiLienHe?.trim() || null,
+      chucVuNguoiLienHe: formData.chucVuNguoiLienHe?.trim() || null,
+      soDienThoai: formData.soDienThoai?.trim() || null,
+      email: formData.email?.trim() || null,
+      diaChi: formData.diaChi?.trim() || null,
+      maSoThue: formData.maSoThue?.trim() || null,
+      ghiChu: formData.ghiChu?.trim() || null,
       trangThai: formData.trangThai || 'HOAT_DONG',
-      danhSachSanPham: validProducts // Gắn mảng đã được chuẩn hóa vào
+      danhSachSanPham: validProducts 
     };
 
     try {
       setIsSubmitting(true);
-      awaitwmsCoreService.updateSupplier(id, payload); // Đối với Edit thì gọi updateSupplier(id, payload)
+      // ĐÃ SỬA LỖI: Thêm dấu cách giữa 'await' và 'wmsCoreService'
+      await wmsCoreService.updateSupplier(id, payload); 
+      
       alert('Lưu thông tin nhà cung cấp thành công!');
       navigate('/suppliers');
     } catch (err) {
-      console.error('Lỗi API 400 Detail:', err.response?.data);
+      // ĐÃ SỬA LỖI: Bỏ chữ "400" code cứng để báo lỗi chuẩn xác hơn
+      console.error('Lỗi khi cập nhật:', err.response?.data || err);
       const msg = err.response?.data?.message || err.response?.data || err.message || 'Lỗi lưu thông tin';
       setErrorMsg(typeof msg === 'string' ? msg : JSON.stringify(msg));
     } finally {
@@ -273,7 +276,22 @@ const handleSubmit = async (e) => {
                       <tr key={index}>
                         <td><input type="text" placeholder="Mã SKU..." value={product.sku} onChange={(e) => handleProductChange(index, 'sku', e.target.value)} /></td>
                         <td><input type="text" placeholder="Tên sản phẩm..." value={product.tenSanPham} onChange={(e) => handleProductChange(index, 'tenSanPham', e.target.value)} /></td>
-                        <td><input type="text" placeholder="ĐVT..." value={product.donViTinh} onChange={(e) => handleProductChange(index, 'donViTinh', e.target.value)} /></td>
+                        <td>
+                          <select 
+                            className="se-table-select"
+                            value={product.donViTinh || ''} 
+                            onChange={(e) => handleProductChange(index, 'donViTinh', e.target.value)}
+                          >
+                            <option value="" disabled>-- Chọn --</option>
+                            <option value="CAI">Cái</option>
+                            <option value="HOP">Hộp</option>
+                            <option value="THUNG">Thùng</option>
+                            <option value="CHIEC">Chiếc</option>
+                            <option value="BO">Bộ</option>
+                            <option value="KG">Kg</option>
+                            <option value="MET">Mét</option>
+                          </select>
+                        </td>
                         <td><input type="number" placeholder="0" value={product.giaNhap} onChange={(e) => handleProductChange(index, 'giaNhap', e.target.value)} /></td>
                         <td><input type="number" placeholder="0" value={product.giaBan} onChange={(e) => handleProductChange(index, 'giaBan', e.target.value)} /></td>
                         <td className="text-center">
