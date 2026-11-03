@@ -1,14 +1,16 @@
 server:
-  port: 8084 # Cổng của Identity Service[cite: 2]
+  port: 8084 # Cổng của Identity Service
 
 spring:
   application:
     name: identity-service
+
   datasource:
-    url: jdbc:postgresql://localhost:5432/identity_db # Database riêng[cite: 2]
+    url: jdbc:postgresql://localhost:5432/identity_db # Database riêng
     username: postgres
     password: 123456 # Đổi lại nếu máy cậu dùng pass khác
     driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: update # Tự động tạo bảng dựa trên Entity
@@ -17,6 +19,8 @@ spring:
 eureka:
   instance:
     prefer-ip-address: true
+    # 🌟 BỔ SUNG DÒNG NÀY: Giúp API Gateway tìm thấy chính xác Identity Service
+    instance-id: ${spring.application.name}:${server.port}
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/

@@ -50,7 +50,7 @@ public class ImportNote {
     private String nguoiTao; // Lưu tài khoản thủ kho / chủ shop tạo phiếu
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "kho_hang_id")
+    @JoinColumn(name = "kho_cua_hang_id")
     private Warehouse khoHang; // Kho tiếp nhận (Kho Tổng hoặc Kho Cửa Hàng)
 
     @ManyToOne(fetch = FetchType.LAZY)

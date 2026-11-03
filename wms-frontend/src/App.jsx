@@ -24,13 +24,11 @@ import SupplierEdit from './pages/Supplier/SupplierEdit';
 import ShippingManagement from './pages/Shipping/ShippingManagement';
 import ShippingForm from './pages/Shipping/ShippingForm';
 
-// Import các trang mới: Danh mục, Kho bãi, Điều chuyển
+// Import các trang mới: Danh mục, Kho bãi
 import CategoryManagement from './pages/Category/CategoryManagement';
 
 import WarehouseManagement from './pages/Warehouse/WarehouseManagement';
 import WarehouseForm from './pages/Warehouse/WarehouseForm';
-import TransferList from './pages/Transfer/TransferList';
-import TransferCreate from './pages/Transfer/TransferCreate';
 
 // Component bảo vệ Route: Kiểm tra trạng thái đăng nhập
 const ProtectedRoute = ({ children }) => {
@@ -71,10 +69,6 @@ const AppRoutes = () => {
         <Route path="export-notes" element={<ExportNoteList />} />
         <Route path="export-notes/create" element={<ExportNoteCreate />} />
         <Route path="export-notes/:id" element={<ExportNoteDetail />} />
-
-        {/* Điều chuyển kho */}
-        <Route path="transfers" element={<TransferList />} />
-        <Route path="transfers/create" element={<TransferCreate />} />
         
         {/* Hàng hóa / Sản phẩm */}
         <Route path="products" element={<ProductManagement />} />

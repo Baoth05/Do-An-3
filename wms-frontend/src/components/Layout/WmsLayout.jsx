@@ -64,7 +64,6 @@ const WmsLayout = () => {
             <span>Quản Lý Xuất Kho</span>
           </Link>
 
-
           <div className="wms-menu-label">DANH MỤC MASTER</div>
 
           <Link to="/products" className={`wms-menu-item ${isActive('products') ? 'active' : ''}`}>

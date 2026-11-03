@@ -6,30 +6,72 @@
   gap: 20px;
 }
 
-/* Phần Tiêu đề */
 .shipping-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .shipping-header h2 {
   font-size: 22px;
-  color: #0f172a !important; /* Chữ tối màu sắc nét */
+  color: #0f172a;
   margin-bottom: 4px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .shipping-header p {
-  font-size: 13px;
-  color: #475569 !important; /* Chữ mô tả xám sẫm */
+  font-size: 13.5px;
+  color: #64748b;
 }
 
-/* Khung Bảng Dữ Liệu Đơn Vị Vận Chuyển */
-.shipping-table-wrapper {
-  background-color: #ffffff !important; /* Nền trắng sáng */
-  border: 1px solid #e2e8f0 !important; /* Viền xám mỏng nhạt */
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); /* Hiệu ứng nổi 3D nhẹ */
+.shipping-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.shipping-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.shipping-table th {
+  background-color: #f8fafc;
+  color: #334155;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 14px 18px;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.shipping-table td {
+  padding: 15px 18px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 13.5px;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.shipping-table tbody tr:hover td {
+  background-color: #f1f5f9 !important;
+}
+
+.shipping-link {
+  color: #2563eb;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.shipping-link:hover {
+  text-decoration: underline;
+  color: #1d4ed8;
 }

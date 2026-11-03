@@ -1,10 +1,3 @@
-/**
- * ==============================================================================
- * Service: ExportNoteService
- * Phân hệ: WMS Core Service (Quản lý kho cốt lõi & Tồn kho 2 tầng - Port 8081)
- * Mô tả: Cung cấp logic nghiệp vụ, giao dịch cơ sở dữ liệu và xử lý dữ liệu cho ExportNoteService.
- * ==============================================================================
- */
 package com.ctut.wms.wmscoreservice.service;
 
 import com.ctut.wms.wmscoreservice.dto.exportnote.ExportNoteDetailRequest;
@@ -33,6 +26,9 @@ public class ExportNoteService {
     private final WarehouseRepository warehouseRepository;
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
+
+    // 🌟 ĐÃ BỔ SUNG: Repository để ghi nhận Thẻ kho
+    private final TheKhoRepository theKhoRepository;
 
     @Transactional
     public ExportNoteResponse createExportNote(ExportNoteRequest request) {
@@ -67,9 +63,26 @@ public class ExportNoteService {
                     throw new RuntimeException("Lỗi: Không đủ tồn kho! Sản phẩm " + product.getTenSanPham() + " chỉ còn khả dụng: " + inventory.getSoLuongKhaDung());
                 }
 
+                // 🌟 BỔ SUNG LOGIC THẺ KHO: Lưu số lượng cũ
+                int soLuongCu = inventory.getSoLuongThucTe();
+
+                // Trừ tồn kho
                 inventory.setSoLuongThucTe(inventory.getSoLuongThucTe() - detailRequest.getSoLuong());
                 inventory.setSoLuongKhaDung(inventory.getSoLuongKhaDung() - detailRequest.getSoLuong());
                 inventoryRepository.save(inventory);
+
+                // 🌟 BỔ SUNG LOGIC THẺ KHO: Tạo bản ghi lịch sử
+                TheKho theKho = new TheKho();
+                theKho.setHangHoa(product);
+                theKho.setKhoCuaHang(warehouse);
+                theKho.setLoaiGiaoDich("XUẤT KHO"); // Đánh dấu là xuất
+                theKho.setMaChungTu(savedExportNote.getMaPhieuXuat());
+                theKho.setPhieuXuatId(savedExportNote.getId());
+                theKho.setSoLuongTruocBienDong(soLuongCu);
+                theKho.setSoLuongBienDong(detailRequest.getSoLuong()); // Số lượng xuất đi
+                theKho.setSoLuongSauBienDong(inventory.getSoLuongThucTe());
+                theKho.setNgayTao(LocalDateTime.now());
+                theKhoRepository.save(theKho);
 
                 ExportNoteDetail detail = new ExportNoteDetail();
                 detail.setPhieuXuat(savedExportNote);

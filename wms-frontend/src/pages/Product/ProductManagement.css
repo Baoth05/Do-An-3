@@ -122,7 +122,7 @@
 }
 
 .product-table th {
-  background: #ffffff;
+  background: #f8fafc;
   padding: 14px 20px;
   text-align: left;
   font-size: 13px;
@@ -147,8 +147,12 @@
   transition: background-color 0.2s;
 }
 
+.product-table tbody tr:nth-child(even) td {
+  background-color: #fafbfc;
+}
+
 .product-table tbody tr:hover td {
-  background-color: #f8fafc;
+  background-color: #f1f5f9 !important;
 }
 
 /* SỬA LỖI MÃ SKU RỚT DÒNG */
@@ -303,3 +307,4 @@
   font-weight: 600;
   color: #0f172a;
 }
+

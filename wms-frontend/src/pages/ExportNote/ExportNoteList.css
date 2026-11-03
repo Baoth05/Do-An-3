@@ -1,32 +1,31 @@
 /* src/pages/ExportNote/ExportNoteList.css */
 
-/* Khung tổng thể trang Quản lý Xuất Kho */
 .export-container {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-/* Phần Tiêu đề Trang & Nút Tạo Phiếu Xuất */
 .export-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .export-header h2 {
   font-size: 22px;
-  color: #0f172a !important; /* Chữ xám đen đậm nổi bật */
+  color: #0f172a;
   margin-bottom: 4px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .export-header p {
-  font-size: 13px;
-  color: #475569 !important; /* Chữ mô tả xám sẫm rõ ràng */
+  font-size: 13.5px;
+  color: #64748b;
 }
 
-/* Thanh Công Cụ (Tìm kiếm & Bộ lọc) */
 .export-toolbar {
   display: flex;
   gap: 12px;
@@ -34,80 +33,43 @@
   justify-content: space-between;
 }
 
-/* Ô Tìm Kiếm Nền Trắng */
-.export-search-box {
-  flex: 1;
-  position: relative;
-  max-width: 420px;
-}
-
-.export-search-box input {
+.export-table {
   width: 100%;
-  padding: 10px 12px 10px 38px;
-  background-color: #ffffff !important;
-  border: 1px solid #cbd5e1 !important;
-  border-radius: 8px;
-  color: #0f172a !important;
-  font-size: 13px;
-  font-weight: 500;
-  outline: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
-.export-search-box input:focus {
-  border-color: #2563eb !important; /* Viền xanh dương khi focus cho Phiếu Xuất */
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
-}
-
-/* Khung Bảng Danh Sách Phiếu Xuất Kho */
-.export-table-wrapper {
-  background-color: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-}
-
-/* Quy tắc hiển thị chữ trong Bảng Phiếu Xuất */
-.export-table-wrapper th {
-  background-color: #f8fafc !important;
-  border-bottom: 2px solid #e2e8f0 !important;
-  color: #334155 !important;
-  font-size: 12px;
-  font-weight: 800;
-  padding: 14px 16px;
+.export-table th {
+  background-color: #f8fafc;
+  color: #334155;
+  font-size: 12.5px;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 14px 18px;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
 }
 
-.export-table-wrapper td {
-  padding: 14px 16px;
-  border-bottom: 1px solid #f1f5f9 !important;
-  color: #0f172a !important;
-  font-size: 13px;
+.export-table td {
+  padding: 15px 18px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 13.5px;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.export-table tbody tr:hover td {
+  background-color: #f1f5f9 !important;
+}
+
+.status-tag.success, .badge-export-success {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
   font-weight: 600;
-}
-
-.export-table-wrapper tr:hover td {
-  background-color: #f8fafc !important;
-}
-
-/* Huy hiệu trạng thái Xuất Kho */
-.badge-export-success {
-  background-color: #dbeafe !important;
-  color: #1d4ed8 !important;
-  border: 1px solid #93c5fd !important;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.badge-export-shipping {
-  background-color: #e0e7ff !important;
-  color: #4338ca !important;
-  border: 1px solid #c7d2fe !important;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 700;
+  display: inline-block;
 }

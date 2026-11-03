@@ -161,6 +161,8 @@ const InventoryStock = () => {
       try {
         setIsLoadingCards(true);
         const res = await wmsCoreService.getStockCards({ 
+          hangHoaId: stock.sanPhamId,
+          khoId: stock.khoHangId,
           sanPhamId: stock.sanPhamId,
           khoHangId: stock.khoHangId 
         });
@@ -541,22 +543,27 @@ const InventoryStock = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {stockCards.map(c => (
-                      <tr key={c.id}>
-                        <td>{c.ngayTao ? new Date(c.ngayTao).toLocaleString('vi-VN') : '—'}</td>
-                        <td>
-                          <span className={`log-type ${c.loaiGiaoDich === 'NHAP_KHO' ? 'in' : 'out'}`}>
-                            {c.loaiGiaoDich === 'NHAP_KHO' ? <FiArrowDownRight size={12} /> : <FiArrowUpRight size={12} />}
-                            {c.loaiGiaoDich}
-                          </span>
-                        </td>
-                        <td>{c.maChungTu || '—'}</td>
-                        <td style={{ textAlign: 'right', fontWeight: 600 }}>
-                          {c.loaiGiaoDich === 'NHAP_KHO' ? `+${c.soLuong}` : `-${c.soLuong}`}
-                        </td>
-                        <td style={{ textAlign: 'right', fontWeight: 700 }}>{c.tonCuoiKy}</td>
-                      </tr>
-                    ))}
+                    {stockCards.map(c => {
+                      const isNhap = (c.loaiGiaoDich || '').toUpperCase().includes('NHẬP') || (c.loaiGiaoDich || '').toUpperCase().includes('NHAP');
+                      const qtyChange = c.soLuongBienDong != null ? c.soLuongBienDong : (c.soLuong || 0);
+                      const postQty = c.soLuongSauBienDong != null ? c.soLuongSauBienDong : (c.tonCuoiKy ?? '—');
+                      return (
+                        <tr key={c.id}>
+                          <td>{c.ngayTao ? new Date(c.ngayTao).toLocaleString('vi-VN') : '—'}</td>
+                          <td>
+                            <span className={`log-type ${isNhap ? 'in' : 'out'}`}>
+                              {isNhap ? <FiArrowDownRight size={12} /> : <FiArrowUpRight size={12} />}
+                              {c.loaiGiaoDich}
+                            </span>
+                          </td>
+                          <td><span className="sku-badge" style={{ fontSize: '11px' }}>{c.maChungTu || '—'}</span></td>
+                          <td style={{ textAlign: 'right', fontWeight: 700, color: isNhap ? '#059669' : '#dc2626' }}>
+                            {isNhap ? `+${qtyChange}` : `-${qtyChange}`}
+                          </td>
+                          <td style={{ textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>{postQty}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -569,3 +576,4 @@ const InventoryStock = () => {
 };
 
 export default InventoryStock;
+

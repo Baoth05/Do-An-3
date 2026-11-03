@@ -4,15 +4,18 @@ import com.ctut.wms.wmscoreservice.dto.InventoryRequest;
 import com.ctut.wms.wmscoreservice.dto.InventoryResponse;
 import com.ctut.wms.wmscoreservice.entity.Inventory;
 import com.ctut.wms.wmscoreservice.entity.Product;
+import com.ctut.wms.wmscoreservice.entity.TheKho;
 import com.ctut.wms.wmscoreservice.entity.Warehouse;
 import com.ctut.wms.wmscoreservice.repository.InventoryRepository;
 import com.ctut.wms.wmscoreservice.repository.ProductRepository;
+import com.ctut.wms.wmscoreservice.repository.TheKhoRepository;
 import com.ctut.wms.wmscoreservice.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,6 +26,7 @@ public class InventoryService {
     private final InventoryRepository inventoryRepository; // Quản lý dữ liệu bảng tồn kho
     private final ProductRepository productRepository;     // Quản lý dữ liệu sản phẩm
     private final WarehouseRepository warehouseRepository; // Quản lý dữ liệu kho bãi
+    private final TheKhoRepository theKhoRepository;       // Quản lý lịch sử thẻ kho vật lý
 
     // Hàm thêm/cộng số lượng hàng vào kho
     @Transactional
@@ -46,10 +50,23 @@ public class InventoryService {
             }
         }
 
+        int soLuongCu = inventory.getSoLuongThucTe();
         int addQty = request.getSoLuong() != null ? request.getSoLuong() : 0;
         inventory.setSoLuongThucTe(inventory.getSoLuongThucTe() + addQty);
         inventory.setSoLuongKhaDung(inventory.getSoLuongKhaDung() + addQty);
         Inventory saved = inventoryRepository.save(inventory);
+
+        // Ghi nhận biến động thẻ kho
+        TheKho theKho = new TheKho();
+        theKho.setHangHoa(product);
+        theKho.setKhoCuaHang(warehouse);
+        theKho.setLoaiGiaoDich("NHẬP BỔ SUNG");
+        theKho.setMaChungTu("BS-" + (System.currentTimeMillis() % 1000000));
+        theKho.setSoLuongTruocBienDong(soLuongCu);
+        theKho.setSoLuongBienDong(addQty);
+        theKho.setSoLuongSauBienDong(saved.getSoLuongThucTe());
+        theKho.setNgayTao(LocalDateTime.now());
+        theKhoRepository.save(theKho);
 
         return mapToResponse(saved);
     }
@@ -133,4 +150,3 @@ public class InventoryService {
                 .build();
     }
 }
-

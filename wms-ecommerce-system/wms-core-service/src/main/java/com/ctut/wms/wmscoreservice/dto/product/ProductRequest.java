@@ -11,6 +11,7 @@ import lombok.Data;
 
 @Data
 public class ProductRequest {
+    private Long id;
     private String sku;
     private String tenSanPham;
     private String donViTinh;

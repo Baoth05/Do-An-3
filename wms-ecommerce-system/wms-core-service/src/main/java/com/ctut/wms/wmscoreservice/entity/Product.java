@@ -7,6 +7,7 @@
  */
 package com.ctut.wms.wmscoreservice.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -57,5 +58,7 @@ public class Product {
     private Category danhMuc;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "nha_cung_cap_id")
+    @JsonIgnore
+
     private Supplier nhaCungCap;
 }

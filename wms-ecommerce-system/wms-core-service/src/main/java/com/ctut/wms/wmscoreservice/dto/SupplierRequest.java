@@ -15,8 +15,10 @@ import java.util.List;
 
 @Data
 public class SupplierRequest {
+    private Long id;
     private String maNhaCungCap;
     private String tenNhaCungCap;
+    private String chucVuNguoiLienHe;
     private String nguoiLienHe;
     private String soDienThoai;
     private String email;

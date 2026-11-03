@@ -62,19 +62,11 @@ export const wmsCoreService = {
   updateExportNoteStatus: (id, status) =>
     api.put(`/wms/export-notes/${id}/status?status=${encodeURIComponent(status)}`),
 
-  // === ĐIỀU CHUYỂN KHO (DIEU_CHUYEN) ===
-  getTransfers: () => api.get('/wms/transfers'),
-  getTransferById: (id) => api.get(`/wms/transfers/${id}`),
-  createTransfer: (data) => api.post('/wms/transfers', data),
-
-// === NHÀ CUNG CẤP (NHA_CUNG_CAP) ===
+  // === NHÀ CUNG CẤP (NHA_CUNG_CAP) ===
   getSuppliers: () => api.get('/wms/suppliers'),
   getSupplierById: (id) => api.get(`/wms/suppliers/${id}`),
   createSupplier: (data) => api.post('/wms/suppliers', data),
-  
-  // Sửa api.post thành api.put để khớp với chuẩn cập nhật dữ liệu (RESTful) của Backend
   updateSupplier: (id, data) => api.put(`/wms/suppliers/${id}`, data),
-
   deleteSupplier: (id) => api.delete(`/wms/suppliers/${id}`),
 
   // === ĐƠN VỊ VẬN CHUYỂN (VAN_CHUYEN) ===

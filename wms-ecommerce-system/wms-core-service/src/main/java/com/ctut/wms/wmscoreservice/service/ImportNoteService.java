@@ -1,10 +1,3 @@
-/**
- * ==============================================================================
- * Service: ImportNoteService
- * Phân hệ: WMS Core Service (Quản lý kho cốt lõi & Tồn kho 2 tầng - Port 8081)
- * Mô tả: Cung cấp logic nghiệp vụ, giao dịch cơ sở dữ liệu và xử lý dữ liệu cho ImportNoteService.
- * ==============================================================================
- */
 package com.ctut.wms.wmscoreservice.service;
 
 import com.ctut.wms.wmscoreservice.dto.importnote.ImportNoteDetailRequest;
@@ -18,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +28,9 @@ public class ImportNoteService {
     private final ShippingProviderRepository shippingProviderRepository;
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
+
+    // 🌟 ĐÃ BỔ SUNG: Repository để ghi nhận Thẻ kho
+    private final TheKhoRepository theKhoRepository;
 
     @Transactional
     public ImportNoteResponse createImportNote(ImportNoteRequest request) {
@@ -53,6 +50,7 @@ public class ImportNoteService {
         importNote.setKhoHang(warehouse);
         importNote.setDonViVanChuyen(shippingProvider);
         importNote.setNguoiTao(request.getNguoiTao() != null ? request.getNguoiTao() : "Thủ kho");
+        importNote.setNgayNhap(LocalDateTime.now());
         importNote.setTrangThai("ĐÃ NHẬP KHO");
 
         ImportNote savedImportNote = importNoteRepository.save(importNote);
@@ -84,9 +82,26 @@ public class ImportNoteService {
                     inventory.setSoLuongKhaDung(0);
                 }
 
+                // 🌟 BỔ SUNG LOGIC THẺ KHO: Lưu số lượng cũ
+                int soLuongCu = inventory.getSoLuongThucTe();
+
+                // Cộng tồn kho
                 inventory.setSoLuongThucTe(inventory.getSoLuongThucTe() + detailRequest.getSoLuong());
                 inventory.setSoLuongKhaDung(inventory.getSoLuongKhaDung() + detailRequest.getSoLuong());
                 inventoryRepository.save(inventory);
+
+                // 🌟 BỔ SUNG LOGIC THẺ KHO: Tạo bản ghi lịch sử
+                TheKho theKho = new TheKho();
+                theKho.setHangHoa(product);
+                theKho.setKhoCuaHang(warehouse);
+                theKho.setLoaiGiaoDich("NHẬP KHO");
+                theKho.setMaChungTu(savedImportNote.getMaPhieuNhap());
+                theKho.setPhieuNhapId(savedImportNote.getId());
+                theKho.setSoLuongTruocBienDong(soLuongCu);
+                theKho.setSoLuongBienDong(detailRequest.getSoLuong());
+                theKho.setSoLuongSauBienDong(inventory.getSoLuongThucTe());
+                theKho.setNgayTao(LocalDateTime.now());
+                theKhoRepository.save(theKho);
 
                 detailResponses.add(ImportNoteDetailResponse.builder()
                         .id(savedDetail.getId())

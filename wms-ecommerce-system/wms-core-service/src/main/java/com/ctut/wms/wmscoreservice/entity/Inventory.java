@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "ton_kho_chi_nhanh")
+@Table(name = "ton_kho")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,7 +23,7 @@ public class Inventory {
     private Product sanPham; // Sản phẩm lưu trữ
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "kho_hang_id", nullable = false)
+    @JoinColumn(name = "kho_cua_hang_id", nullable = false)
     private Warehouse khoHang; // Kho hàng / Gian hàng chứa sản phẩm
 
     @Column(name = "so_luong_thuc_te", nullable = false)
@@ -49,4 +49,6 @@ public class Inventory {
 
     @Version
     private Integer version; // Khóa lạc quan chống race condition khi tranh mua
+
+
 }

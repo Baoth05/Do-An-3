@@ -34,7 +34,7 @@ public class ExportNote extends BaseEntity {
     private String donHangId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "kho_hang_id", nullable = false)
+    @JoinColumn(name = "kho_cua_hang_id")
     private Warehouse khoHang; // Kho xuất hàng (Kho Tổng hoặc Kho Cửa Hàng)
 
     @ManyToOne(fetch = FetchType.LAZY)

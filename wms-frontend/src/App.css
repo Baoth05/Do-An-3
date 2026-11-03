@@ -10,9 +10,9 @@
   background-color: #dc2626;
   color: #ffffff;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 13px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -22,7 +22,7 @@
 .btn-primary:hover {
   background-color: #b91c1c;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+  box-shadow: 0 3px 6px rgba(220, 38, 38, 0.3);
 }
 
 .btn-primary:active {
@@ -33,14 +33,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 7px;
   background-color: #ffffff;
   color: #334155;
   border: 1px solid #cbd5e1;
-  padding: 8px 14px;
-  border-radius: 6px;
+  padding: 8px 15px;
+  border-radius: 8px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -58,15 +58,15 @@
 }
 
 .btn-icon {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background-color: #ffffff;
   color: #475569;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -75,6 +75,7 @@
   background-color: #f1f5f9;
   color: #0f172a;
   border-color: #cbd5e1;
+  transform: translateY(-1px);
 }
 
 .btn-icon.edit:hover {
@@ -105,15 +106,16 @@
 
 .search-box input {
   width: 100%;
-  height: 38px;
-  padding: 8px 12px 8px 36px;
+  height: 40px;
+  padding: 8px 14px 8px 38px;
   background-color: #ffffff;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 13px;
+  border-radius: 8px;
+  font-size: 13.5px;
   color: #0f172a;
   outline: none;
   transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .search-box input:focus {
@@ -125,77 +127,251 @@
   color: #94a3b8;
 }
 
-/* Badges */
-.sku-badge {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
-  background-color: #f1f5f9;
-  color: #334155;
-  padding: 2px 8px;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
-  letter-spacing: 0.2px;
-}
+/* ==============================================================================
+ * BẢNG DỮ LIỆU CHUẨN DOANH NGHIỆP (ENTERPRISE DATA TABLE SYSTEM)
+ * ============================================================================== */
 
-.cat-badge {
-  font-size: 11px;
-  font-weight: 500;
-  background-color: #f8fafc;
-  color: #475569;
-  padding: 3px 8px;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
-}
-
-/* Common Data Table Wrapper */
+/* Khung bọc bảng chống tràn & bo góc hiện đại */
 .table-responsive {
   width: 100%;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  overflow-x: auto;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
 }
 
-.inventory-table, .product-table, .import-table, .export-table, .wms-data-table {
+/* Định dạng cơ bản cho tất cả các bảng dữ liệu */
+.inventory-table, 
+.product-table, 
+.import-table, 
+.export-table, 
+.shipping-table, 
+.supplier-table, 
+.cat-table, 
+.inv-data-table, 
+.wms-data-table,
+.custom-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: left;
 }
 
-.inventory-table th, .product-table th, .import-table th, .export-table th, .wms-data-table th {
-  background-color: #f8fafc;
-  color: #475569;
-  font-size: 12px;
-  font-weight: 600;
+/* Tiêu đề bảng (Header TH): Rõ ràng, tương phản tốt, không bị rớt dòng */
+.inventory-table th, 
+.product-table th, 
+.import-table th, 
+.export-table th, 
+.shipping-table th, 
+.supplier-table th, 
+.cat-table th, 
+.inv-data-table th, 
+.wms-data-table th,
+.custom-table th {
+  background: #f8fafc;
+  color: #334155;
+  font-size: 12.5px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 12px 16px;
-  border-bottom: 1px solid #e2e8f0;
+  letter-spacing: 0.04em;
+  padding: 14px 18px;
+  border-bottom: 2px solid #e2e8f0;
   white-space: nowrap;
+  user-select: none;
 }
 
-.inventory-table td, .product-table td, .import-table td, .export-table td, .wms-data-table td {
-  padding: 12px 16px;
+/* Nội dung ô bảng (TD): Khoảng cách thông thoáng, dễ đọc, căn giữa theo chiều dọc */
+.inventory-table td, 
+.product-table td, 
+.import-table td, 
+.export-table td, 
+.shipping-table td, 
+.supplier-table td, 
+.cat-table td, 
+.inv-data-table td, 
+.wms-data-table td,
+.custom-table td {
+  padding: 14px 18px;
   border-bottom: 1px solid #f1f5f9;
-  font-size: 13px;
+  font-size: 13.5px;
   color: #1e293b;
   vertical-align: middle;
+  transition: background-color 0.12s ease;
 }
 
-.inventory-table tr:hover td, .product-table tr:hover td, .import-table tr:hover td, .export-table tr:hover td, .wms-data-table tr:hover td {
-  background-color: #f8fafc;
+/* Hiệu ứng sọc xen kẽ nhẹ & Hover làm nổi bật hàng đang xem */
+.inventory-table tbody tr:nth-child(even) td,
+.product-table tbody tr:nth-child(even) td,
+.import-table tbody tr:nth-child(even) td,
+.export-table tbody tr:nth-child(even) td,
+.shipping-table tbody tr:nth-child(even) td,
+.supplier-table tbody tr:nth-child(even) td,
+.cat-table tbody tr:nth-child(even) td,
+.inv-data-table tbody tr:nth-child(even) td,
+.wms-data-table tbody tr:nth-child(even) td,
+.custom-table tbody tr:nth-child(even) td {
+  background-color: #fafbfc;
 }
 
-.inventory-table tr:last-child td, .product-table tr:last-child td, .import-table tr:last-child td, .export-table tr:last-child td, .wms-data-table tr:last-child td {
+.inventory-table tbody tr:hover td, 
+.product-table tbody tr:hover td, 
+.import-table tbody tr:hover td, 
+.export-table tbody tr:hover td, 
+.shipping-table tbody tr:hover td, 
+.supplier-table tbody tr:hover td, 
+.cat-table tbody tr:hover td, 
+.inv-data-table tbody tr:hover td, 
+.wms-data-table tbody tr:hover td,
+.custom-table tbody tr:hover td {
+  background-color: #f1f5f9 !important;
+}
+
+/* Bỏ viền dưới ở hàng cuối cùng */
+.inventory-table tbody tr:last-child td, 
+.product-table tbody tr:last-child td, 
+.import-table tbody tr:last-child td, 
+.export-table tbody tr:last-child td, 
+.shipping-table tbody tr:last-child td, 
+.supplier-table tbody tr:last-child td, 
+.cat-table tbody tr:last-child td, 
+.inv-data-table tbody tr:last-child td, 
+.wms-data-table tbody tr:last-child td,
+.custom-table tbody tr:last-child td {
   border-bottom: none;
 }
 
-/* Action buttons cell */
-.action-btns {
+/* ==============================================================================
+ * CÁC BADGE & THẺ ĐỊNH DẠNG TRONG BẢNG (PILLS & BADGES)
+ * ============================================================================== */
+
+/* Mã SKU / Mã chứng từ định dạng Monospace rõ nét */
+.sku-badge, .sku-pill, .ncc-code-badge, .code-badge {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  background-color: #f1f5f9;
+  color: #1e293b;
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  letter-spacing: 0.3px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* Huy hiệu Danh mục ngành hàng */
+.cat-badge {
+  font-size: 12px;
+  font-weight: 500;
+  background-color: #f8fafc;
+  color: #475569;
+  padding: 3px 9px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  display: inline-block;
+}
+
+/* Huy hiệu trạng thái tiêu chuẩn (Status Badges) */
+.status-badge, .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.badge-success, .badge-status-success, .status-badge.badge-success {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+.badge-warning, .badge-status-warning, .status-badge.badge-warning {
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+  border: 1px solid #fde68a !important;
+}
+
+.badge-danger, .badge-status-danger, .status-badge.badge-danger {
+  background-color: #fef2f2 !important;
+  color: #b91c1c !important;
+  border: 1px solid #fecaca !important;
+}
+
+.badge-info, .badge-export-success, .status-badge.badge-info {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+.status-tag.active {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0 !important;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-tag.inactive {
+  background-color: #fef2f2 !important;
+  color: #b91c1c !important;
+  border: 1px solid #fecaca !important;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+/* Định dạng số lượng & giá cả trong bảng */
+.stock-qty-actual {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.stock-qty-avail {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0284c7;
+}
+
+.stock-qty-min {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.price-text, .text-price {
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: 0.2px;
+}
+
+/* Khu vực nút thao tác trong cột cuối cùng */
+.action-btns, .action-cell {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 8px;
+}
+
+/* Trạng thái bảng trống / đang tải */
+.empty-table-cell {
+  text-align: center;
+  padding: 50px 20px !important;
+  color: #64748b;
+}
+
+.empty-table-cell p {
+  margin-top: 10px;
+  font-size: 14px;
 }

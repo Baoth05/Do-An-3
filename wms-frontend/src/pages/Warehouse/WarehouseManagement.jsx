@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiHome, FiRefreshCw, FiMapPin } from 'react-icons/fi';
 import { wmsCoreService } from '../../services/wmsCoreService';
-import '../Product/ProductManagement.css';
+import './WarehouseManagement.css';
 
 const WarehouseManagement = () => {
   const navigate = useNavigate();
@@ -56,8 +56,8 @@ const WarehouseManagement = () => {
   });
 
   return (
-    <div className="product-container">
-      <div className="product-header">
+    <div className="warehouse-container">
+      <div className="warehouse-header">
         <div>
           <h2>Quản Lý Danh Sách Kho Hàng</h2>
           <p>Mạng lưới các chi nhánh kho vật lý, địa chỉ và sức chứa vận hành</p>
@@ -75,7 +75,7 @@ const WarehouseManagement = () => {
         </div>
       </div>
 
-      <div className="product-toolbar">
+      <div className="warehouse-toolbar">
         <div className="search-box">
           <FiSearch className="search-icon" />
           <input 
@@ -88,22 +88,22 @@ const WarehouseManagement = () => {
       </div>
 
       <div className="table-responsive">
-        <table className="product-table">
+        <table className="warehouse-table">
           <thead>
             <tr>
-              <th>Mã Kho</th>
+              <th style={{ width: '140px' }}>Mã Kho</th>
               <th>Tên Kho Bãi</th>
               <th>Địa Chỉ Vật Lý</th>
-              <th style={{ textAlign: 'center' }}>Sức Chứa Tối Đa</th>
-              <th style={{ textAlign: 'center' }}>Trạng Thái</th>
-              <th style={{ textAlign: 'right' }}>Hành Động</th>
+              <th style={{ textAlign: 'center', width: '160px' }}>Sức Chứa Tối Đa</th>
+              <th style={{ textAlign: 'center', width: '130px' }}>Trạng Thái</th>
+              <th style={{ textAlign: 'right', width: '120px' }}>Hành Động</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
                 <td colSpan="6" style={{ textAlign: 'center', padding: '40px' }}>
-                  <FiRefreshCw className="spin-icon" size={24} style={{ color: '#4f46e5' }} />
+                  <FiRefreshCw className="spin-icon" size={24} style={{ color: '#dc2626' }} />
                   <p style={{ marginTop: '8px', color: '#64748b' }}>Đang nạp danh sách kho...</p>
                 </td>
               </tr>
@@ -128,14 +128,14 @@ const WarehouseManagement = () => {
                     <span className="sku-badge">{w.maKho}</span>
                   </td>
                   <td>
-                    <strong>{w.tenKho}</strong>
+                    <strong style={{ color: '#0f172a' }}>{w.tenKho}</strong>
                   </td>
                   <td>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#475569' }}>
-                      <FiMapPin size={14} /> {w.diaChi || 'Chưa cập nhật'}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#475569' }}>
+                      <FiMapPin size={14} style={{ color: '#94a3b8' }} /> {w.diaChi || 'Chưa cập nhật'}
                     </span>
                   </td>
-                  <td style={{ textAlign: 'center', fontWeight: 600 }}>
+                  <td style={{ textAlign: 'center', fontWeight: 600, color: '#0f172a' }}>
                     {w.sucChuaToiDa ? Number(w.sucChuaToiDa).toLocaleString('vi-VN') + ' món' : '50.000 món'}
                   </td>
                   <td style={{ textAlign: 'center' }}>
@@ -168,7 +168,7 @@ const WarehouseManagement = () => {
         </table>
       </div>
 
-      <div className="product-footer">
+      <div className="warehouse-footer">
         <span>Tổng cộng: <strong>{filteredWarehouses.length}</strong> kho</span>
       </div>
     </div>
@@ -176,4 +176,3 @@ const WarehouseManagement = () => {
 };
 
 export default WarehouseManagement;
-
