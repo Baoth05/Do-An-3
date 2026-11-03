@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FiArrowLeft, FiSave, FiPlus, FiTrash2, 
-  FiFileText, FiTruck, FiMapPin, FiCheckCircle 
+  FiFileText, FiTruck, FiCheckCircle 
 } from 'react-icons/fi';
 import { wmsCoreService } from '../../services/wmsCoreService';
-import './ImportNoteForm.css';
+import './ImportNoteCreate.css';
 
 const ImportNoteCreate = () => {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ const ImportNoteCreate = () => {
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [filteredProducts, setFilteredProducts] = useState([]);
 
   // Form State
   const [headerData, setHeaderData] = useState({
@@ -26,10 +27,31 @@ const ImportNoteCreate = () => {
     ghiChu: '',
   });
 
-  // Chi tiết các mặt hàng nhập
-  const [items, setItems] = useState([
-    { sanPhamId: 1, soLuong: 10, giaNhap: 1500000 },
-  ]);
+  const [items, setItems] = useState([]);
+
+  // --- HÀM HỖ TRỢ LỌC SẢN PHẨM ---
+  // Hàm này bao quát nhiều cấu trúc JSON khác nhau từ backend
+  const filterProductsBySupplier = (allProducts, supplierId) => {
+    if (!supplierId) return [];
+    const targetId = String(supplierId);
+    
+    // In ra phần tử đầu tiên để bạn dễ debug (Mở F12 -> tab Console để xem cấu trúc thực tế)
+    if (allProducts.length > 0) {
+        console.log("Cấu trúc 1 sản phẩm từ API là:", allProducts[0]);
+    }
+
+    return allProducts.filter(p => {
+      return (
+        String(p.nhaCungCapId) === targetId ||
+        String(p.nha_cung_cap_id) === targetId ||
+        String(p.supplierId) === targetId ||
+        (p.nhaCungCap && String(p.nhaCungCap.id) === targetId) ||
+        (p.supplier && String(p.supplier.id) === targetId) ||
+        // Trường hợp backend chỉ trả về ID thẳng trong trường nhaCungCap chứ không phải object
+        (typeof p.nhaCungCap !== 'object' && String(p.nhaCungCap) === targetId)
+      );
+    });
+  };
 
   useEffect(() => {
     fetchPrerequisites();
@@ -44,22 +66,35 @@ const ImportNoteCreate = () => {
         wmsCoreService.getProducts(),
       ]);
 
+      let loadedProducts = [];
+      if (prodRes.status === 'fulfilled' && Array.isArray(prodRes.value)) {
+        setProducts(prodRes.value);
+        loadedProducts = prodRes.value;
+      }
+
       if (suppRes.status === 'fulfilled' && Array.isArray(suppRes.value)) {
         setSuppliers(suppRes.value);
         if (suppRes.value.length > 0) {
-          setHeaderData(prev => ({ ...prev, nhaCungCapId: suppRes.value[0].id }));
+          const firstSuppId = String(suppRes.value[0].id);
+          setHeaderData(prev => ({ ...prev, nhaCungCapId: firstSuppId }));
+          
+          const initialFiltered = filterProductsBySupplier(loadedProducts, firstSuppId);
+          setFilteredProducts(initialFiltered);
+
+          if (initialFiltered.length > 0) {
+            setItems([{ 
+              sanPhamId: initialFiltered[0].id, 
+              soLuong: 1, 
+              giaNhap: initialFiltered[0].giaNhap || 0 
+            }]);
+          }
         }
       }
+
       if (whRes.status === 'fulfilled' && Array.isArray(whRes.value)) {
         setWarehouses(whRes.value);
         if (whRes.value.length > 0) {
           setHeaderData(prev => ({ ...prev, khoHangId: whRes.value[0].id }));
-        }
-      }
-      if (prodRes.status === 'fulfilled' && Array.isArray(prodRes.value)) {
-        setProducts(prodRes.value);
-        if (prodRes.value.length > 0) {
-          setItems([{ sanPhamId: prodRes.value[0].id, soLuong: 10, giaNhap: 1500000 }]);
         }
       }
     } catch (e) {
@@ -72,36 +107,56 @@ const ImportNoteCreate = () => {
   const handleHeaderChange = (e) => {
     const { name, value } = e.target;
     setHeaderData(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'nhaCungCapId') {
+      const newFiltered = filterProductsBySupplier(products, value);
+      setFilteredProducts(newFiltered);
+
+      if (newFiltered.length > 0) {
+        setItems([{ 
+          sanPhamId: newFiltered[0].id, 
+          soLuong: 1, 
+          giaNhap: newFiltered[0].giaNhap || 0 
+        }]);
+      } else {
+        setItems([]);
+      }
+    }
   };
 
   const handleItemChange = (index, field, value) => {
     setItems(prev => {
       const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: Number(value) };
+      if (field === 'sanPhamId') {
+        const selectedId = String(value);
+        const selectedProduct = filteredProducts.find(p => String(p.id) === selectedId);
+        updated[index] = { 
+          ...updated[index], 
+          sanPhamId: value,
+          giaNhap: selectedProduct ? (selectedProduct.giaNhap || 0) : 0
+        };
+      } else {
+        updated[index] = { ...updated[index], [field]: Number(value) };
+      }
       return updated;
     });
   };
 
   const handleAddItem = () => {
-    const defaultProdId = products[0]?.id || 1;
-    setItems(prev => [...prev, { sanPhamId: defaultProdId, soLuong: 1, giaNhap: 1000000 }]);
+    if (filteredProducts.length === 0) {
+        alert('Không có sản phẩm nào thuộc nhà cung cấp này để thêm!');
+        return;
+    }
+    const defaultProdId = filteredProducts[0].id;
+    setItems(prev => [...prev, { sanPhamId: defaultProdId, soLuong: 1, giaNhap: filteredProducts[0].giaNhap || 0 }]);
   };
 
   const handleRemoveItem = (index) => {
-    if (items.length === 1) {
-      alert('Phiếu nhập phải có ít nhất một mặt hàng!');
-      return;
-    }
     setItems(prev => prev.filter((_, idx) => idx !== index));
   };
 
-  const calculateTotal = () => {
-    return items.reduce((sum, item) => sum + (item.soLuong * item.giaNhap), 0);
-  };
-
-  const calculateTotalQuantity = () => {
-    return items.reduce((sum, item) => sum + Number(item.soLuong || 0), 0);
-  };
+  const calculateTotal = () => items.reduce((sum, item) => sum + (item.soLuong * item.giaNhap), 0);
+  const calculateTotalQuantity = () => items.reduce((sum, item) => sum + Number(item.soLuong || 0), 0);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -109,11 +164,16 @@ const ImportNoteCreate = () => {
       alert('Vui lòng chọn đầy đủ Nhà cung cấp và Kho hàng!');
       return;
     }
+    if (items.length === 0) {
+      alert('Vui lòng thêm ít nhất một mặt hàng vào phiếu nhập!');
+      return;
+    }
 
     const payload = {
       nhaCungCapId: Number(headerData.nhaCungCapId),
       khoHangId: Number(headerData.khoHangId),
       nguoiTao: headerData.nguoiTao,
+      trangThai: 'CHO_DUYET',
       danhSachHangHoa: items.map(it => ({
         sanPhamId: Number(it.sanPhamId),
         soLuong: Number(it.soLuong),
@@ -124,7 +184,7 @@ const ImportNoteCreate = () => {
     try {
       setIsSubmitting(true);
       await wmsCoreService.createImportNote(payload);
-      alert('Tạo phiếu nhập kho thành công! Số lượng hàng hóa đã được cộng dồn vào kệ kho.');
+      alert('Tạo phiếu nhập kho thành công!');
       navigate('/import-notes');
     } catch (err) {
       alert('Lỗi khi tạo phiếu nhập kho: ' + (err.response?.data || err.message));
@@ -143,143 +203,70 @@ const ImportNoteCreate = () => {
 
   return (
     <div className="import-form-container">
-      {/* Tiêu đề & Breadcrumb */}
       <div className="form-header">
         <div className="form-header-title">
-          <button 
-            type="button" 
-            className="btn-back" 
-            onClick={() => navigate('/import-notes')}
-            title="Quay lại danh sách"
-          >
+          <button type="button" className="btn-back" onClick={() => navigate('/import-notes')} title="Quay lại danh sách">
             <FiArrowLeft size={18} />
           </button>
           <div>
-            <h2>Lập Chứng Từ Nhập Kho Mới (Goods Receipt Note)</h2>
-            <p>Quy trình kiểm đếm, ghi nhận hàng hóa từ đối tác và tăng tồn kho thực tế</p>
+            <h2>Tạo Yêu Cầu Nhập Kho</h2> {/* Sửa tiêu đề */}
+            <p>Lập danh sách hàng hóa cần nhập để gửi Thủ kho trưởng phê duyệt</p> {/* Sửa mô tả */}
           </div>
         </div>
-
         <div className="form-header-actions">
-          <button 
-            type="button" 
-            className="btn-cancel" 
-            onClick={() => navigate('/import-notes')}
-          >
-            Hủy Bỏ
-          </button>
-          <button 
-            type="button" 
-            className="btn-submit" 
-            onClick={handleSubmit} 
-            disabled={isSubmitting}
-          >
-            <FiSave size={16} /> {isSubmitting ? 'Đang xử lý...' : 'Xác Nhận Nhập Kho'}
+          <button type="button" className="btn-cancel" onClick={() => navigate('/import-notes')}>Hủy Bỏ</button>
+          <button type="button" className="btn-submit" onClick={handleSubmit} disabled={isSubmitting}>
+            {/* Sửa text nút bấm */}
+            <FiSave size={16} /> {isSubmitting ? 'Đang gửi...' : 'Gửi Yêu Cầu Nhập'}
           </button>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        {/* Phần 1: Thông tin chung chứng từ */}
         <div className="form-card">
           <div className="form-card-title">
-            <FiFileText size={18} />
-            <span>Thông Tin Chứng Từ Nhập Kho</span>
+            <FiFileText size={18} /><span>Thông Tin Chứng Từ Nhập Kho</span>
           </div>
-
-          <div className="import-form-container form-grid-3">
+          <div className="form-grid-3">
             <div className="form-group">
               <label>Mã Phiếu Nhập Kho</label>
-              <input 
-                type="text" 
-                name="maPhieu"
-                value={headerData.maPhieu}
-                disabled
-                style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed', fontWeight: 'bold' }}
-              />
+              <input type="text" name="maPhieu" value={headerData.maPhieu} disabled style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed', fontWeight: 'bold' }} />
             </div>
-
             <div className="form-group">
               <label>Nhà Cung Cấp Giao Hàng <span style={{ color: '#dc2626' }}>*</span></label>
-              <select 
-                name="nhaCungCapId"
-                value={headerData.nhaCungCapId}
-                onChange={handleHeaderChange}
-                required
-              >
+              <select name="nhaCungCapId" value={headerData.nhaCungCapId} onChange={handleHeaderChange} required>
                 <option value="">-- Chọn Nhà Cung Cấp --</option>
-                {suppliers.map(s => (
-                  <option key={s.id} value={s.id}>{s.tenNhaCungCap || s.tenNCC}</option>
-                ))}
-                {suppliers.length === 0 && (
-                  <>
-                    <option value={1}>Công ty TNHH Logitech VN</option>
-                    <option value={2}>Đại lý phân phối AKKO</option>
-                  </>
-                )}
+                {suppliers.map(s => <option key={s.id} value={s.id}>{s.tenNhaCungCap || s.tenNCC}</option>)}
               </select>
             </div>
-
             <div className="form-group">
               <label>Kho Tiếp Nhận & Lưu Trữ <span style={{ color: '#dc2626' }}>*</span></label>
-              <select 
-                name="khoHangId"
-                value={headerData.khoHangId}
-                onChange={handleHeaderChange}
-                required
-              >
+              <select name="khoHangId" value={headerData.khoHangId} onChange={handleHeaderChange} required>
                 <option value="">-- Chọn Kho Tiếp Nhận --</option>
-                {warehouses.map(w => (
-                  <option key={w.id} value={w.id}>{w.tenKho} ({w.maKho})</option>
-                ))}
-                {warehouses.length === 0 && (
-                  <option value={1}>Kho Tổng Trung Tâm (KHO-01)</option>
-                )}
+                {warehouses.map(w => <option key={w.id} value={w.id}>{w.tenKho} ({w.maKho})</option>)}
               </select>
             </div>
           </div>
-
-          <div className="import-form-container form-grid-3" style={{ marginTop: '14px' }}>
+          <div className="form-grid-3" style={{ marginTop: '20px' }}>
             <div className="form-group">
               <label>Người Lập Phiếu / Thủ Kho</label>
-              <input 
-                type="text" 
-                name="nguoiTao"
-                value={headerData.nguoiTao}
-                onChange={handleHeaderChange}
-              />
+              <input type="text" name="nguoiTao" value={headerData.nguoiTao} onChange={handleHeaderChange}/>
             </div>
-
             <div className="form-group">
               <label>Ngày Thực Hiện Nhập Kho</label>
-              <input 
-                type="date" 
-                name="ngayNhap"
-                value={headerData.ngayNhap}
-                onChange={handleHeaderChange}
-              />
+              <input type="date" name="ngayNhap" value={headerData.ngayNhap} onChange={handleHeaderChange}/>
             </div>
-
             <div className="form-group">
-              <label>Ghi Chú Chứng Từ (Biên bản giao nhận, số hóa đơn đỏ...)</label>
-              <input 
-                type="text" 
-                name="ghiChu"
-                value={headerData.ghiChu}
-                onChange={handleHeaderChange}
-                placeholder="VD: Hóa đơn GTGT số 008912"
-              />
+              <label>Ghi Chú Chứng Từ</label>
+              <input type="text" name="ghiChu" value={headerData.ghiChu} onChange={handleHeaderChange} placeholder="VD: Hóa đơn GTGT số 008912"/>
             </div>
           </div>
         </div>
 
-        {/* Phần 2: Bảng danh sách hàng hóa kiểm đếm */}
         <div className="form-card">
           <div className="form-card-title">
-            <FiTruck size={18} />
-            <span>Danh Sách Mặt Hàng Kiểm Đếm & Nhập Kho</span>
+            <FiTruck size={18} /><span>Danh Sách Mặt Hàng Kiểm Đếm & Nhập Kho</span>
           </div>
-
           <div className="items-table-wrapper">
             <table className="items-table">
               <thead>
@@ -289,62 +276,37 @@ const ImportNoteCreate = () => {
                   <th style={{ width: '150px' }}>Số Lượng Nhập</th>
                   <th style={{ width: '180px' }}>Đơn Giá Nhập (VNĐ)</th>
                   <th style={{ width: '180px' }}>Thành Tiền (VNĐ)</th>
-                  <th style={{ width: '60px' }}>Xóa</th>
+                  <th style={{ width: '60px', textAlign: 'center' }}>Xóa</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((item, idx) => {
                   const subtotal = item.soLuong * item.giaNhap;
-
                   return (
                     <tr key={idx}>
                       <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{idx + 1}</td>
                       <td>
-                        <select 
-                          value={item.sanPhamId}
-                          onChange={(e) => handleItemChange(idx, 'sanPhamId', e.target.value)}
-                        >
-                          {products.map(p => (
+                        <select value={item.sanPhamId} onChange={(e) => handleItemChange(idx, 'sanPhamId', e.target.value)}>
+                          {filteredProducts.map(p => (
                             <option key={p.id} value={p.id}>
                               {p.tenSanPham || p.tenHangHoa} ({p.sku || `SP00${p.id}`})
                             </option>
                           ))}
-                          {products.length === 0 && (
-                            <>
-                              <option value={1}>iPhone 15 Pro Max 256GB (SP001)</option>
-                              <option value={2}>MacBook Pro 14 M3 (SP002)</option>
-                            </>
-                          )}
+                          {filteredProducts.length === 0 && <option value="">Không có sản phẩm nào cho NCC này</option>}
                         </select>
                       </td>
                       <td>
-                        <input 
-                          type="number"
-                          min="1"
-                          value={item.soLuong}
-                          onChange={(e) => handleItemChange(idx, 'soLuong', e.target.value)}
-                        />
+                        <input type="number" min="1" value={item.soLuong} onChange={(e) => handleItemChange(idx, 'soLuong', e.target.value)} />
                       </td>
                       <td>
-                        <input 
-                          type="number"
-                          min="0"
-                          step="1000"
-                          value={item.giaNhap}
-                          onChange={(e) => handleItemChange(idx, 'giaNhap', e.target.value)}
-                        />
+                        <input type="number" min="0" step="1000" value={item.giaNhap} onChange={(e) => handleItemChange(idx, 'giaNhap', e.target.value)} />
                       </td>
                       <td style={{ fontWeight: 'bold', color: '#1d4ed8' }}>
                         {Number(subtotal).toLocaleString('vi-VN')} đ
                       </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <button 
-                          type="button" 
-                          className="btn-icon text-red"
-                          onClick={() => handleRemoveItem(idx)}
-                          title="Xóa dòng này"
-                        >
-                          <FiTrash2 size={16} />
+                      <td>
+                        <button type="button" className="btn-icon text-red" onClick={() => handleRemoveItem(idx)} title="Xóa dòng này">
+                          <FiTrash2 size={18} />
                         </button>
                       </td>
                     </tr>
@@ -353,16 +315,9 @@ const ImportNoteCreate = () => {
               </tbody>
             </table>
           </div>
-
-          <button 
-            type="button" 
-            className="btn-add-row"
-            onClick={handleAddItem}
-          >
+          <button type="button" className="btn-add-row" onClick={handleAddItem}>
             <FiPlus size={16} /> Thêm Dòng Mặt Hàng
           </button>
-
-          {/* Tổng kết tiền */}
           <div className="total-summary-card">
             <div className="total-summary-item">
               <span>TỔNG SỐ LƯỢNG HÀNG</span>
@@ -374,22 +329,11 @@ const ImportNoteCreate = () => {
             </div>
           </div>
         </div>
-
-        {/* Nút submit chân trang */}
         <div className="form-footer">
-          <button 
-            type="button" 
-            className="btn-cancel" 
-            onClick={() => navigate('/import-notes')}
-          >
-            Hủy Bỏ
-          </button>
-          <button 
-            type="submit" 
-            className="btn-submit" 
-            disabled={isSubmitting}
-          >
-            <FiCheckCircle size={16} /> {isSubmitting ? 'Đang ghi sổ kho...' : 'Xác Nhận Nhập Kho & Tăng Tồn Kho'}
+          <button type="button" className="btn-cancel" onClick={() => navigate('/import-notes')}>Hủy Bỏ</button>
+          <button type="submit" className="btn-submit" disabled={isSubmitting}>
+            {/* Sửa text nút bấm dưới cùng */}
+            <FiCheckCircle size={18} /> {isSubmitting ? 'Đang xử lý...' : 'Xác Nhận Gửi Yêu Cầu Phê Duyệt'}
           </button>
         </div>
       </form>

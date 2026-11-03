@@ -5,7 +5,7 @@ import {
   FiMapPin, FiTruck, FiUser, FiCalendar 
 } from 'react-icons/fi';
 import { wmsCoreService } from '../../services/wmsCoreService';
-import './ImportNoteForm.css';
+import './ImportNoteDetail.css';
 
 const ImportNoteDetail = () => {
   const { id } = useParams();

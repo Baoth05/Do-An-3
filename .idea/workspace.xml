@@ -5,20 +5,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="05157197-5de5-4476-bd13-0b5f7d424e90" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/admin-frontend/.env" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/admin-frontend/src/services/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/src/services/api.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/admin-frontend/vite.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/vite.config.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wms-frontend/.env" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wms-frontend/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/App.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/Category/CategoryForm.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/Category/CategoryManagement.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/Category/CategoryManagement.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/Product/ProductForm.css" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/Product/ProductForm.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/Product/ProductForm.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/Product/ProductForm.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/Product/ProductManagement.css" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/Product/ProductManagement.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/Product/ProductManagement.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/Product/ProductManagement.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/Supplier/SupplierEdit.css" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/Supplier/SupplierEdit.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/Supplier/SupplierEdit.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/Supplier/SupplierEdit.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/components/Layout/WmsLayout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/components/Layout/WmsLayout.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteCreate.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteCreate.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteDetail.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteDetail.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteForm.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteList.css" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteList.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteList.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteList.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wms-frontend/src/utils/constants.js" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/utils/constants.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -251,6 +251,8 @@
       <workItem from="1792488759964" duration="1499000" />
       <workItem from="1793090969941" duration="6297000" />
       <workItem from="1793176439493" duration="7195000" />
+      <workItem from="1793699127368" duration="1352000" />
+      <workItem from="1793706993364" duration="3976000" />
     </task>
     <servers />
   </component>

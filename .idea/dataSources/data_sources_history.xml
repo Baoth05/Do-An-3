@@ -5,7 +5,7 @@
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <imported>true</imported>
-      <remarks>D:/Projects/Do-an/Do_An/Do-An-3/wms-ecommerce-system/wms-core-service/src/main/resources/application.yaml</remarks>
+      <remarks>D:/Do-An-3/wms-ecommerce-system/wms-core-service/src/main/resources/application.yaml</remarks>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
       <jdbc-url>jdbc:postgresql://localhost:5432/wms_core_db</jdbc-url>
       <user-name>postgres</user-name>
@@ -19,7 +19,7 @@
       <driver-ref>redis</driver-ref>
       <synchronize>true</synchronize>
       <imported>true</imported>
-      <remarks>D:/Projects/Do-an/Do_An/Do-An-3/wms-ecommerce-system/wms-core-service/src/main/resources/application.yaml</remarks>
+      <remarks>D:/Do-An-3/wms-ecommerce-system/wms-core-service/src/main/resources/application.yaml</remarks>
       <jdbc-driver>jdbc.RedisDriver</jdbc-driver>
       <jdbc-url>jdbc:redis://localhost:6379/0</jdbc-url>
       <schema-mapping />
@@ -32,7 +32,7 @@
       <driver-ref>redis</driver-ref>
       <synchronize>true</synchronize>
       <imported>true</imported>
-      <remarks>D:/Projects/Do-an/Do_An/Do-An-3/wms-ecommerce-system/order-service/src/main/resources/application.yaml</remarks>
+      <remarks>D:/Do-An-3/wms-ecommerce-system/order-service/src/main/resources/application.yaml</remarks>
       <jdbc-driver>jdbc.RedisDriver</jdbc-driver>
       <jdbc-url>jdbc:redis://localhost:6379/0</jdbc-url>
       <schema-mapping />
@@ -45,7 +45,7 @@
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <imported>true</imported>
-      <remarks>D:/Projects/Do-an/Do_An/Do-An-3/wms-ecommerce-system/interaction-service/src/main/resources/application.yaml</remarks>
+      <remarks>D:/Do-An-3/wms-ecommerce-system/interaction-service/src/main/resources/application.yaml</remarks>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
       <jdbc-url>jdbc:postgresql://localhost:5432/inter_db</jdbc-url>
       <user-name>postgres</user-name>
@@ -59,7 +59,7 @@
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <imported>true</imported>
-      <remarks>D:/Projects/Do-an/Do_An/Do-An-3/wms-ecommerce-system/identity-service/src/main/resources/application.yaml</remarks>
+      <remarks>D:/Do-An-3/wms-ecommerce-system/identity-service/src/main/resources/application.yaml</remarks>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
       <jdbc-url>jdbc:postgresql://localhost:5432/identity_db</jdbc-url>
       <user-name>postgres</user-name>
@@ -73,7 +73,7 @@
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <imported>true</imported>
-      <remarks>D:/Projects/Do-an/Do_An/Do-An-3/wms-ecommerce-system/payment-service/src/main/resources/application.yaml</remarks>
+      <remarks>D:/Do-An-3/wms-ecommerce-system/payment-service/src/main/resources/application.yaml</remarks>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
       <jdbc-url>jdbc:postgresql://localhost:5432/payment_db</jdbc-url>
       <user-name>postgres</user-name>
@@ -87,7 +87,7 @@
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <imported>true</imported>
-      <remarks>D:/Projects/Do-an/Do_An/Do-An-3/wms-ecommerce-system/order-service/src/main/resources/application.yaml</remarks>
+      <remarks>D:/Do-An-3/wms-ecommerce-system/order-service/src/main/resources/application.yaml</remarks>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
       <jdbc-url>jdbc:postgresql://localhost:5432/order_db</jdbc-url>
       <user-name>postgres</user-name>

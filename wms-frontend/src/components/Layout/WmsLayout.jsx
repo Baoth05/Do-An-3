@@ -1,17 +1,10 @@
-/**
- * ==============================================================================
- * Module: WmsLayout.jsx
- * Mô tả: Khung Layout chính cho toàn bộ hệ thống Quản lý Kho (WMS Portal).
- * Chức năng: Sidebar điều hướng phân quyền, Top Header hiển thị tài khoản/trạng thái và Outlet render page con.
- * ==============================================================================
- */
 import { useContext } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { 
   FiGrid, FiBox, FiArrowDownLeft, FiArrowUpRight, 
   FiLayers, FiTruck, FiUsers, FiLogOut, FiPackage,
-  FiRepeat, FiHome, FiTag
+  FiHome, FiTag, FiCheckSquare, FiShoppingCart, FiFileText
 } from 'react-icons/fi';
 import './WmsLayout.css';
 
@@ -42,28 +35,58 @@ const WmsLayout = () => {
         </div>
 
         <nav className="wms-sidebar-menu">
-          <div className="wms-menu-label">VẬN HÀNH KHO</div>
-          
           <Link to="/dashboard" className={`wms-menu-item ${isActive('dashboard') ? 'active' : ''}`}>
             <FiGrid size={18} />
-            <span>Thống Kê Xuất/Nhập</span>
+            <span>Thống Kê Tổng Quan</span>
           </Link>
+
+          {/* NHÓM 1: QUẢN LÝ & PHÊ DUYỆT (THỦ KHO TRƯỞNG) */}
+          <div className="wms-menu-label">QUẢN LÝ & PHÊ DUYỆT</div>
+          
+          <Link to="/import-approve" className={`wms-menu-item ${isActive('import-approve') ? 'active' : ''}`}>
+            <FiCheckSquare size={18} />
+            <span>Duyệt Yêu Cầu Nhập</span>
+          </Link>
+
+          <Link to="/purchase-orders/create" className={`wms-menu-item ${isActive('purchase-orders') ? 'active' : ''}`}>
+            <FiShoppingCart size={18} />
+            <span>Lập Đơn Đặt Hàng (PO)</span>
+          </Link>
+
+          {/* NHÓM 2: QUẢN LÝ CHỨNG TỪ (CHUNG) */}
+          <div className="wms-menu-label">QUẢN LÝ CHỨNG TỪ</div>
 
           <Link to="/inventory" className={`wms-menu-item ${isActive('inventory') ? 'active' : ''}`}>
             <FiBox size={18} />
             <span>Tồn Kho & Thẻ Kho</span>
           </Link>
 
-          <Link to="/import-notes" className={`wms-menu-item ${isActive('import-notes') ? 'active' : ''}`}>
-            <FiArrowDownLeft size={18} />
-            <span>Quản Lý Nhập Kho</span>
+          {/* Đã đổi tên ở đây */}
+          <Link to="/import-notes" className={`wms-menu-item ${isActive('import-notes') && !isActive('import-approve') ? 'active' : ''}`}>
+            <FiFileText size={18} />
+            <span>Quản Lý Phiếu Nhập</span>
           </Link>
 
+          {/* Đã đổi tên ở đây */}
           <Link to="/export-notes" className={`wms-menu-item ${isActive('export-notes') ? 'active' : ''}`}>
-            <FiArrowUpRight size={18} />
-            <span>Quản Lý Xuất Kho</span>
+            <FiFileText size={18} />
+            <span>Quản Lý Phiếu Xuất</span>
           </Link>
 
+          {/* NHÓM MỚI: XỬ LÝ THỰC TẾ DÀNH CHO NHÂN VIÊN KHO */}
+          <div className="wms-menu-label">THAO TÁC KHO THỰC TẾ</div>
+
+          <Link to="/actual-imports" className={`wms-menu-item ${isActive('actual-imports') ? 'active' : ''}`}>
+            <FiArrowDownLeft size={18} />
+            <span>Xử Lý Nhập Kho Thực Tế</span>
+          </Link>
+
+          <Link to="/actual-exports" className={`wms-menu-item ${isActive('actual-exports') ? 'active' : ''}`}>
+            <FiArrowUpRight size={18} />
+            <span>Xử Lý Xuất Kho Thực Tế</span>
+          </Link>
+
+          {/* NHÓM 3: DANH MỤC MASTER */}
           <div className="wms-menu-label">DANH MỤC MASTER</div>
 
           <Link to="/products" className={`wms-menu-item ${isActive('products') ? 'active' : ''}`}>
@@ -122,7 +145,6 @@ const WmsLayout = () => {
           </div>
         </header>
 
-        {/* Khu vực render nội dung Router con */}
         <main className="wms-page-body">
           <Outlet />
         </main>

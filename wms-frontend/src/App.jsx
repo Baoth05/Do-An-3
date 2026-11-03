@@ -12,6 +12,10 @@ import InventoryStock from './pages/Inventory/InventoryStock';
 import ImportNoteList from './pages/ImportNote/ImportNoteList';
 import ImportNoteCreate from './pages/ImportNote/ImportNoteCreate';
 import ImportNoteDetail from './pages/ImportNote/ImportNoteDetail';
+import ApproveImportNote from './pages/ImportNote/ApproveImportNote'; // Trang Duyệt Yêu Cầu
+import CreatePurchaseOrder from './pages/PurchaseOrder/CreatePurchaseOrder'; // Trang Gom Đơn PO
+import ActualImportNote from './pages/ImportNote/ActualImportNote';
+
 import ExportNoteList from './pages/ExportNote/ExportNoteList';
 import ExportNoteCreate from './pages/ExportNote/ExportNoteCreate';
 import ExportNoteDetail from './pages/ExportNote/ExportNoteDetail';
@@ -26,7 +30,6 @@ import ShippingForm from './pages/Shipping/ShippingForm';
 
 // Import các trang mới: Danh mục, Kho bãi
 import CategoryManagement from './pages/Category/CategoryManagement';
-
 import WarehouseManagement from './pages/Warehouse/WarehouseManagement';
 import WarehouseForm from './pages/Warehouse/WarehouseForm';
 
@@ -37,59 +40,49 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Cấu hình toàn bộ tuyến đường (Routes) của hệ thống
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Route công khai: Đăng nhập */}
       <Route path="/login" element={<Login />} />
 
-      {/* Routes yêu cầu đăng nhập và có chứa Layout Sidebar + Header */}
-      <Route 
-        path="/" 
-        element={
-          <ProtectedRoute>
-            <WmsLayout />
-          </ProtectedRoute>
-        }
-      >
+      <Route path="/" element={<ProtectedRoute><WmsLayout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
-        
         <Route path="dashboard" element={<WmsDashboard />} />
         
         {/* Tồn kho */}
         <Route path="inventory" element={<InventoryStock />} />
         
-        {/* Nhập kho */}
+        {/* Quản lý & Phê duyệt Nhập kho */}
+        <Route path="import-approve" element={<ApproveImportNote />} />
+        <Route path="purchase-orders/create" element={<CreatePurchaseOrder />} />
+        
+        {/* Vận hành Nhập kho */}
         <Route path="import-notes" element={<ImportNoteList />} />
         <Route path="import-notes/create" element={<ImportNoteCreate />} />
         <Route path="import-notes/:id" element={<ImportNoteDetail />} />
+        <Route path="actual-imports" element={<ActualImportNote />} />
         
         {/* Xuất kho */}
         <Route path="export-notes" element={<ExportNoteList />} />
         <Route path="export-notes/create" element={<ExportNoteCreate />} />
         <Route path="export-notes/:id" element={<ExportNoteDetail />} />
         
-        {/* Hàng hóa / Sản phẩm */}
+        {/* Danh mục Master */}
         <Route path="products" element={<ProductManagement />} />
         <Route path="products/create" element={<ProductForm />} />
         <Route path="products/edit/:id" element={<ProductForm />} />
         <Route path="products/:id" element={<ProductDetail />} />
 
-        {/* Danh mục hàng hóa */}
         <Route path="categories" element={<CategoryManagement />} />
 
-        {/* Kho bãi chi nhánh */}
         <Route path="warehouses" element={<WarehouseManagement />} />
         <Route path="warehouses/create" element={<WarehouseForm />} />
         <Route path="warehouses/edit/:id" element={<WarehouseForm />} />
         
-        {/* Nhà cung cấp (ĐÃ SỬA LỖI CÚ PHÁP TẠI ĐÂY) */}
         <Route path="suppliers" element={<SupplierManagement />} />
         <Route path="suppliers/create" element={<SupplierCreate />} />
         <Route path="suppliers/edit/:id" element={<SupplierEdit />} />
         
-        {/* Đơn vị vận chuyển */}
         <Route path="shipping" element={<ShippingManagement />} />
         <Route path="shipping/create" element={<ShippingForm />} />
         <Route path="shipping/edit/:id" element={<ShippingForm />} />
