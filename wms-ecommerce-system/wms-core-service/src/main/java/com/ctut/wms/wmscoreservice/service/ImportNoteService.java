@@ -28,8 +28,6 @@ public class ImportNoteService {
     private final ShippingProviderRepository shippingProviderRepository;
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
-
-    // 🌟 ĐÃ BỔ SUNG: Repository để ghi nhận Thẻ kho
     private final TheKhoRepository theKhoRepository;
 
     @Transactional
@@ -51,7 +49,12 @@ public class ImportNoteService {
         importNote.setDonViVanChuyen(shippingProvider);
         importNote.setNguoiTao(request.getNguoiTao() != null ? request.getNguoiTao() : "Thủ kho");
         importNote.setNgayNhap(LocalDateTime.now());
-        importNote.setTrangThai("ĐÃ NHẬP KHO");
+
+        // Mặc định là CHO_DUYET khi mới tạo
+        String trangThai = (request.getTrangThai() != null && !request.getTrangThai().isEmpty())
+                ? request.getTrangThai()
+                : "CHO_DUYET";
+        importNote.setTrangThai(trangThai);
 
         ImportNote savedImportNote = importNoteRepository.save(importNote);
         BigDecimal tongTien = BigDecimal.ZERO;
@@ -72,36 +75,7 @@ public class ImportNoteService {
                 BigDecimal thanhTien = detailRequest.getGiaNhap().multiply(BigDecimal.valueOf(detailRequest.getSoLuong()));
                 tongTien = tongTien.add(thanhTien);
 
-                Inventory inventory = inventoryRepository.findBySanPhamAndKhoHang(product, warehouse)
-                        .orElse(new Inventory());
-
-                if (inventory.getId() == null) {
-                    inventory.setSanPham(product);
-                    inventory.setKhoHang(warehouse);
-                    inventory.setSoLuongThucTe(0);
-                    inventory.setSoLuongKhaDung(0);
-                }
-
-                // 🌟 BỔ SUNG LOGIC THẺ KHO: Lưu số lượng cũ
-                int soLuongCu = inventory.getSoLuongThucTe();
-
-                // Cộng tồn kho
-                inventory.setSoLuongThucTe(inventory.getSoLuongThucTe() + detailRequest.getSoLuong());
-                inventory.setSoLuongKhaDung(inventory.getSoLuongKhaDung() + detailRequest.getSoLuong());
-                inventoryRepository.save(inventory);
-
-                // 🌟 BỔ SUNG LOGIC THẺ KHO: Tạo bản ghi lịch sử
-                TheKho theKho = new TheKho();
-                theKho.setHangHoa(product);
-                theKho.setKhoCuaHang(warehouse);
-                theKho.setLoaiGiaoDich("NHẬP KHO");
-                theKho.setMaChungTu(savedImportNote.getMaPhieuNhap());
-                theKho.setPhieuNhapId(savedImportNote.getId());
-                theKho.setSoLuongTruocBienDong(soLuongCu);
-                theKho.setSoLuongBienDong(detailRequest.getSoLuong());
-                theKho.setSoLuongSauBienDong(inventory.getSoLuongThucTe());
-                theKho.setNgayTao(LocalDateTime.now());
-                theKhoRepository.save(theKho);
+                // 🌟 LƯU Ý: KHÔNG CỘNG TỒN KHO VÀ KHÔNG GHI THẺ KHO Ở ĐÂY NỮA
 
                 detailResponses.add(ImportNoteDetailResponse.builder()
                         .id(savedDetail.getId())
@@ -122,12 +96,34 @@ public class ImportNoteService {
         return mapToResponse(savedImportNote, detailResponses);
     }
 
+    @Transactional(readOnly = true)
     public List<ImportNoteResponse> getAllImportNotes() {
         return importNoteRepository.findAll().stream()
-                .map(note -> mapToResponse(note, null))
+                .map(note -> {
+                    List<ImportNoteDetail> details = importNoteDetailRepository.findByPhieuNhap(note);
+                    List<ImportNoteDetailResponse> detailResponses = details.stream().map(d -> {
+                        Product p = d.getSanPham();
+                        BigDecimal tt = (d.getGiaNhap() != null && d.getSoLuong() != null)
+                                ? d.getGiaNhap().multiply(BigDecimal.valueOf(d.getSoLuong()))
+                                : BigDecimal.ZERO;
+                        return ImportNoteDetailResponse.builder()
+                                .id(d.getId())
+                                .sanPhamId(p != null ? p.getId() : null)
+                                .sku(p != null ? p.getSku() : "")
+                                .tenSanPham(p != null ? p.getTenSanPham() : "")
+                                .donViTinh(p != null ? p.getDonViTinh() : "")
+                                .soLuong(d.getSoLuong())
+                                .giaNhap(d.getGiaNhap())
+                                .thanhTien(tt)
+                                .build();
+                    }).collect(Collectors.toList());
+
+                    return mapToResponse(note, detailResponses);
+                })
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public ImportNoteResponse getImportNoteById(Long id) {
         ImportNote note = importNoteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy phiếu nhập có ID = " + id));
@@ -152,12 +148,60 @@ public class ImportNoteService {
         return mapToResponse(note, detailResponses);
     }
 
+    // 🌟 CHỈ CỘNG TỒN KHO & GHI THẺ KHO KHI CHUYỂN TRẠNG THÁI THÀNH DA_NHAP_KHO
     @Transactional
     public ImportNoteResponse updateStatus(Long id, String status) {
         ImportNote note = importNoteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy phiếu nhập!"));
+
+        String oldStatus = note.getTrangThai();
         note.setTrangThai(status);
-        return mapToResponse(importNoteRepository.save(note), null);
+        ImportNote updatedNote = importNoteRepository.save(note);
+
+        // Kiểm tra nếu trạng thái mới là DA_NHAP_KHO và trước đó chưa nhập kho
+        if ("DA_NHAP_KHO".equalsIgnoreCase(status) && !"DA_NHAP_KHO".equalsIgnoreCase(oldStatus)) {
+            List<ImportNoteDetail> details = importNoteDetailRepository.findByPhieuNhap(updatedNote);
+            Warehouse warehouse = updatedNote.getKhoHang();
+
+            for (ImportNoteDetail detail : details) {
+                Product product = detail.getSanPham();
+                Integer qty = detail.getSoLuong();
+
+                if (product != null && warehouse != null && qty != null) {
+                    Inventory inventory = inventoryRepository.findBySanPhamAndKhoHang(product, warehouse)
+                            .orElse(new Inventory());
+
+                    if (inventory.getId() == null) {
+                        inventory.setSanPham(product);
+                        inventory.setKhoHang(warehouse);
+                        inventory.setSoLuongThucTe(0);
+                        inventory.setSoLuongKhaDung(0);
+                    }
+
+                    int soLuongCu = inventory.getSoLuongThucTe();
+
+                    // 1. Cập nhật số lượng tồn kho
+                    inventory.setSoLuongThucTe(soLuongCu + qty);
+                    inventory.setSoLuongKhaDung(inventory.getSoLuongKhaDung() + qty);
+                    inventoryRepository.save(inventory);
+
+                    // 2. Ghi bản ghi Lịch Sử Thẻ Kho
+                    TheKho theKho = new TheKho();
+                    theKho.setHangHoa(product);
+                    theKho.setKhoCuaHang(warehouse);
+                    theKho.setLoaiGiaoDich("NHẬP KHO THỰC TẾ");
+                    theKho.setMaChungTu(updatedNote.getMaPhieuNhap());
+                    theKho.setPhieuNhapId(updatedNote.getId());
+                    theKho.setSoLuongTruocBienDong(soLuongCu);
+                    theKho.setSoLuongBienDong(qty);
+                    theKho.setSoLuongSauBienDong(inventory.getSoLuongThucTe());
+                    theKho.setNgayTao(LocalDateTime.now());
+                    theKhoRepository.save(theKho);
+                }
+            }
+        }
+
+        return mapToResponse(updatedNote, null);
     }
 
     private ImportNoteResponse mapToResponse(ImportNote note, List<ImportNoteDetailResponse> details) {

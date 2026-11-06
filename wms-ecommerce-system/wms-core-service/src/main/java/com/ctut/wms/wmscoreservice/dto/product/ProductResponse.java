@@ -17,7 +17,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductResponse {
+
     private Long id;
+    private Long nhaCungCapId;
     private String sku;
     private String tenSanPham;
     private String donViTinh;
@@ -29,4 +31,5 @@ public class ProductResponse {
     private String hinhAnh;
     private Double khoiLuong;
     private String trangThai;
+
 }

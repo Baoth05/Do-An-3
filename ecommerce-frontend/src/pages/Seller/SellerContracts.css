@@ -1,0 +1,476 @@
+/* src/pages/Seller/SellerContracts.css */
+.seller-contracts-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.contract-workflow-steps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px 28px;
+  gap: 16px;
+}
+
+.wf-step {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.wf-step-num {
+  width: 36px;
+  height: 36px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 2px solid #bfdbfe;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.wf-step-text strong {
+  display: block;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.wf-step-text span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.wf-arrow {
+  color: #94a3b8;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.btn-create-contract {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.btn-create-contract:hover {
+  background: #1d4ed8;
+}
+
+/* Table card */
+.contracts-table-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.contracts-card-header {
+  padding: 18px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.contracts-card-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.contracts-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  text-align: left;
+}
+
+.contracts-data-table th {
+  background: #ffffff;
+  padding: 14px 20px;
+  border-bottom: 2px solid #f1f5f9;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+}
+
+.contracts-data-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.contract-code-tag {
+  color: #2563eb;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+.contract-sub-sig {
+  display: block;
+  font-size: 11px;
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+.contract-amount {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.badge-contract-active {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ecfdf5;
+  color: #059669;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.btn-view-contract-doc {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-view-contract-doc:hover {
+  background: #e2e8f0;
+}
+
+/* Modal Wizard */
+.contract-wizard-modal, .contract-view-modal {
+  background: #ffffff;
+  width: 95%;
+  max-width: 860px;
+  max-height: 90vh;
+  border-radius: 16px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.wizard-step-tag {
+  font-size: 12px;
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.catalog-selection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 16px 0 12px 0;
+}
+
+.catalog-selection-header h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.selected-summary-pill {
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.import-products-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 380px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.picker-item-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  transition: all 0.2s;
+}
+
+.picker-item-card.selected {
+  border-color: #2563eb;
+  background: #fafcff;
+}
+
+.p-card-left strong {
+  display: block;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.p-meta-sub {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.p-card-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.p-card-right label {
+  font-size: 12px;
+  color: #475569;
+  font-weight: 600;
+}
+
+.qty-input-group {
+  display: flex;
+  align-items: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.qty-input-group button {
+  width: 32px;
+  height: 32px;
+  background: #f1f5f9;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.qty-input-group input {
+  width: 50px;
+  height: 32px;
+  border: none;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  outline: none;
+}
+
+/* Contract Document Paper Preview */
+.contract-document-preview {
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 32px;
+  font-family: 'Times New Roman', Times, serif;
+  max-height: 440px;
+  overflow-y: auto;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.contract-doc-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.contract-doc-header h4 {
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+}
+
+.contract-doc-header p {
+  margin: 4px 0 8px 0;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.doc-divider {
+  width: 120px;
+  height: 1px;
+  background: #000;
+  margin: 8px auto 16px auto;
+}
+
+.contract-doc-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  color: #1e3a8a;
+}
+
+.contract-parties-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  background: #f8fafc;
+  padding: 16px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.party-block p {
+  margin: 2px 0;
+}
+
+.contract-terms-text {
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.contract-terms-text h5 {
+  font-size: 14px;
+  margin: 16px 0 8px 0;
+  font-weight: bold;
+  color: #0f172a;
+}
+
+.contract-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0 16px 0;
+  font-size: 13px;
+}
+
+.contract-items-table th, .contract-items-table td {
+  border: 1px solid #cbd5e1;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.contract-items-table th {
+  background: #f1f5f9;
+  font-weight: bold;
+}
+
+/* Digital Signature Card */
+.digital-signature-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.sig-header-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #059669;
+  font-weight: 800;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.digital-stamp-preview {
+  margin: 20px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.stamp-box {
+  border: 3px double #dc2626;
+  color: #dc2626;
+  padding: 16px 28px;
+  border-radius: 8px;
+  text-align: center;
+  background: rgba(254, 242, 242, 0.5);
+  display: inline-block;
+  transform: rotate(-2deg);
+}
+
+.stamp-box.verified {
+  border-color: #059669;
+  color: #059669;
+  background: rgba(236, 253, 245, 0.5);
+  transform: none;
+}
+
+.stamp-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.stamp-name {
+  font-size: 18px;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin: 4px 0;
+}
+
+.stamp-role {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stamp-meta {
+  font-size: 10px;
+  margin-top: 6px;
+  border-top: 1px dashed currentColor;
+  padding-top: 4px;
+}
+
+.btn-next-step, .btn-complete-sign {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-complete-sign {
+  background: #059669;
+}
+
+.btn-go-to-publish {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #2563eb;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 700;
+}
+

@@ -126,6 +126,8 @@ public class ProductService {
                 .hinhAnh(product.getHinhAnh())
                 .khoiLuong(product.getKhoiLuong())
                 .trangThai(product.getTrangThai())
+                .nhaCungCapId(product.getNhaCungCap() != null ? product.getNhaCungCap().getId() : null)
                 .build();
+
     }
 }

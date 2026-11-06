@@ -17,4 +17,5 @@ public class ImportNoteRequest {
     private Long donViVanChuyenId;
     private String nguoiTao;
     private List<ImportNoteDetailRequest> danhSachHangHoa;
+    private String trangThai;
 }

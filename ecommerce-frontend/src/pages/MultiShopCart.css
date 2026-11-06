@@ -389,3 +389,138 @@
   margin-top: 20px;
 }
 
+
+/* Checkbox & Selection Bar */
+.cart-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-clear-all-cart {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-clear-all-cart:hover {
+  background: #fee2e2;
+}
+
+.cart-select-all-bar {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  padding: 14px 20px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.cart-select-all-bar .checkbox-label {
+  flex: 1;
+}
+
+.cart-col-price { width: 130px; text-align: center; }
+.cart-col-qty { width: 120px; text-align: center; }
+.cart-col-subtotal { width: 140px; text-align: right; }
+.cart-col-action { width: 80px; text-align: center; }
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.check-icon {
+  font-size: 20px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.check-icon.checked {
+  color: #2563eb;
+}
+
+.cart-item-row.item-selected {
+  background: #fafcff;
+}
+
+.btn-remove-shop {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.btn-remove-shop:hover {
+  color: #dc2626;
+}
+
+.cart-item-name-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.cart-item-name-link:hover .cart-item-name {
+  color: #2563eb;
+}
+
+.applied-voucher-tag {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.remove-voucher-btn {
+  cursor: pointer;
+  font-size: 16px;
+  color: #059669;
+}
+
+.remove-voucher-btn:hover {
+  color: #dc2626;
+}
+
+.voucher-error-msg {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.shop-voucher-badge {
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

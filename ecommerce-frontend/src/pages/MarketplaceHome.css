@@ -462,3 +462,140 @@
   to { transform: rotate(360deg); }
 }
 
+
+/* Search Result Banner */
+.search-result-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 14px 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.search-tag-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #1e40af;
+  font-size: 14px;
+}
+
+.search-query-text {
+  color: #1d4ed8;
+  font-size: 16px;
+  margin-left: 6px;
+}
+
+.search-count-pill {
+  color: #64748b;
+  font-size: 13px;
+  margin-left: 8px;
+}
+
+.btn-clear-query {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: #475569;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-clear-query:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Filter Controls Row */
+.filter-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.sort-select-wrap, .price-filter-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.sort-select-wrap select, .price-filter-wrap select {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+}
+
+.sort-select-wrap select:focus, .price-filter-wrap select:focus {
+  border-color: #2563eb;
+}
+
+.btn-reset-filters {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-reset-filters:hover {
+  background: #fecaca;
+}
+
+.product-summary-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 20px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.active-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.active-filter-badge svg {
+  cursor: pointer;
+}
+
+.btn-reset-filters-large {
+  margin-top: 16px;
+  padding: 10px 20px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}

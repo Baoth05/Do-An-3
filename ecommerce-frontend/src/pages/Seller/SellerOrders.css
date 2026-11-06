@@ -1,0 +1,258 @@
+/* src/pages/Seller/SellerOrders.css */
+.seller-orders-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.seller-order-tabs {
+  display: flex;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+.seller-tab-btn {
+  flex: 1;
+  padding: 14px 18px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+}
+
+.seller-tab-btn.active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+  background: #ffffff;
+}
+
+.tab-pill {
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.seller-tab-btn.active .tab-pill {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.orders-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: #64748b;
+}
+
+.orders-search-bar input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
+}
+
+/* Orders List */
+.seller-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.seller-order-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.order-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.order-code-lg {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-right: 12px;
+}
+
+.order-date-text {
+  font-size: 12px;
+  color: #64748b;
+  margin-right: 10px;
+}
+
+.session-tag {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pill-pending { background: #fef3c7; color: #b45309; }
+.pill-confirmed { background: #dbeafe; color: #1e40af; }
+.pill-shipping { background: #e0e7ff; color: #4338ca; }
+.pill-completed { background: #d1fae5; color: #047857; }
+.pill-cancelled { background: #fee2e2; color: #b91c1c; }
+
+.order-recipient-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 16px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 13px;
+}
+
+.label-s {
+  display: block;
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.address-text {
+  margin: 4px 0 0 0;
+  color: #64748b;
+}
+
+.order-items-table {
+  padding: 12px 20px;
+  background: #fbfcfe;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item-row {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #334155;
+}
+
+.item-name { flex: 1; font-weight: 600; color: #0f172a; }
+.item-sku { width: 100px; color: #64748b; font-size: 12px; }
+.item-qty { width: 60px; font-weight: 600; text-align: center; }
+.item-price { width: 120px; text-align: right; font-weight: 700; }
+
+.order-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.total-amount-box span {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.total-amount-box strong {
+  font-size: 18px;
+  color: #dc2626;
+  font-weight: 800;
+}
+
+.seller-action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-confirm-order {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-dispatch-shipping {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #4f46e5;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-complete-order {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #059669;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-cancel-seller {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+

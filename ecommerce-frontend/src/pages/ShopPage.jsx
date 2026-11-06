@@ -12,9 +12,16 @@ const ShopPage = () => {
   const [products, setProducts] = useState([]);
   const [vouchers, setVouchers] = useState([]);
   const [copiedVoucher, setCopiedVoucher] = useState('');
+  const [addedNotice, setAddedNotice] = useState('');
   const [loading, setLoading] = useState(true);
 
   const { addToCart } = useContext(CartContext);
+
+  const handleAddToCart = (product) => {
+    addToCart(product, 1);
+    setAddedNotice(`Đã thêm "${product.tenSanPham}" vào giỏ hàng!`);
+    setTimeout(() => setAddedNotice(''), 2500);
+  };
 
   useEffect(() => {
     const fetchStoreData = async () => {
@@ -54,6 +61,13 @@ const ShopPage = () => {
 
   return (
     <div className="shop-page">
+      {/* Toast thông báo thêm giỏ hàng */}
+      {addedNotice && (
+        <div className="toast-notification">
+          <FiCheck size={18} /> {addedNotice}
+        </div>
+      )}
+
       {/* Header Hồ Sơ Gian Hàng */}
       <section className="shop-banner-header">
         <div className="container shop-header-inner">
@@ -138,7 +152,7 @@ const ShopPage = () => {
                   <div className="product-action-bar">
                     <button 
                       className="btn-add-cart"
-                      onClick={() => addToCart(p, 1)}
+                      onClick={() => handleAddToCart(p)}
                     >
                       <FiShoppingCart size={16} /> Thêm Giỏ Hàng
                     </button>

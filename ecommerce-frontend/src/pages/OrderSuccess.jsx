@@ -69,8 +69,11 @@ const OrderSuccess = () => {
           </div>
 
           <div className="success-actions">
+            <Link to="/my-orders" className="btn-view-my-orders">
+              <FiPackage /> Xem & Quản Lý Đơn Mua Của Tôi
+            </Link>
             <Link to="/" className="btn-back-home">
-              <FiHome /> Về Trang Chủ Sàn
+              <FiHome /> Tiếp Tục Mua Sắm
             </Link>
             <a 
               href="http://localhost:5173" 
@@ -78,7 +81,7 @@ const OrderSuccess = () => {
               rel="noreferrer" 
               className="btn-view-wms"
             >
-              <FiPackage /> Theo Dõi Tại Portal Quản Trị Kho (WMS)
+              <FiPackage /> Portal Quản Trị Kho (WMS)
             </a>
           </div>
         </div>

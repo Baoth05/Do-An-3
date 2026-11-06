@@ -195,3 +195,23 @@
   gap: 8px;
 }
 
+
+.btn-view-my-orders {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.btn-view-my-orders:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}

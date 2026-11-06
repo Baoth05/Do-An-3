@@ -17,9 +17,12 @@ import {
 import './Checkout.css';
 
 const Checkout = () => {
-  const { groupedByShop, totalPrice, clearCart } = useContext(CartContext);
+  const { groupedByShop, selectedGroupedByShop, selectedTotalPrice, totalPrice, clearCart } = useContext(CartContext);
   const location = useLocation();
   const navigate = useNavigate();
+
+  const checkoutShopBlocks = selectedGroupedByShop.length > 0 ? selectedGroupedByShop : groupedByShop;
+  const currentTotal = selectedGroupedByShop.length > 0 ? selectedTotalPrice : totalPrice;
 
   const globalDiscount = location.state?.globalDiscount || 0;
   const shopVouchers = location.state?.shopVouchers || {};
@@ -39,7 +42,7 @@ const Checkout = () => {
   const [paymentModal, setPaymentModal] = useState(null); // { isOpen, qrCodeUrl, payUrl, momoOrderId, maGiaoDichGoc, amount }
   const [cryptoTxHash, setCryptoTxHash] = useState('');
 
-  const finalTotal = Math.max(0, totalPrice - globalDiscount);
+  const finalTotal = Math.max(0, currentTotal - globalDiscount);
 
   const handleSubmitOrder = async (e) => {
     e.preventDefault();
@@ -53,14 +56,15 @@ const Checkout = () => {
       // 1. Chuẩn bị Payload Tách Đơn Hàng Đa Shop (Order Splitting)
       const payload = {
         nguoiDungId: 101, // Mock Customer ID
+        hoTen: customerInfo.hoTen,
         diaChiGiaoHang: customerInfo.diaChiGiaoHang,
         soDienThoai: customerInfo.soDienThoai,
         phuongThucThanhToan: paymentMethod,
-        maVoucherToanSan: globalDiscount > 0 ? 'CTUT50K' : null,
-        shopOrders: groupedByShop.map((shop) => ({
+        maVoucherToanSan: globalDiscount > 0 ? (location.state?.appliedVoucherCode || 'CTUT50K') : null,
+        shopOrders: checkoutShopBlocks.map((shop) => ({
           cuaHangId: shop.cuaHangId,
           tenShop: shop.tenShop,
-          maVoucherShop: shopVouchers[shop.cuaHangId] || null,
+          maVoucherShop: shopVouchers[shop.cuaHangId]?.code || (typeof shopVouchers[shop.cuaHangId] === 'string' ? shopVouchers[shop.cuaHangId] : null),
           donViVanChuyen: shippingProvider,
           danhSachHang: shop.items.map((item) => ({
             sanPhamId: item.sanPhamId,
@@ -163,11 +167,11 @@ const Checkout = () => {
     }
   };
 
-  if (groupedByShop.length === 0 && !paymentModal) {
+  if (checkoutShopBlocks.length === 0 && !paymentModal) {
     return (
       <div className="container empty-cart-container">
-        <p>Giỏ hàng trống. Vui lòng thêm sản phẩm trước khi thanh toán.</p>
-        <Link to="/" className="btn-continue-shopping">Về Trang Chủ</Link>
+        <p>Giỏ hàng trống hoặc chưa có sản phẩm nào được chọn. Vui lòng chọn sản phẩm trước khi thanh toán.</p>
+        <Link to="/cart" className="btn-continue-shopping">Quay Lại Giỏ Hàng</Link>
       </div>
     );
   }
@@ -323,10 +327,10 @@ const Checkout = () => {
           {/* Cột Phải: Kiểm Tra Danh Sách Tách Đơn & Nút Mua */}
           <div className="checkout-side-column">
             <div className="checkout-summary-card">
-              <h3>Kiểm Tra Đơn Hàng ({groupedByShop.length} Cửa Hàng)</h3>
+              <h3>Kiểm Tra Đơn Hàng ({checkoutShopBlocks.length} Cửa Hàng)</h3>
 
               <div className="split-orders-preview">
-                {groupedByShop.map((shop, idx) => (
+                {checkoutShopBlocks.map((shop, idx) => (
                   <div key={shop.cuaHangId} className="split-shop-item">
                     <div className="split-shop-header">
                       <span className="split-shop-badge">Gói hàng #{idx + 1}</span>
