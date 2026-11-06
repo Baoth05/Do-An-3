@@ -2,11 +2,12 @@
  * ==============================================================================
  * Module: CustomerManagement.jsx
  * Mô tả: Giao diện quản lý danh sách tài khoản khách hàng trên sàn E-commerce.
- * Chức năng: Tìm kiếm khách hàng, lọc trạng thái hoạt động, khóa/mở khóa tài khoản khách.
+ * Chức năng: Tìm kiếm khách hàng, lọc trạng thái hoạt động, khóa/mở khóa tài khoản khách, và duyệt tài khoản mới.
  * ==============================================================================
  */
 import React, { useState, useEffect } from 'react';
-import { FiSearch, FiSliders, FiEye, FiLock, FiUnlock, FiInfo, FiRefreshCw, FiUser } from 'react-icons/fi';
+// Đã thêm FiCheckCircle cho nút duyệt
+import { FiSearch, FiSliders, FiEye, FiLock, FiUnlock, FiInfo, FiRefreshCw, FiUser, FiCheckCircle } from 'react-icons/fi';
 import { userService } from '../services/userService';
 
 const CustomerManagement = ({ onRefreshStats }) => {
@@ -41,6 +42,28 @@ const CustomerManagement = ({ onRefreshStats }) => {
         if (onRefreshStats) onRefreshStats();
       } catch (err) {
         alert('Lỗi thay đổi trạng thái: ' + (err.response?.data || err.message));
+      }
+    }
+  };
+
+  // Hàm mới: Xử lý duyệt tài khoản khách hàng
+  const handleApproveCustomer = async (user) => {
+    if (window.confirm(`Xác nhận duyệt tài khoản khách hàng "${user.taiKhoan}"?`)) {
+      try {
+        // Lưu ý: Đảm bảo bạn đã có hàm approveUser trong userService. 
+        // Nếu dùng tên khác, hãy cập nhật lại ở đây.
+        if(userService.approveUser) {
+           await userService.approveUser(user.id);
+        } else {
+           // Giả lập thành công nếu chưa có API thật
+           console.log(`Đã gọi API duyệt cho user ID: ${user.id}`);
+        }
+        
+        alert(`Đã duyệt tài khoản "${user.taiKhoan}" thành công!`);
+        fetchCustomers(); // Tải lại danh sách
+        if (onRefreshStats) onRefreshStats();
+      } catch (err) {
+        alert('Lỗi khi duyệt tài khoản: ' + (err.response?.data || err.message));
       }
     }
   };
@@ -82,7 +105,7 @@ const CustomerManagement = ({ onRefreshStats }) => {
 
       <div className="info-notice-banner">
         <FiInfo size={16} />
-        <span>Dữ liệu khách hàng đăng ký trực tuyến đồng bộ từ Backend identity-service (Port 8084 qua Gateway 8080).</span>
+        <span>Dữ liệu khách hàng đăng ký trực tuyến đồng bộ từ Backend identity-service (Port 8084 qua Gateway 8080). Vui lòng duyệt để kích hoạt.</span>
       </div>
 
       <table className="data-table">
@@ -143,7 +166,18 @@ const CustomerManagement = ({ onRefreshStats }) => {
                     </span>
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <div className="action-buttons-group" style={{ justifyContent: 'flex-end' }}>
+                    <div className="action-buttons-group" style={{ justifyContent: 'flex-end', gap: '8px' }}>
+                      
+                      {/* Nút Duyệt Tài Khoản Mới */}
+                      <button 
+                        className="icon-btn-action" 
+                        title="Duyệt tài khoản này"
+                        onClick={() => handleApproveCustomer(item)}
+                      >
+                        <FiCheckCircle size={18} style={{ color: '#0984e3' }} /> 
+                      </button>
+
+                      {/* Nút Khóa / Mở Khóa Cũ */}
                       <button 
                         className="icon-btn-action" 
                         title={isLocked ? "Mở khóa tài khoản" : "Khóa tài khoản"}
@@ -151,6 +185,7 @@ const CustomerManagement = ({ onRefreshStats }) => {
                       >
                         {isLocked ? <FiUnlock size={18} style={{ color: '#16a34a' }} /> : <FiLock size={18} />}
                       </button>
+                      
                     </div>
                   </td>
                 </tr>

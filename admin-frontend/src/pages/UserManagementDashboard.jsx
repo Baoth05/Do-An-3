@@ -2,13 +2,14 @@
  * ==============================================================================
  * Module: UserManagementDashboard.jsx
  * Mô tả: Bảng điều khiển quản lý toàn diện người dùng hệ thống (Admin Dashboard).
- * Chức năng: Thống kê số lượng khách hàng, nhân sự, admin, và chuyển đổi tab quản trị.
+ * Chức năng: Thống kê số lượng khách hàng, nhân sự, tài khoản bán hàng, và chuyển đổi tab quản trị.
  * ==============================================================================
  */
 import React, { useState, useEffect } from 'react';
-import { FiUsers, FiShoppingBag, FiBriefcase, FiShield, FiRefreshCw } from 'react-icons/fi';
+import { FiUsers, FiShoppingBag, FiBriefcase, FiShield, FiRefreshCw, FiTag } from 'react-icons/fi'; 
 import CustomerManagement from './CustomerManagement';
 import StaffManagement from './StaffManagement';
+import SalesManagement from './SalesManagement';
 import { userService } from '../services/userService';
 import './UserManagement.css'; 
 
@@ -18,6 +19,7 @@ const UserManagementDashboard = () => {
     totalUsers: 0,
     totalCustomers: 0,
     totalStaff: 0,
+    totalSales: 0,
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -26,7 +28,10 @@ const UserManagementDashboard = () => {
       setIsLoading(true);
       const data = await userService.getStats();
       if (data) {
-        setStats(data);
+        setStats(prev => ({
+          ...prev,
+          ...data
+        }));
       }
     } catch (e) {
       console.warn('Lỗi lấy thống kê người dùng:', e);
@@ -63,8 +68,9 @@ const UserManagementDashboard = () => {
         </div>
       </div>
 
-      {/* Thống kê từ Database */}
+      {/* Thống kê từ Database (Gồm 4 ô) */}
       <div className="user-stats-grid">
+        {/* Ô 1: Tổng tài khoản */}
         <div className="user-stat-card">
           <div className="stat-info">
             <div className="stat-label">Tổng tài khoản</div>
@@ -74,6 +80,7 @@ const UserManagementDashboard = () => {
           <div className="stat-icon-wrapper red-light"><FiUsers size={22} /></div>
         </div>
 
+        {/* Ô 2: Khách hàng */}
         <div className="user-stat-card">
           <div className="stat-info">
             <div className="stat-label">Khách hàng</div>
@@ -83,6 +90,7 @@ const UserManagementDashboard = () => {
           <div className="stat-icon-wrapper red-light"><FiShoppingBag size={22} /></div>
         </div>
 
+        {/* Ô 3: Nhân sự nội bộ */}
         <div className="user-stat-card">
           <div className="stat-info">
             <div className="stat-label">Nhân sự nội bộ</div>
@@ -90,6 +98,16 @@ const UserManagementDashboard = () => {
             <div className="stat-sub">Quản trị & Thủ kho vận hành</div>
           </div>
           <div className="stat-icon-wrapper orange-light"><FiBriefcase size={22} /></div>
+        </div>
+
+        {/* Ô 4 (MỚI THÊM): Tài khoản bán hàng / Chủ cửa hàng */}
+        <div className="user-stat-card">
+          <div className="stat-info">
+            <div className="stat-label">Tài khoản bán hàng</div>
+            <div className="stat-number" style={{ color: '#d9480f' }}>{stats.totalSales || 0}</div>
+            <div className="stat-sub">Chủ cửa hàng (Store Owner)</div>
+          </div>
+          <div className="stat-icon-wrapper orange-light"><FiTag size={22} /></div>
         </div>
       </div>
 
@@ -107,6 +125,14 @@ const UserManagementDashboard = () => {
         >
           <FiBriefcase size={16} /> Danh sách nhân viên ({stats.totalStaff})
         </button>
+        
+        <button 
+          className={`tab-item ${activeTab === 'sales' ? 'active' : ''}`}
+          onClick={() => setActiveTab('sales')}
+        >
+          <FiTag size={16} /> Danh sách tài khoản bán hàng ({stats.totalSales || 0})
+        </button>
+
         <button 
           className={`tab-item ${activeTab === 'logs' ? 'active' : ''}`}
           onClick={() => setActiveTab('logs')}
@@ -119,6 +145,8 @@ const UserManagementDashboard = () => {
       <div className="content-card-wrapper">
         {activeTab === 'customers' && <CustomerManagement onRefreshStats={fetchStats} />}
         {activeTab === 'staff' && <StaffManagement onRefreshStats={fetchStats} />}
+        {activeTab === 'sales' && <SalesManagement onRefreshStats={fetchStats} />}
+        
         {activeTab === 'logs' && (
           <div style={{ padding: '40px 20px', textAlign: 'center', color: '#868e96' }}>
             <FiShield size={48} style={{ marginBottom: '12px', color: '#d63031' }} />

@@ -1,15 +1,14 @@
 /**
  * ==============================================================================
  * Module: ExportNoteList.jsx
- * Mô tả: Giao diện Quản lý Phiếu Xuất Kho (WMS Fulfillment).
- * Chức năng: Theo dõi danh sách chứng từ xuất kho bàn giao cho đơn vị vận chuyển hoặc điều chuyển.
+ * Mô tả: Giao diện Quản lý Yêu Cầu/Phiếu Xuất Kho (WMS Fulfillment).
  * ==============================================================================
  */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  FiSearch, FiPlus, FiEye, FiTruck, FiRefreshCw, FiCheckCircle, 
-  FiFileText, FiMapPin 
+  FiSearch, FiPlus, FiEye, FiTruck, FiRefreshCw, 
+  FiFileText 
 } from 'react-icons/fi';
 import { wmsCoreService } from '../../services/wmsCoreService';
 import './ExportNoteList.css';
@@ -33,7 +32,7 @@ const ExportNoteList = () => {
         setNotes([]);
       }
     } catch (e) {
-      console.warn('Lỗi lấy phiếu xuất kho từ Backend:', e.message);
+      console.warn('Lỗi lấy dữ liệu từ Backend:', e.message);
       setIsBackendConnected(false);
     } finally {
       setIsLoading(false);
@@ -43,11 +42,6 @@ const ExportNoteList = () => {
   useEffect(() => {
     fetchData();
   }, []);
-
-  const formatCurrency = (amount) => {
-    if (!amount) return '0 đ';
-    return Number(amount).toLocaleString('vi-VN') + ' đ';
-  };
 
   const filteredNotes = notes.filter(n => {
     const code = n.maPhieuXuat || n.maPhieu || '';
@@ -64,8 +58,8 @@ const ExportNoteList = () => {
     <div className="export-container">
       <div className="export-header">
         <div>
-          <h2>Quản Lý Phiếu Xuất Kho (Fulfillment)</h2>
-          <p>Chứng từ xuất hàng giao cho bưu cục vận chuyển và trừ tồn kho vật lý</p>
+          <h2>Quản Lý Yêu Cầu Xuất Kho (Fulfillment)</h2>
+          <p>Theo dõi các yêu cầu xuất hàng và tình trạng xử lý</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button className="btn-secondary" onClick={fetchData} disabled={isLoading} title="Làm mới">
@@ -75,7 +69,7 @@ const ExportNoteList = () => {
             className="btn-primary" 
             onClick={() => navigate('/export-notes/create')}
           >
-            <FiPlus size={16} /> Lập Phiếu Xuất Kho
+            <FiPlus size={16} /> Lập Yêu Cầu Xuất Kho
           </button>
         </div>
       </div>
@@ -85,7 +79,7 @@ const ExportNoteList = () => {
           <FiSearch className="search-icon" />
           <input 
             type="text" 
-            placeholder="Tìm theo mã phiếu xuất, mã đơn hàng, kho xuất, bưu tá..." 
+            placeholder="Tìm theo mã yêu cầu, mã đơn hàng, kho xuất, đối tác vận chuyển..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -96,13 +90,13 @@ const ExportNoteList = () => {
         <table className="export-table">
           <thead>
             <tr>
-              <th>Mã Phiếu Xuất</th>
+              <th>Mã Yêu Cầu</th>
               <th>Tham Chiếu Đơn Hàng</th>
               <th>Kho Xuất Hàng</th>
               <th>Đơn Vị Vận Chuyển</th>
-              <th>Ngày Xuất</th>
+              <th>Ngày Tạo</th>
               <th style={{ textAlign: 'center' }}>Trạng Thái</th>
-              <th>Thủ Kho Xuất</th>
+              <th>Người Tạo</th>
               <th style={{ textAlign: 'right' }}>Thao Tác</th>
             </tr>
           </thead>
@@ -111,32 +105,41 @@ const ExportNoteList = () => {
               <tr>
                 <td colSpan="8" style={{ textAlign: 'center', padding: '40px' }}>
                   <FiRefreshCw className="spin-icon" size={24} style={{ color: '#4f46e5' }} />
-                  <p style={{ marginTop: '8px', color: '#64748b' }}>Đang nạp dữ liệu phiếu xuất kho...</p>
+                  <p style={{ marginTop: '8px', color: '#64748b' }}>Đang nạp dữ liệu...</p>
                 </td>
               </tr>
             ) : filteredNotes.length === 0 ? (
               <tr>
                 <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
                   <FiFileText size={36} style={{ marginBottom: '8px', opacity: 0.5 }} />
-                  <p>Chưa có phiếu xuất kho nào.</p>
+                  <p>Chưa có yêu cầu xuất kho nào.</p>
                   <button 
                     className="btn-primary" 
                     style={{ marginTop: '12px' }}
                     onClick={() => navigate('/export-notes/create')}
                   >
-                    <FiPlus size={16} /> Tạo Phiếu Xuất Kho Mới
+                    <FiPlus size={16} /> Tạo Yêu Cầu Mới
                   </button>
                 </td>
               </tr>
             ) : (
               filteredNotes.map((note) => {
-                const code = note.maPhieuXuat || note.maPhieu || `PX-${note.id}`;
+                const code = note.maPhieuXuat || note.maPhieu || `YCX-${note.id}`;
                 const orderRef = note.donHangId || note.donHangRef || '---';
                 const whName = note.tenKhoHang || note.khoXuat || 'Kho Tổng Trung Tâm';
                 const shipName = note.tenDonViVanChuyen || note.dvvc || 'Giao Hàng Tiết Kiệm';
                 const dateStr = note.ngayXuat ? new Date(note.ngayXuat).toLocaleDateString('vi-VN') : '---';
-                const creator = note.nguoiTao || 'Thủ kho';
-                const status = note.trangThai || 'HOÀN THÀNH';
+                const creator = note.nguoiTao || 'Nhân viên';
+                
+                // Phân tích trạng thái để gán class CSS
+                const statusStr = note.trangThai || 'HOÀN THÀNH';
+                let statusClass = 'success'; // Mặc định màu xanh (hoàn thành)
+                
+                if (statusStr.toUpperCase() === 'HỦY BỎ' || statusStr.toUpperCase() === 'ĐÃ HỦY') {
+                  statusClass = 'cancelled'; // Màu đỏ
+                } else if (statusStr.toUpperCase() === 'CHỜ XỬ LÝ' || statusStr.toUpperCase() === 'ĐANG XỬ LÝ') {
+                  statusClass = 'pending'; // Màu vàng cam
+                }
 
                 return (
                   <tr key={note.id}>
@@ -154,15 +157,16 @@ const ExportNoteList = () => {
                     </td>
                     <td>{dateStr}</td>
                     <td style={{ textAlign: 'center' }}>
-                      <span className="status-tag success">
-                        {status}
+                      {/* Áp dụng class động dựa vào trạng thái */}
+                      <span className={`status-tag ${statusClass}`}>
+                        {statusStr}
                       </span>
                     </td>
                     <td>{creator}</td>
                     <td style={{ textAlign: 'right' }}>
                       <button 
                         className="btn-icon" 
-                        title="Xem chi tiết phiếu xuất"
+                        title="Xem chi tiết yêu cầu"
                         onClick={() => navigate(`/export-notes/${note.id}`)}
                       >
                         <FiEye size={16} />
@@ -177,7 +181,7 @@ const ExportNoteList = () => {
       </div>
 
       <div className="export-footer">
-        <span>Tổng cộng: <strong>{filteredNotes.length}</strong> chứng từ xuất kho</span>
+        <span>Tổng cộng: <strong>{filteredNotes.length}</strong> yêu cầu xuất kho</span>
       </div>
     </div>
   );
