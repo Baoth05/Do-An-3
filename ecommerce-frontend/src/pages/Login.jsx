@@ -1,7 +1,8 @@
 // src/pages/Login.jsx
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FiEye, FiEyeOff, FiMonitor, FiZap, FiBox, FiCheck } from 'react-icons/fi';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { FiEye, FiEyeOff, FiMonitor, FiZap, FiBox, FiCheck, FiShoppingBag, FiArrowRight, FiAlertCircle } from 'react-icons/fi';
+import { authService } from '../services/authService';
 import './Login.css';
 
 const Login = () => {
@@ -9,14 +10,40 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(true);
-    const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
+    const [successNotice, setSuccessNotice] = useState('');
 
-    const handleLogin = (e) => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const from = location.state?.from?.pathname || '/';
+
+    const handleLogin = async (e) => {
         e.preventDefault();
-        // TODO: Ở bước sau, tớ sẽ hướng dẫn cậu gọi API đăng nhập tại đây
-        console.log('Login attempt:', { username, password, rememberMe });
-        alert('Đăng nhập mô phỏng thành công! Chuyển hướng...');
-        navigate('/');
+        setErrorMsg('');
+        setSuccessNotice('');
+
+        if (!username.trim() || !password) {
+            setErrorMsg('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const customer = await authService.loginCustomer({
+                taiKhoan: username.trim(),
+                matKhau: password,
+            });
+
+            setSuccessNotice(`Chào mừng trở lại, ${customer.hoTen || customer.taiKhoan}! Đang chuyển hướng...`);
+            setTimeout(() => {
+                navigate(from, { replace: true });
+            }, 800);
+        } catch (err) {
+            setErrorMsg(err.response?.data?.message || err.message || 'Tài khoản hoặc mật khẩu không chính xác!');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -24,15 +51,20 @@ const Login = () => {
             {/* Top Navigation Bar */}
             <nav className="login-top-nav">
                 <div className="nav-left">
-                    <div className="nav-logo">
-                        <span className="logo-icon">A</span>
-                        <strong>CTUT GEAR</strong>
-                    </div>
+                    <Link to="/" className="nav-logo-link">
+                        <div className="nav-logo">
+                            <span className="logo-icon">G</span>
+                            <strong>CTUT GEAR</strong>
+                        </div>
+                    </Link>
                     <span className="nav-divider">|</span>
-                    <span className="nav-portal-title">Authentication Portal</span>
+                    <span className="nav-portal-title">Cổng Đăng Nhập Mua Hàng</span>
                 </div>
                 <div className="nav-right">
-                    <a href="#" className="nav-help">Need Help?</a>
+                    <Link to="/seller/login" className="seller-portal-cta">
+                        <FiShoppingBag size={14} /> Kênh Người Bán
+                    </Link>
+                    <Link to="/" className="nav-help">Về Trang Chủ</Link>
                 </div>
             </nav>
 
@@ -45,45 +77,45 @@ const Login = () => {
                     <div className="promo-content">
                         <div className="promo-badges">
                             <span className="badge-official"><FiCheck size={12} /> CTUT OFFICIAL MALL</span>
-                            <span className="badge-flash"><span className="dot"></span> Flash Deals Active</span>
+                            <span className="badge-flash"><span className="dot"></span> Kho Hàng Sẵn Sàng</span>
                         </div>
 
-                        <h1 className="promo-title">Level Up Your Battlestation</h1>
-                        <p className="promo-subtitle">Vietnam's Premier Web3 & Pro Gaming Hardware Gateway.</p>
+                        <h1 className="promo-title">Nâng Tầm Không Gian Chiến Game & Sáng Tạo</h1>
+                        <p className="promo-subtitle">Sàn thương mại điện tử thiết bị phần cứng & Gaming Gear hàng đầu Việt Nam.</p>
 
                         <div className="promo-features">
                             <div className="feat-box">
                                 <div className="feat-icon"><FiMonitor /></div>
                                 <div className="feat-text">
-                                    <strong>100% Genuine Tech & 2-Year Instant Swap</strong>
-                                    <p>Official tier warranty coverage on GPUs, boards & switches.</p>
+                                    <strong>100% Linh Kiện Chính Hãng & Đổi Mới 1-1</strong>
+                                    <p>Chính sách bảo hành trực tiếp từ Kho Tổng CTUT Gear cho toàn bộ GPU, Mainboard, Switch.</p>
                                 </div>
                             </div>
                             <div className="feat-box">
                                 <div className="feat-icon"><FiZap /></div>
                                 <div className="feat-text">
-                                    <strong>Ultra-Fast 2-Hour Express Delivery</strong>
-                                    <p>Immediate courier dispatch across Ho Chi Minh City & Hanoi.</p>
+                                    <strong>Giao Hỏa Tốc & Tự Động Phân Tuyến Shop</strong>
+                                    <p>Tối ưu hóa hành trình giao vận thông minh giữa các kho cửa hàng đối tác trên cả nước.</p>
                                 </div>
                             </div>
                             <div className="feat-box">
                                 <div className="feat-icon"><FiBox /></div>
                                 <div className="feat-text">
-                                    <strong>Crypto & Web3 Native Settlement</strong>
-                                    <p>Seamless frictionless checkout with MetaMask, USDT & SOL.</p>
+                                    <strong>Voucher Toàn Sàn & Ưu Đãi Độc Quyền</strong>
+                                    <p>Áp dụng mã giảm giá nhiều tầng cho giỏ hàng đa gian hàng, thanh toán tiện lợi linh hoạt.</p>
                                 </div>
                             </div>
                         </div>
 
                         <div className="promo-trust-badge">
                             <div className="trust-avatars">
-                                <span className="av">K</span><span className="av">V</span><span className="av">N</span>
+                                <span className="av">Q</span><span className="av">K</span><span className="av">H</span>
                             </div>
                             <div className="trust-text">
                                 <div className="stars">★★★★★ 4.9/5</div>
-                                <div className="desc">Trusted by 120,000+ PC Builders</div>
+                                <div className="desc">Tin dùng bởi hơn 120.000 game thủ & PC Builder</div>
                             </div>
-                            <div className="authentic-tag">AUTHENTIC</div>
+                            <div className="authentic-tag">CHÍNH HÃNG</div>
                         </div>
                     </div>
                 </div>
@@ -91,37 +123,53 @@ const Login = () => {
                 {/* Right Side: Login Form */}
                 <div className="login-form-side">
                     <div className="form-tabs">
-                        <button className="tab-btn active">Log In</button>
-                        <button className="tab-btn">Register</button>
-                    </div>
-
-                    <div className="qr-corner-icon">
-                        {/* Icon trang trí giả lập QR */}
-                        <div className="qr-mock"></div>
+                        <button className="tab-btn active" type="button">Đăng Nhập Khách</button>
+                        <button 
+                            className="tab-btn" 
+                            type="button"
+                            onClick={() => navigate('/register')}
+                        >
+                            Đăng Ký Khách Mới
+                        </button>
                     </div>
 
                     <div className="form-header">
-                        <h2>Welcome Back!</h2>
-                        <p>Please enter your credentials to access your gear & orders.</p>
+                        <h2>Chào Mừng Trở Lại!</h2>
+                        <p>Đăng nhập tài khoản khách hàng để quản lý đơn hàng & giỏ đồ công nghệ.</p>
                     </div>
+
+                    {errorMsg && (
+                        <div className="auth-alert-box error">
+                            <FiAlertCircle size={16} />
+                            <span>{errorMsg}</span>
+                        </div>
+                    )}
+
+                    {successNotice && (
+                        <div className="auth-alert-box success">
+                            <FiCheck size={16} />
+                            <span>{successNotice}</span>
+                        </div>
+                    )}
 
                     <form onSubmit={handleLogin} className="auth-form">
                         <div className="input-group">
-                            <label>Username, Phone or Email</label>
+                            <label>Tên đăng nhập hoặc Email</label>
                             <div className="input-wrapper">
                                 <span className="input-icon">👤</span>
                                 <input
                                     type="text"
-                                    placeholder="gamer@ctutgear.vn or 0908 123 456"
+                                    placeholder="ví dụ: user_minhquan hoặc email"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     required
+                                    autoFocus
                                 />
                             </div>
                         </div>
 
                         <div className="input-group">
-                            <label>Password</label>
+                            <label>Mật khẩu</label>
                             <div className="input-wrapper">
                                 <span className="input-icon">🔒</span>
                                 <input
@@ -149,36 +197,43 @@ const Login = () => {
                                     onChange={(e) => setRememberMe(e.target.checked)}
                                 />
                                 <span className="checkmark"></span>
-                                Remember me
+                                Ghi nhớ đăng nhập
                             </label>
-                            <a href="#" className="forgot-link">Forgot Password?</a>
+                            <a href="#" className="forgot-link" onClick={(e) => { e.preventDefault(); alert('Vui lòng liên hệ Bot Tư Vấn hoặc bộ phận hỗ trợ 1900-888-CTUT để khôi phục mật khẩu.'); }}>
+                                Quên mật khẩu?
+                            </a>
                         </div>
 
-                        <button type="submit" className="btn-primary-login">
-                            LOG IN →
+                        <button 
+                            type="submit" 
+                            className="btn-primary-login"
+                            disabled={loading}
+                        >
+                            {loading ? 'ĐANG XÁC THỰC...' : 'ĐĂNG NHẬP MUA HÀNG →'}
                         </button>
                     </form>
 
-                    <div className="social-login-section">
-                        <div className="divider"><span>OR CONNECT WITH</span></div>
-                        <div className="social-buttons">
-                            <button className="btn-social">
-                                <span className="soc-icon">G</span> Google
-                            </button>
-                            <button className="btn-social">
-                                <span className="soc-icon blue">f</span> Facebook
-                            </button>
-                            <button className="btn-social">
-                                <span className="soc-icon fox">🦊</span> MetaMask
-                            </button>
-                        </div>
+                    <div className="register-prompt">
+                        <p>
+                            Chưa có tài khoản mua hàng?{' '}
+                            <Link to="/register" className="highlight-link">
+                                Đăng ký tài khoản khách ngay
+                            </Link>
+                        </p>
                     </div>
 
-                    <div className="register-prompt">
-                        <p>New to CTUT Gear? <a href="#">Sign Up Now</a></p>
-                        <p className="terms-text">
-                            By proceeding, you agree to CTUT Gear's <a href="#">Terms of Service</a> & <a href="#">Privacy Policy</a>.
-                        </p>
+                    {/* Dedicated Seller Portal Section */}
+                    <div className="seller-switch-banner">
+                        <div className="seller-banner-icon">
+                            <FiShoppingBag size={20} />
+                        </div>
+                        <div className="seller-banner-text">
+                            <strong>Bạn là Chủ Cửa Hàng / Đối Tác?</strong>
+                            <p>Quản lý gian hàng, kho hàng và ký hợp đồng cung ứng B2B2C.</p>
+                        </div>
+                        <Link to="/seller/login" className="btn-go-seller">
+                            Vào Kênh Người Bán <FiArrowRight size={14} />
+                        </Link>
                     </div>
                 </div>
 
@@ -187,17 +242,17 @@ const Login = () => {
             {/* Bottom Footer */}
             <footer className="login-footer">
                 <div className="footer-links">
-                    <span>🎧 Support Hotline: 1900-888-CTUT</span>
+                    <span>🎧 Hotline Hỗ Trợ: 1900-888-CTUT</span>
                     <span className="dot">•</span>
-                    <span>🔒 256-Bit SSL Encrypted Security</span>
+                    <span>🔒 Bảo Mật SSL 256-Bit</span>
                     <span className="dot">•</span>
-                    <span>🛡️ Official Tech Warranty Guaranteed</span>
+                    <span>🛡️ Bảo Hành Chính Hãng Kho Tổng</span>
                 </div>
                 <div className="footer-policy">
-                    <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a> | <a href="#">Security Guidelines</a>
+                    <a href="#">Chính Sách Bảo Mật</a> | <a href="#">Điều Khoản Dịch Vụ</a> | <a href="#">Quy Định Đổi Trả</a>
                 </div>
                 <div className="footer-copyright">
-                    © 2024 CTUT Gear Global Commerce. All Rights Reserved.
+                    © 2024 CTUT Gear E-Commerce Platform. All Rights Reserved.
                 </div>
             </footer>
         </div>

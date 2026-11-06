@@ -8,14 +8,19 @@ import Login from './pages/Login';
 // Import các trang chính đã được gom nhóm và xây dựng
 import UserManagementDashboard from './pages/UserManagementDashboard';
 import StrategicReport from './pages/StrategicReport';
-import FinancialManagement from './pages/FinancialManagement'; // Đã thêm import trang Tài chính
+import FinancialManagement from './pages/FinancialManagement';
 
-import './App.css'; // CSS chung toàn cục
+import './App.css';
 
-// Component bảo vệ tuyến đường (Chưa đăng nhập -> Đẩy về /login)
+// Component bảo vệ tuyến đường (Chỉ duy nhất ADMIN mới có quyền truy cập)
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated, user } = useContext(AuthContext);
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+  
+  // Kiểm tra vai trò: Phải là ADMIN
+  if (user?.role !== 'ADMIN') {
+    return <Navigate to="/login" replace />;
+  }
   return children;
 };
 
@@ -25,7 +30,7 @@ const AppRoutes = () => {
       {/* 1. Khai báo Route cho Trang Đăng nhập */}
       <Route path="/login" element={<Login />} />
 
-      {/* 2. Các tuyến đường Admin (Bắt buộc phải đăng nhập) */}
+      {/* 2. Các tuyến đường Admin (Bắt buộc phải đăng nhập và có vai trò ADMIN) */}
       <Route 
         path="/" 
         element={
@@ -40,7 +45,7 @@ const AppRoutes = () => {
         {/* Các trang con hiển thị bên trong AdminLayout */}
         <Route path="strategic-report" element={<StrategicReport />} />
         <Route path="user-management" element={<UserManagementDashboard />} />
-        <Route path="finance" element={<FinancialManagement />} /> {/* Đã thêm Route Tài chính */}
+        <Route path="finance" element={<FinancialManagement />} />
       </Route>
 
       {/* 3. Tất cả các đường dẫn sai khác đều đẩy về /login */}

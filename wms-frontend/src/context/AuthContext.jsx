@@ -20,17 +20,44 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem('wms_token') || null);
   const [loading] = useState(false);
 
+  // Danh sách các vai trò được phép truy cập WMS: ADMIN, THỦ KHO, NHÂN VIÊN KHO
+  const ALLOWED_WMS_ROLES = ['ADMIN', 'WAREHOUSE_MANAGER', 'WAREHOUSE_STAFF', 'THUKHO', 'NVKHO'];
+
   // Hàm xử lý Đăng nhập
   const login = async (username, password) => {
     try {
       const response = await authService.login({ username, password });
       if (response && response.token) {
+        const rawRole = (response.vaiTro || 'THUKHO').toUpperCase().replace('ROLE_', '');
+
+        // 🌟 KIỂM TRA PHÂN QUYỀN RBAC CHO CỔNG KHO BÃI (WMS):
+        if (rawRole === 'CUSTOMER' || rawRole === 'KHACH_HANG') {
+          return {
+            success: false,
+            message: 'Từ chối truy cập: Tài khoản của bạn là Khách Hàng, chỉ có quyền mua sắm trên Sàn TMĐT!'
+          };
+        }
+
+        if (rawRole === 'STORE_OWNER' || rawRole === 'SELLER' || rawRole === 'CHU_CUA_HANG') {
+          return {
+            success: false,
+            message: 'Từ chối truy cập: Tài khoản của bạn là Chủ Cửa Hàng, vui lòng truy cập Kênh Người Bán (Seller Portal)!'
+          };
+        }
+
+        if (!ALLOWED_WMS_ROLES.includes(rawRole)) {
+          return {
+            success: false,
+            message: `Từ chối truy cập: Vai trò [${rawRole}] không có quyền truy cập Hệ Thống Quản Lý Kho Bãi (WMS)!`
+          };
+        }
+
         const userToken = response.token;
         const userData = {
           id: response.id,
           taiKhoan: response.taiKhoan,
           name: response.hoTen || response.taiKhoan,
-          role: response.vaiTro || 'THUKHO',
+          role: rawRole,
           email: response.email,
         };
 
@@ -73,6 +100,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         logout,
+        ALLOWED_WMS_ROLES
       }}
     >
       {children}

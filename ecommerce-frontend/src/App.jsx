@@ -2,6 +2,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import Header from './components/Header';
+import LiveChatWidget from './components/LiveChatWidget';
 import MarketplaceHome from './pages/MarketplaceHome';
 import ShopPage from './pages/ShopPage';
 import ProductDetail from './pages/ProductDetail';
@@ -11,9 +12,11 @@ import OrderSuccess from './pages/OrderSuccess';
 import VouchersPage from './pages/VouchersPage';
 import MyOrders from './pages/MyOrders';
 import Login from './pages/Login';
+import CustomerRegister from './pages/CustomerRegister';
 
 // Seller Portal Pages
 import SellerLayout from './pages/Seller/SellerLayout';
+import SellerLogin from './pages/Seller/SellerLogin';
 import SellerDashboard from './pages/Seller/SellerDashboard';
 import SellerProducts from './pages/Seller/SellerProducts';
 import SellerOrders from './pages/Seller/SellerOrders';
@@ -26,11 +29,13 @@ import './App.css';
 
 function AppContent() {
   const location = useLocation();
-  const isSellerPortal = location.pathname.startsWith('/seller') && location.pathname !== '/seller/register';
+  const isSellerPortal = location.pathname.startsWith('/seller') && 
+                         location.pathname !== '/seller/register' && 
+                         location.pathname !== '/seller/login';
 
   return (
     <div className={isSellerPortal ? 'seller-root' : 'marketplace-app'}>
-      {/* Ẩn Header sàn khi đang ở Kênh Người Bán (Seller Portal Dashboard) */}
+      {/* Ẩn Header sàn khi đang ở Kênh Người Bán Dashboard */}
       {!isSellerPortal && <Header />}
 
       <main className={isSellerPortal ? 'seller-main-body' : 'marketplace-main-body'}>
@@ -44,12 +49,16 @@ function AppContent() {
           <Route path="/order-success" element={<OrderSuccess />} />
           <Route path="/my-orders" element={<MyOrders />} />
           <Route path="/vouchers" element={<VouchersPage />} />
-          <Route path="/login" element={<Login />} />
 
-          {/* Trang Đăng Ký Mở Gian Hàng & Khởi Tạo Kho Riêng */}
+          {/* Cổng Đăng Nhập & Đăng Ký Tài Khoản Khách Hàng Tách Biệt */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<CustomerRegister />} />
+
+          {/* Cổng Đăng Nhập & Đăng Ký Dành Riêng Cho Chủ Cửa Hàng (Seller) */}
+          <Route path="/seller/login" element={<SellerLogin />} />
           <Route path="/seller/register" element={<SellerRegister />} />
 
-          {/* Cụm Trang Kênh Người Bán (Dành cho Chủ Cửa Hàng) */}
+          {/* Cụm Trang Kênh Người Bán (Chỉ vào được sau khi Đăng Nhập Chủ Shop) */}
           <Route path="/seller" element={<SellerLayout />}>
             <Route index element={<SellerDashboard />} />
             <Route path="contracts" element={<SellerContracts />} />
@@ -62,6 +71,9 @@ function AppContent() {
           <Route path="*" element={<MarketplaceHome />} />
         </Routes>
       </main>
+
+      {/* Bot Chat Hỗ Trợ Tư Vấn Mua Sắm & Khiếu Nại Báo Lỗi Toàn Cục */}
+      <LiveChatWidget />
 
       {/* Ẩn Footer sàn khi đang ở Kênh Người Bán */}
       {!isSellerPortal && (

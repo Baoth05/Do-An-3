@@ -86,9 +86,12 @@ public class AuthService {
         // 3. Nếu đúng, tạo Token và chuẩn bị thông tin trả về
         UserInfo userInfo = userInfoRepository.findByUser(user).orElse(null);
         String hoTen = (userInfo != null && userInfo.getHoTen() != null) ? userInfo.getHoTen() : user.getTaiKhoan();
-        String token = jwtService.generateToken(user.getTaiKhoan());
 
         String roleName = user.getRoles() != null && !user.getRoles().isEmpty() ? user.getRoles().iterator().next().getMaVaiTro() : user.getVaiTro();
+        if (roleName == null || roleName.isEmpty()) {
+            roleName = "CUSTOMER";
+        }
+        String token = jwtService.generateToken(user.getTaiKhoan(), roleName, user.getId());
 
         return AuthResponse.builder()
                 .token(token)

@@ -1,10 +1,11 @@
 // src/components/Header.jsx
 import { useContext, useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom'; // 🌟 Bổ sung useLocation
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
+import { authService } from '../services/authService';
 import {
   FiShoppingCart, FiSearch, FiShoppingBag, FiExternalLink,
-  FiUser, FiTag, FiPackage, FiChevronDown
+  FiUser, FiTag, FiPackage, FiChevronDown, FiLogOut, FiLogIn, FiUserPlus
 } from 'react-icons/fi';
 import './Header.css';
 
@@ -15,7 +16,11 @@ const Header = ({ onSearch }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   const navigate = useNavigate();
-  const location = useLocation(); // 🌟 Lấy thông tin URL hiện tại
+  const location = useLocation();
+
+  // Kiểm tra phiên đăng nhập của Khách Hàng & Chủ Shop
+  const customer = authService.getCurrentCustomer();
+  const seller = authService.getCurrentSeller();
 
   useEffect(() => {
     const q = searchParams.get('q');
@@ -37,12 +42,18 @@ const Header = ({ onSearch }) => {
     }
   };
 
-  // 🌟 LOGIC ẨN HEADER: Nếu URL là '/login' thì ngắt luôn, không render gì cả
-  if (location.pathname === '/login') {
+  const handleCustomerLogout = () => {
+    authService.logoutCustomer();
+    setShowUserDropdown(false);
+    navigate('/login');
+  };
+
+  // Ẩn Header sàn khi đang ở các trang đăng ký / đăng nhập chuyên biệt
+  const authRoutes = ['/login', '/register', '/seller/login', '/seller/register'];
+  if (authRoutes.includes(location.pathname)) {
     return null;
   }
 
-  // Nếu không phải /login, render Header bình thường
   return (
     <header className="market-header">
       {/* Top Banner Thông Báo */}
@@ -50,12 +61,16 @@ const Header = ({ onSearch }) => {
         <div className="container top-banner-content">
           <span>🔥 Siêu Hội Mua Sắm CTUT Gear - Miễn Phí Vận Chuyển Toàn Quốc Cho Đơn Từ 200.000đ!</span>
           <div className="top-banner-links">
-            <Link to="/seller" className="seller-channel-link">
-              <FiShoppingBag size={13} /> Kênh Người Bán (Chủ Cửa Hàng)
+            <Link 
+              to={seller ? "/seller" : "/seller/login"} 
+              className="seller-channel-link"
+              title="Cổng dành cho Đối tác & Chủ Shop"
+            >
+              <FiShoppingBag size={13} /> {seller ? `Kênh Người Bán (${seller.tenCuaHang || seller.taiKhoan})` : 'Kênh Người Bán'}
             </Link>
             <span className="divider-bar">|</span>
             <a href="http://localhost:5173" target="_blank" rel="noreferrer" className="wms-portal-link">
-              <FiExternalLink size={13} /> Kênh Quản Trị & Kho Bãi (WMS Portal)
+              <FiExternalLink size={13} /> Kênh Quản Trị & Kho Bãi (WMS)
             </a>
           </div>
         </div>
@@ -108,47 +123,66 @@ const Header = ({ onSearch }) => {
               <span className="cart-label">Giỏ Hàng</span>
             </Link>
 
-            {/* User Profile Menu */}
-            <div
-              className="user-profile-btn"
-              onClick={() => setShowUserDropdown(!showUserDropdown)}
-              tabIndex={0}
-              onBlur={() => setTimeout(() => setShowUserDropdown(false), 200)}
-            >
-              <div className="avatar-circle">
-                <FiUser size={18} />
-              </div>
-              <div className="user-info-text">
-                <span className="user-name">Trần Minh Quân</span>
-                <span className="user-role">CUSTOMER #101 <FiChevronDown size={11} /></span>
-              </div>
-
-              {showUserDropdown && (
-                <div className="user-dropdown-menu">
-                  <div className="dropdown-header">
-                    <strong>Trần Minh Quân</strong>
-                    <small>0901234567 • Ninh Kiều, Cần Thơ</small>
-                  </div>
-                  <div className="dropdown-divider"></div>
-                  <Link to="/my-orders" className="dropdown-item">
-                    <FiPackage size={16} /> Đơn Mua Của Tôi
-                  </Link>
-                  <Link to="/vouchers" className="dropdown-item">
-                    <FiTag size={16} /> Kho Voucher Toàn Sàn
-                  </Link>
-                  <Link to="/cart" className="dropdown-item">
-                    <FiShoppingCart size={16} /> Giỏ Hàng ({totalQuantity})
-                  </Link>
-                  <div className="dropdown-divider"></div>
-                  <Link to="/seller" className="dropdown-item seller-menu-item">
-                    <FiShoppingBag size={16} /> 🏪 Kênh Người Bán (Chủ Shop)
-                  </Link>
-                  <a href="http://localhost:5173" target="_blank" rel="noreferrer" className="dropdown-item">
-                    <FiExternalLink size={16} /> Đăng nhập Kênh Quản Trị WMS
-                  </a>
+            {/* User Profile or Guest Auth Buttons */}
+            {customer ? (
+              <div
+                className="user-profile-btn"
+                onClick={() => setShowUserDropdown(!showUserDropdown)}
+                tabIndex={0}
+                onBlur={() => setTimeout(() => setShowUserDropdown(false), 250)}
+              >
+                <div className="avatar-circle">
+                  <FiUser size={18} />
                 </div>
-              )}
-            </div>
+                <div className="user-info-text">
+                  <span className="user-name">{customer.hoTen || customer.taiKhoan}</span>
+                  <span className="user-role">KHÁCH HÀNG <FiChevronDown size={11} /></span>
+                </div>
+
+                {showUserDropdown && (
+                  <div className="user-dropdown-menu">
+                    <div className="dropdown-header">
+                      <strong>{customer.hoTen || customer.taiKhoan}</strong>
+                      <small>{customer.email || `${customer.taiKhoan}@ctutgear.vn`}</small>
+                    </div>
+                    <div className="dropdown-divider"></div>
+                    <Link to="/my-orders" className="dropdown-item">
+                      <FiPackage size={16} /> Đơn Mua Của Tôi
+                    </Link>
+                    <Link to="/vouchers" className="dropdown-item">
+                      <FiTag size={16} /> Kho Voucher Toàn Sàn
+                    </Link>
+                    <Link to="/cart" className="dropdown-item">
+                      <FiShoppingCart size={16} /> Giỏ Hàng ({totalQuantity})
+                    </Link>
+                    <div className="dropdown-divider"></div>
+                    <Link to={seller ? "/seller" : "/seller/login"} className="dropdown-item seller-menu-item">
+                      <FiShoppingBag size={16} /> 🏪 Kênh Người Bán (Chủ Shop)
+                    </Link>
+                    <a href="http://localhost:5173" target="_blank" rel="noreferrer" className="dropdown-item">
+                      <FiExternalLink size={16} /> Cổng Quản Trị Kho (WMS)
+                    </a>
+                    <div className="dropdown-divider"></div>
+                    <button 
+                      type="button" 
+                      className="dropdown-item logout-item"
+                      onClick={handleCustomerLogout}
+                    >
+                      <FiLogOut size={16} /> Đăng Xuất Khách Hàng
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="guest-auth-actions">
+                <Link to="/login" className="btn-auth-login">
+                  <FiLogIn size={15} /> Đăng Nhập
+                </Link>
+                <Link to="/register" className="btn-auth-register">
+                  <FiUserPlus size={15} /> Đăng Ký
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

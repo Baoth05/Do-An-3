@@ -12,8 +12,8 @@ import InventoryStock from './pages/Inventory/InventoryStock';
 import ImportNoteList from './pages/ImportNote/ImportNoteList';
 import ImportNoteCreate from './pages/ImportNote/ImportNoteCreate';
 import ImportNoteDetail from './pages/ImportNote/ImportNoteDetail';
-import ApproveImportNote from './pages/ImportNote/ApproveImportNote'; // Trang Duyệt Yêu Cầu
-import CreatePurchaseOrder from './pages/PurchaseOrder/CreatePurchaseOrder'; // Trang Gom Đơn PO
+import ApproveImportNote from './pages/ImportNote/ApproveImportNote';
+import CreatePurchaseOrder from './pages/PurchaseOrder/CreatePurchaseOrder';
 import ActualImportNote from './pages/ImportNote/ActualImportNote';
 
 import ExportNoteList from './pages/ExportNote/ExportNoteList';
@@ -33,10 +33,17 @@ import CategoryManagement from './pages/Category/CategoryManagement';
 import WarehouseManagement from './pages/Warehouse/WarehouseManagement';
 import WarehouseForm from './pages/Warehouse/WarehouseForm';
 
-// Component bảo vệ Route: Kiểm tra trạng thái đăng nhập
+// Component bảo vệ Route: Kiểm tra trạng thái đăng nhập & Phân quyền Thủ kho / Nhân viên kho / Admin
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated, user, ALLOWED_WMS_ROLES } = useContext(AuthContext);
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  const roles = ALLOWED_WMS_ROLES || ['ADMIN', 'WAREHOUSE_MANAGER', 'WAREHOUSE_STAFF', 'THUKHO', 'NVKHO'];
+  const userRole = user?.role ? user.role.toUpperCase() : '';
+  if (userRole && !roles.includes(userRole)) {
+    return <Navigate to="/login" replace />;
+  }
+
   return children;
 };
 

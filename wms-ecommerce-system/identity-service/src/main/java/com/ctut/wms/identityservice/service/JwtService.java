@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class JwtService {
@@ -22,12 +24,23 @@ public class JwtService {
     public static final String SECRET = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
 
     public String generateToken(String taiKhoan) {
+        return generateToken(taiKhoan, "CUSTOMER", null);
+    }
+
+    public String generateToken(String taiKhoan, String role, Long userId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", role);
+        claims.put("vaiTro", role);
+        if (userId != null) {
+            claims.put("userId", userId);
+        }
+
         return Jwts.builder()
-                .subject(taiKhoan) // Ở bản 0.12.x dùng subject() thay vì setSubject()
-                .issuedAt(new Date(System.currentTimeMillis())) // Dùng issuedAt() thay vì setIssuedAt()
+                .claims(claims)
+                .subject(taiKhoan)
+                .issuedAt(new Date(System.currentTimeMillis()))
                 // Hạn sử dụng 1 ngày
                 .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
-                // Ở bản 0.12.x, chỉ cần truyền SecretKey, hệ thống sẽ tự nhận diện thuật toán mã hóa
                 .signWith(getSignInKey())
                 .compact();
     }

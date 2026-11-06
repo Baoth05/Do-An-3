@@ -269,3 +269,89 @@
 .link-register-mini:hover {
   text-decoration: underline;
 }
+
+/* Seller Logout Button */
+.btn-seller-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: 12px;
+}
+
+.btn-seller-logout:hover {
+  background: #fecaca;
+}
+
+.seller-redirecting {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 500;
+}
+
+
+/* Single Owner Locked Store Info Card */
+.owner-verified-pill {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.single-owner-store-card {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.store-locked-name {
+  margin: 0 0 6px 0;
+  font-size: 13.5px;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.store-locked-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.store-locked-meta strong {
+  color: #fcd34d;
+}
+
+.admin-store-switcher {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-tag {
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  align-self: flex-start;
+  letter-spacing: 0.5px;
+}

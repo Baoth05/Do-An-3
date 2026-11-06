@@ -238,3 +238,54 @@
   cursor: not-allowed;
 }
 
+
+/* Thêm grid 3 cột và strip switch */
+.form-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.auth-switch-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  margin-top: 14px;
+}
+
+.auth-switch-strip .btn-switch-link {
+  color: #2563eb;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth-switch-strip .btn-switch-link:hover {
+  text-decoration: underline;
+}
+
+.footer-links-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.bullet-sep {
+  color: #cbd5e1;
+}
+
+.btn-customer-reg-link {
+  color: #64748b;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.btn-customer-reg-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}

@@ -1,188 +1,101 @@
-# KIẾN TRÚC PHÂN HỆ ECOMMERCE & KÊNH NGƯỜI BÁN (SELLER PORTAL)
+# KIẾN TRÚC PHÂN HỆ ECOMMERCE & PHÂN QUYỀN TOÀN HỆ THỐNG (RBAC ARCHITECTURE)
 **Dự Án:** Hệ Sinh Thái Chuỗi Cung Ứng Kho Vận & Sàn Thương Mại Điện Tử Tập Trung (B2B2C)  
-**Phân Hệ:** `ecommerce-frontend` kết nối Hệ Thống Microservices qua API Gateway (Port 8080)  
-**Ngày cập nhật:** 03/11/2026  
+**Phân Hệ:** `ecommerce-frontend`, `wms-frontend`, `admin-frontend` kết nối Hệ Thống Microservices qua API Gateway (Port 8080)  
+**Ngày cập nhật:** 06/11/2026  
 
 ---
 
-## 1. TỔNG QUAN KIẾN TRÚC 2 PHÂN HỆ (BUYER vs SELLER)
+## 1. TỔNG QUAN MA TRẬN PHÂN QUYỀN TOÀN HỆ THỐNG (RBAC MATRIX)
 
-Hệ thống được thiết kế theo mô hình **Sàn Thương Mại Điện Tử Tập Trung (Centralized Marketplace)** kết hợp **Kho Vận 2 Tầng (Central WMS & Store-level Fulfillment)**. 
+Hệ thống được thiết kế theo nguyên tắc **Bảo mật đa lớp (Defense in Depth)** từ API Gateway xuống từng Microservice và Route Guard tại từng Cổng Frontend:
 
-Cổng giao diện Frontend thương mại điện tử phục vụ 2 nhóm đối tượng người dùng chính:
-1. **Khách hàng Mua Sắm (Marketplace Buyer):**
-   - Xem và tìm kiếm các sản phẩm đang được mở bán trên toàn sàn.
-   - Giỏ hàng đa shop Shopee Mall, tự động gom nhóm theo cửa hàng.
-   - Áp dụng Voucher toàn sàn và Voucher riêng của Shop.
-   - Đặt hàng theo thuật toán **Order Splitting** (tự động tách thành nhiều đơn độc lập cho từng gian hàng).
-   - Thanh toán đa phương thức: COD, Ví MoMo (VietQR), Web3 Crypto Blockchain (USDT).
-   - Quản lý đơn mua, theo dõi vận chuyển và gửi đánh giá / bình luận sản phẩm.
-2. **Chủ Cửa Hàng / Người Bán Hàng (Shop Owner / Seller):**
-   - Quản lý kho hàng nội bộ của cửa hàng.
-   - **Chủ động chọn lọc sản phẩm muốn bán** để đăng bán lên sàn (không hiển thị tất cả hàng trong kho).
-   - Định giá bán lẻ trên sàn (`giaBanHienTai`) và thiết lập ngưỡng cảnh báo tồn kho.
-   - Tiếp nhận, đóng gói và điều phối bưu tá cho các đơn hàng thuộc quyền quản lý của shop.
-   - Tạo mã giảm giá (Voucher) riêng của gian hàng để thu hút khách.
-   - Tùy chỉnh thông tin hồ sơ gian hàng, ảnh đại diện, địa chỉ kho bãi.
-
-```
-                          ┌────────────────────────┐
-                          │   API GATEWAY (8080)   │
-                          └───────────┬────────────┘
-                                      │
-     ┌──────────────────┬─────────────┼─────────────┬──────────────────┐
-     ▼                  ▼             ▼             ▼                  ▼
-┌───────────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────────────┐
-│WMS-CORE (8081)│ │ORDER(8082)│ │PAYMENT(85)│ │INTERACT(83│ │IDENTITY-SRV (8084)│
-│- Warehouse    │ │- Orders   │ │- MoMo     │ │- Reviews  │ │- Auth             │
-│- Inventory    │ │- Splitting│ │- Crypto   │ │- Comments │ │- User profiles    │
-│- Products     │ │- Vouchers │ │  (Web3)   │ │           │ │                   │
-└───────────────┘ └───────────┘ └───────────┘ └───────────┘ └───────────────────┘
-```
+| Vai Trò Người Dùng | Mã Quyền (Role) | Cổng Quản Trị Hệ Thống (`admin-frontend` :5174) | Cổng Kho Bãi WMS (`wms-frontend` :5173) | Kênh Người Bán Shop (`ecommerce/seller` :5175) | Cổng Khách Hàng TMĐT (`ecommerce` :5175) | Quyền Hạn Backend Microservices |
+|---|---|:---:|:---:|:---:|:---:|---|
+| **QUẢN TRỊ VIÊN (ADMIN)** | `ADMIN` | ✅ **Toàn Quyền** | ✅ **Toàn Quyền** | ✅ **Toàn Quyền** | ✅ **Toàn Quyền** | Toàn quyền gọi tất cả API trên toàn bộ các Microservices. |
+| **THỦ KHO** | `WAREHOUSE_MANAGER`, `THUKHO` | ❌ Bị chặn (403) | ✅ **Toàn quyền WMS** | ❌ Bị chặn (403) | ❌ Bị chặn mua sắm | Thao tác nhập/xuất kho, duyệt yêu cầu, tạo PO, quản lý danh mục & nhà cung cấp. |
+| **NHÂN VIÊN KHO** | `WAREHOUSE_STAFF`, `NVKHO` | ❌ Bị chặn (403) | ✅ **Thao tác kho** | ❌ Bị chặn (403) | ❌ Bị chặn mua sắm | Thao tác ghi nhận nhập/xuất kho, kiểm đếm kệ hàng, in phiếu kho. |
+| **CHỦ CỬA HÀNG** | `STORE_OWNER`, `SELLER` | ❌ Bị chặn (403) | ❌ Bị chặn (403) | ✅ **Toàn quyền Shop** | ✅ **Được mua sắm** | Đăng bán hàng (`/publish`), xử lý đơn shop, ký hợp đồng nhập hàng B2B2C, tạo voucher shop. |
+| **KHÁCH HÀNG** | `CUSTOMER` | ❌ Bị chặn (403) | ❌ Bị chặn (403) | ❌ Bị chặn (403) | ✅ **Chỉ xem & Mua** | Mua sắm, giỏ hàng, checkout tách đơn, quản lý đơn cá nhân, gửi đánh giá/bình luận, bot chat. |
 
 ---
 
-## 2. NGUYÊN TẮC QUẢN LÝ DỮ LIỆU THẬT & LOGIC ĐĂNG BÁN HÀNG HÓA
+## 2. CƠ CHẾ PHÂN QUYỀN TẠI BACKEND (API GATEWAY & IDENTITY SERVICE)
 
-### 2.1. Loại Bỏ Hoàn Toàn Dữ Liệu Giả (Mock Data)
-- **100% dữ liệu** hiển thị trên Frontend được gọi trực tiếp từ cơ sở dữ liệu thật qua API Gateway.
-- Không sử dụng mảng tĩnh trong code (`MOCK_PRODUCTS`, `MOCK_STORES`, `MOCK_VOUCHERS` đã được dọn sạch).
-- Khi hệ thống chưa có dữ liệu hoặc danh mục rỗng, giao diện hiển thị trạng thái **Empty State** thân thiện, hướng dẫn khách hàng và chủ shop thao tác thực tế.
+### 2.1. Đóng Gói Thông Tin Quyền Vào JWT Token ([`JwtService.java`](file:///d:/Projects/Do-an/Do_An/Do-An-3/wms-ecommerce-system/identity-service/src/main/java/com/ctut/wms/identityservice/service/JwtService.java))
+- Khi người dùng đăng nhập tại `POST /auth/login`, `identity-service` truy xuất vai trò chính thức từ CSDL (`vai_tro`).
+- Tạo JWT Token chuẩn HMAC-SHA256 chứa các Claims:
+  - `subject`: Tên tài khoản (`taiKhoan`).
+  - `role`: Mã vai trò chuẩn hóa (`ADMIN`, `STORE_OWNER`, `WAREHOUSE_MANAGER`, `WAREHOUSE_STAFF`, `CUSTOMER`).
+  - `vaiTro`: Mã vai trò đồng bộ.
+  - `userId`: Định danh ID người dùng.
 
-### 2.2. Logic "Chủ Cửa Hàng Muốn Bán Gì Thì Đăng Lên" (Selective Listing)
-Trong hệ thống bán lẻ B2B2C, một Cửa hàng / Kho có thể lưu trữ rất nhiều mã hàng hóa (`Inventory`), bao gồm:
-- Hàng dự trữ nội bộ, hàng trưng bày, hàng phục vụ bán buôn (B2B).
-- Hàng chuẩn bị nhập kho, chưa chốt giá bán lẻ.
-- Hàng hóa độc quyền chỉ mở bán vào dịp khuyến mãi.
-
-Vì vậy, hệ thống thiết kế cờ trạng thái **`dangBan` (Published on Marketplace)**:
-- **Tại Sàn Mua Sắm (`/`, `/products/:id`, `/stores/:id`):**
-  - Chỉ gọi API `/inventory/marketplace`.
-  - Backend lọc nghiêm ngặt điều kiện: `dangBan == true AND soLuongThucTe > 0`.
-  - Khách hàng tuyệt đối **không nhìn thấy toàn bộ kho hàng** của chủ shop nếu chủ shop chưa kích hoạt đăng bán!
-- **Tại Kênh Người Bán (`/seller/products`):**
-  - Chủ shop xem được toàn bộ danh mục hàng tồn kho của mình (`/inventory/store/{storeId}`).
-  - Phân loại rõ ràng:
-    - 🟢 **ĐANG MỞ BÁN:** Hàng đã duyệt và hiển thị công khai trên sàn TMĐT.
-    - ⚪ **LƯU KHO (ẨN):** Hàng nội bộ, khách hàng trên sàn không thể tìm kiếm hay nhìn thấy.
-  - Chủ shop có quyền:
-    - Bấm **"Đăng Bán Sàn"**: Kích hoạt `dangBan = true`.
-    - Bấm **"Gỡ Khỏi Sàn"**: Chuyển `dangBan = false`.
-    - Thiết lập **Giá bán lẻ trên sàn** (`giaBanHienTai`).
-    - Cài đặt **Ngưỡng cảnh báo tồn kho** (`soLuongToiThieu`).
-
----
-
-## 3. CẤU TRÚC CHI TIẾT CÁC TRANG CỦA KÊNH NGƯỜI BÁN (SELLER PORTAL)
-
-Kênh Người Bán được tổ chức tại thư mục [`src/pages/Seller/`](file:///d:/Projects/Do-an/Do_An/Do-An-3/ecommerce-frontend/src/pages/Seller) với các trang chuyên biệt:
-
-| STT | Tên Trang & File Component | Tuyến Đường (Route) | Chức Năng Chính Của Chủ Cửa Hàng |
-|---|---|---|---|
-| 1 | **Đăng Ký Gian Hàng & Tạo Kho Riêng**<br>`SellerRegister.jsx` | `/seller/register` | **Khởi tạo Shop & Kho:** Nhập thông tin pháp lý chủ sở hữu, thiết lập mã kho riêng (`STORE-XXXX`), địa chỉ nhận trả hàng bưu tá, sức chứa kho và kích hoạt kho riêng trên hệ thống (`POST /stores`, `loaiHinh: KHO_CUA_HANG`). |
-| 2 | **Hợp Đồng Cung Ứng & Nhập Kho**<br>`SellerContracts.jsx` | `/seller/contracts` | **Nghiệp vụ nhập hàng có hợp đồng:** Chọn Kho Tổng Trung Tâm & sản phẩm Master Catalog, soạn thảo hợp đồng cung ứng B2B2C, thực hiện Ký số điện tử (Digital Signature) và tự động nhập hàng về kho riêng (`POST /inventory/add`). |
-| 3 | **Seller Layout**<br>`SellerLayout.jsx` | `/seller` | Khung giao diện riêng của Kênh Người Bán, Sidebar điều hướng, bộ chọn quản lý nhiều Gian hàng (Multi-store switcher), nút chuyển về Sàn mua sắm. |
-| 4 | **Tổng Quan Gian Hàng**<br>`SellerDashboard.jsx` | `/seller` (Index) | Báo cáo doanh thu tích lũy, số đơn hàng chờ xác nhận, số đơn đang giao, tỷ lệ hàng đang đăng bán so với tổng kho, cảnh báo các mặt hàng sắp hết tồn kho. |
-| 5 | **Hàng Hóa & Đăng Bán**<br>`SellerProducts.jsx` | `/seller/products` | **Chức năng trọng tâm:** Tra cứu toàn bộ kho hàng, Bật/Tắt đăng bán (`publish/unpublish`), thiết lập giá bán lẻ và ngưỡng cảnh báo tồn kho thấp. |
-| 6 | **Quản Lý Đơn Hàng**<br>`SellerOrders.jsx` | `/seller/orders` | Quản lý các đơn khách đặt tại shop: Lọc đơn theo trạng thái, Tiếp nhận & Soạn kho (`CONFIRMED`), Bàn giao bưu tá (`SHIPPING` + chọn ĐVVC GHTK/GHN/Viettel Post), Giao thành công (`COMPLETED`), Hủy đơn (`CANCELLED`). |
-| 7 | **Mã Khuyến Mãi Của Shop**<br>`SellerVouchers.jsx` | `/seller/vouchers` | Quản lý danh sách voucher riêng của shop, Form phát hành mã giảm giá mới (% giảm, giảm tối đa, đơn tối thiểu, số lượng phát hành). |
-| 8 | **Hồ Sơ & Thiết Lập Shop**<br>`SellerShopSettings.jsx` | `/seller/settings` | Cập nhật thông tin nhận diện thương hiệu của shop: Tên gian hàng, Địa chỉ kho, Số điện thoại hỗ trợ, Ảnh đại diện logo, Lời giới thiệu / chính sách bảo hành. |
+### 2.2. Bộ Lọc Bảo Mật Toàn Cục Tại API Gateway ([`AuthenticationFilter.java`](file:///d:/Projects/Do-an/Do_An/Do-An-3/wms-ecommerce-system/api-gateway/src/main/java/com/ctut/wms/apigateway/filter/AuthenticationFilter.java))
+API Gateway (Port 8080) áp dụng `GlobalFilter` mức ưu tiên cao nhất (`Ordered = -1`), kiểm soát mọi truy vấn:
+1. **Public Endpoints (Cho phép không cần token):**
+   - Đăng nhập, đăng ký: `/auth/login`, `/auth/register`, `/auth/validate`.
+   - Xem hàng công khai trên sàn: `GET /inventory/marketplace`, `GET /products/**`, `GET /categories/**`, `GET /stores/**`, `GET /vouchers/global`, `GET /interactions/**`.
+   - Webhook thanh toán: `/payments/momo/ipn`, `/payments/callback`.
+2. **Kiểm Tra & Giải Mã Token:**
+   - Trích xuất token từ header `Authorization: Bearer <token>`.
+   - Nếu token không hợp lệ hoặc hết hạn -> Phản hồi ngay `401 Unauthorized`.
+3. **Thực Thi Phân Quyền (RBAC Enforcement):**
+   - **`ADMIN`:** Luôn được thông qua vào bất kỳ URL nào.
+   - **Thủ kho / Nhân viên kho (`WAREHOUSE_MANAGER`, `WAREHOUSE_STAFF`, `THUKHO`, `NVKHO`):**
+     - Cho phép: `/warehouses/**`, `/export-notes/**`, `/import-notes/**`, `/actual-imports/**`, `/stock-cards/**`, `/suppliers/**`, `/transfers/**`, `/shippers/**`, `/shipping-providers/**`, `/purchase-orders/**`, `/wms/**`, `/products/**`, `/categories/**`.
+     - Chặn tuyệt đối: `/auth/users/**`, `/orders/store/**`, `/publish` -> Trả về `403 Forbidden`.
+   - **Chủ cửa hàng (`STORE_OWNER`, `SELLER`):**
+     - Cho phép: `/stores/**`, `/inventory/store/**`, `/inventory/{id}/publish`, `/orders/store/**`, `/orders/{id}/status`, `/orders/{id}/shipping-status`, `/vouchers/**`, và các API mua sắm khách hàng.
+     - Chặn tuyệt đối: Thao tác Kho Tổng `/export-notes/**`, `/import-notes/**`, `/suppliers/**`, `/warehouses/**`, và Quản trị `/auth/users/**` -> Trả về `403 Forbidden`.
+   - **Khách hàng (`CUSTOMER`):**
+     - Chỉ được gọi các API mua sắm: `/orders/checkout-multishop`, `/orders/user/**`, `/orders/{id}/cancel`, `/payments/**`, `/interactions/**`, `/auth/profile/**`.
+     - Chặn tuyệt đối: Kho bãi WMS, Kênh Người Bán và Quản trị người dùng -> Trả về `403 Forbidden`.
+4. **Header Chuyển Tiếp Microservices:**
+   - Gateway tự động đính kèm `X-User-Account` và `X-User-Role` để các microservice bên trong nhận diện ngữ cảnh người dùng.
 
 ---
 
-## 4. TỔNG HỢP DANH SÁCH REST API CHO TỪNG PHÂN HỆ
+## 3. CƠ CHẾ PHÂN QUYỀN TẠI TỪNG CỔNG FRONTEND
 
-### 4.1. Nhóm API Khách Hàng Mua Sắm (Marketplace Client)
-- `GET /inventory/marketplace`: Lấy sản phẩm đang đăng bán toàn sàn (`dangBan == true`).
-- `GET /stores`: Lấy danh sách các gian hàng chính hãng.
-- `GET /stores/{id}`: Lấy chi tiết gian hàng và thông tin shop.
-- `GET /inventory/store/{storeId}`: Lấy sản phẩm mở bán theo từng gian hàng.
-- `GET /vouchers/global`: Lấy danh sách voucher khuyến mãi toàn sàn.
-- `GET /vouchers/store/{storeId}`: Lấy voucher riêng của gian hàng.
-- `GET /vouchers/check/{code}`: Kiểm tra hiệu lực của voucher trước khi áp dụng.
-- `POST /orders/checkout-multishop`: Đặt hàng đa shop, tự động tách đơn (Order Splitting).
-- `GET /orders/user/{userId}`: Lấy lịch sử đơn mua của người dùng.
-- `PUT /orders/{id}/cancel`: Khách hàng hủy đơn hàng (khi ở trạng thái `PENDING`).
-- `POST /payments/create`: Tạo liên kết thanh toán và mã QR MoMo (VietQR).
-- `POST /payments/crypto/submit`: Xác thực giao dịch Web3 Blockchain (USDT).
-- `GET /interactions/danh-gia/{maHangHoa}`: Xem đánh giá và số sao thực tế.
-- `POST /interactions/danh-gia`: Gửi đánh giá sản phẩm mới.
-- `GET /interactions/binh-luan/{maHangHoa}`: Xem danh sách hỏi đáp / bình luận.
-- `POST /interactions/binh-luan`: Đăng câu hỏi hoặc bình luận mới.
+### 3.1. Cổng Quản Trị Hệ Thống ([`admin-frontend`](file:///d:/Projects/Do-an/Do_An/Do-An-3/admin-frontend))
+- **Mục tiêu:** Chỉ cho phép duy nhất vai trò `ADMIN`.
+- **Tại trang Đăng nhập ([`Login.jsx`](file:///d:/Projects/Do-an/Do_An/Do-An-3/admin-frontend/src/pages/Login.jsx)):**
+  - Khi Backend trả về thông tin đăng nhập, kiểm tra `vaiTro !== 'ADMIN'`.
+  - Nếu không phải `ADMIN`, lập tức từ chối và hiển thị cảnh báo: *"Từ chối truy cập: Tài khoản của bạn có vai trò [ROLE]. Chỉ Quản trị viên (ADMIN) mới có quyền truy cập Cổng Quản Trị Hệ Thống!"*.
+- **Tại Route Guard ([`App.jsx`](file:///d:/Projects/Do-an/Do_An/Do-An-3/admin-frontend/src/App.jsx)):**
+  - `ProtectedRoute` xác thực `isAuthenticated && user?.role === 'ADMIN'`. Nếu sai, điều hướng ngay về `/login`.
 
-### 4.2. Nhóm API Chủ Cửa Hàng (Seller Channel)
-- `GET /inventory/store/{storeId}`: Lấy toàn bộ hàng tồn kho của shop (cả đang bán và lưu kho).
-- `PUT /inventory/{id}/publish`: **Bật/Tắt đăng bán lên sàn** kèm giá bán lẻ (`giaBanHienTai`) và ngưỡng cảnh báo.
-- `GET /orders/store/{storeId}`: Lấy toàn bộ đơn hàng khách đặt thuộc quyền quản lý của shop.
-- `PUT /orders/{id}/status?status={STATUS}`: Chuyển trạng thái đơn (`CONFIRMED`, `COMPLETED`, `CANCELLED`).
-- `PUT /orders/{id}/shipping-status?shippingStatus=DELIVERING&donViVanChuyen={PROVIDER}`: Điều phối bưu tá và chọn đơn vị vận chuyển (GHTK, GHN, Viettel Post).
-- `POST /vouchers`: Tạo mã voucher khuyến mãi riêng cho shop.
-- `PUT /stores/{id}`: Cập nhật hồ sơ thông tin gian hàng.
+### 3.2. Cổng Quản Lý Kho Bãi ([`wms-frontend`](file:///d:/Projects/Do-an/Do_An/Do-An-3/wms-frontend))
+- **Mục tiêu:** Chỉ cho phép `ADMIN`, `WAREHOUSE_MANAGER`, `WAREHOUSE_STAFF`, `THUKHO`, `NVKHO`.
+- **Tại Context Xác thực ([`AuthContext.jsx`](file:///d:/Projects/Do-an/Do_An/Do-An-3/wms-frontend/src/context/AuthContext.jsx)):**
+  - Nếu tài khoản đăng nhập là `CUSTOMER`: *"Từ chối truy cập: Tài khoản của bạn là Khách Hàng, chỉ có quyền mua sắm trên Sàn TMĐT!"*.
+  - Nếu tài khoản đăng nhập là `STORE_OWNER` / `SELLER`: *"Từ chối truy cập: Tài khoản của bạn là Chủ Cửa Hàng, vui lòng truy cập Kênh Người Bán (Seller Portal)!"*.
+  - Chỉ cho phép các vai trò thuộc danh sách `ALLOWED_WMS_ROLES`.
+- **Tại Route Guard ([`App.jsx`](file:///d:/Projects/Do-an/Do_An/Do-An-3/wms-frontend/src/App.jsx)):**
+  - `ProtectedRoute` chặn và chuyển hướng về `/login` nếu người dùng không thuộc vai trò quản lý kho hoặc admin.
 
----
-
-## 5. CẤU TRÚC THƯ MỤC SOURCE CODE FRONTEND
-
-```text
-ecommerce-frontend/
-├── src/
-│   ├── components/
-│   │   ├── Header.jsx                 # Header sàn, tìm kiếm, giỏ hàng, menu chuyển đổi sang Kênh Người Bán
-│   │   └── Header.css
-│   ├── context/
-│   │   └── CartContext.jsx            # Quản lý giỏ hàng đa shop, Checkbox Select CRUD, validate tồn kho thực
-│   ├── pages/
-│   │   ├── MarketplaceHome.jsx        # Trang chủ sàn TMĐT, tìm kiếm, lọc giá, sắp xếp bán chạy
-│   │   ├── ProductDetail.jsx          # Chi tiết sản phẩm, CRUD Đánh giá sao & Bình luận hỏi đáp
-│   │   ├── ShopPage.jsx               # Trang riêng của từng Chủ gian hàng (chỉ hiện hàng đang đăng bán)
-│   │   ├── MultiShopCart.jsx          # Giỏ hàng đa shop, chọn từng món, áp dụng voucher sàn/shop
-│   │   ├── Checkout.jsx               # Thanh toán gộp, Order Splitting, MoMo QR, Web3 Crypto, COD
-│   │   ├── OrderSuccess.jsx           # Báo đặt hàng thành công, hiển thị danh sách các đơn con đã tách
-│   │   ├── MyOrders.jsx               # Quản lý Đơn Mua của tôi: lọc trạng thái, hủy đơn, mua lại
-│   │   ├── VouchersPage.jsx           # Kho voucher toàn sàn và danh sách voucher đã lưu
-│   │   ├── Login.jsx                  # Đăng nhập hệ thống
-│   │   │
-│   │   └── Seller/                    # 🌟 KÊNH DÀNH RIÊNG CHO CHỦ CỬA HÀNG
-│   │       ├── SellerLayout.jsx       # Layout Kênh Người Bán + Sidebar điều hướng + Multi-store selector
-│   │       ├── SellerLayout.css
-│   │       ├── SellerDashboard.jsx    # Tổng quan doanh thu, đơn cần soạn, cảnh báo tồn kho thấp
-│   │       ├── SellerDashboard.css
-│   │       ├── SellerProducts.jsx     # QUẢN LÝ KHO & CHỦ ĐỘNG ĐĂNG BÁN / GỠ BỎ HÀNG KHỎI SÀN
-│   │       ├── SellerProducts.css
-│   │       ├── SellerOrders.jsx       # TIẾP NHẬN, ĐÓNG GÓI & ĐIỀU PHỐI GIAO VẬN ĐƠN HÀNG CỦA SHOP
-│   │       ├── SellerOrders.css
-│   │       ├── SellerVouchers.jsx     # TẠO & QUẢN LÝ VOUCHER ĐỘC QUYỀN CỦA SHOP
-│   │       ├── SellerVouchers.css
-│   │       ├── SellerShopSettings.jsx # HỒ SƠ GIAN HÀNG, ẢNH ĐẠI DIỆN, ĐỊA CHỈ KHO
-│   │       └── SellerShopSettings.css
-│   ├── services/
-│   │   ├── api.js                     # Cấu hình Axios BaseURL (http://localhost:8080) và JWT Interceptor
-│   │   └── marketplaceService.js      # Toàn bộ API methods kết nối backend thật (100% no mock data)
-│   ├── App.jsx                        # Điều phối định tuyến linh hoạt giữa Marketplace và Seller Portal
-│   ├── App.css
-│   └── main.jsx
-├── package.json
-└── vite.config.js
-```
+### 3.3. Cổng Sàn TMĐT & Kênh Người Bán ([`ecommerce-frontend`](file:///d:/Projects/Do-an/Do_An/Do-An-3/ecommerce-frontend))
+- **Dịch vụ xác thực ([`authService.js`](file:///d:/Projects/Do-an/Do_An/Do-An-3/ecommerce-frontend/src/services/authService.js)):**
+  - `loginSeller`:
+    - Chặn khách hàng: *"Tài khoản của bạn là Khách Hàng. Khách hàng chỉ có quyền mua sắm trên sàn, không thể truy cập Kênh Người Bán!"*.
+    - Chặn thủ kho: *"Tài khoản của bạn là Thủ kho / Nhân viên kho. Bạn chỉ có quyền làm việc tại Cổng Quản Lý Kho Bãi (WMS)!"*.
+    - Chỉ chấp thuận: `ADMIN`, `STORE_OWNER`, `SELLER`, `CHU_CUA_HANG`, `STORE_MANAGER`.
+  - `loginCustomer`:
+    - Chặn nhân viên kho dùng tài khoản kho để mua sắm.
+    - Cho phép `CUSTOMER`, `ADMIN` và `STORE_OWNER`.
+- **Auth Guard Kênh Người Bán ([`SellerLayout.jsx`](file:///d:/Projects/Do-an/Do_An/Do-An-3/ecommerce-frontend/src/pages/Seller/SellerLayout.jsx)):**
+  - Kiểm tra `ALLOWED_SELLER_ROLES`. Bắt buộc phải là Chủ shop hoặc Admin mới được xem các trang `/seller/*`. Khách hàng bị điều hướng về `/seller/login`.
 
 ---
 
-## 6. HƯỚNG DẪN KIỂM THỬ THỰC TẾ
+## 4. TỔNG KẾT KẾT QUẢ BIÊN DỊCH & KIỂM THỬ
 
-1. **Khởi động Backend Microservices:**
-   - Đảm bảo `discovery-server` (8761), `api-gateway` (8080), `wms-core-service` (8081), `order-service` (8082), `interaction-service` (8083) đang hoạt động.
-2. **Khởi động Ecommerce Frontend:**
-   ```bash
-   cd ecommerce-frontend
-   npm run dev
+Toàn bộ hệ thống Backend và 3 phân hệ Frontend đã được biên dịch thành công:
+1. **Backend Microservices (`identity-service`, `api-gateway`):**
+   ```text
+   [INFO] api-gateway ........................................ SUCCESS [4.515 s]
+   [INFO] identity-service ................................... SUCCESS [3.606 s]
+   [INFO] BUILD SUCCESS
    ```
-3. **Thử nghiệm Kênh Người Bán:**
-   - Truy cập `http://localhost:5175/seller` hoặc bấm vào **"🏪 Kênh Người Bán (Chủ Cửa Hàng)"** trên thanh top banner.
-   - Chọn gian hàng (ví dụ: `Apple Store Chính Hãng CTUT` hoặc `CTUT Gaming & Gear Hub`).
-   - Vào mục **"Hàng Hóa & Đăng Bán"**: Thử bấm nút **"Đăng Bán Sàn"** hoặc **"Gỡ Khỏi Sàn"** cho một sản phẩm trong kho.
-   - Quay lại trang chủ Sàn Mua Sắm (`/`): Kiểm tra xem sản phẩm vừa gỡ có lập tức biến mất khỏi sàn, và sản phẩm vừa đăng bán có xuất hiện hay không.
-4. **Thử nghiệm Đặt Hàng & Điều Phối Đơn Hàng:**
-   - Thêm sản phẩm vào giỏ, bấm Thanh toán (`/checkout`).
-   - Sau khi tạo đơn thành công, truy cập `/seller/orders` để xem đơn hàng vừa được tách về đúng shop.
-   - Bấm **"Tiếp Nhận & Soạn Hàng"**, sau đó bấm **"Bàn Giao Cho Bưu Tá"** để chọn đơn vị vận chuyển GHTK / GHN / Viettel Post.
-
+2. **`admin-frontend`:** Build thành công Vite (`✓ 678 modules transformed`, exit code 0).
+3. **`wms-frontend`:** Build thành công Vite (`✓ 139 modules transformed`, exit code 0).
+4. **`ecommerce-frontend`:** Build thành công Vite (`✓ 131 modules transformed`, exit code 0).

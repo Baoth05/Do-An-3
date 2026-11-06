@@ -33,6 +33,12 @@ const Login = () => {
       // 2. Tách các thông tin mà Backend (AuthResponse) trả về
       const { token, hoTen, vaiTro, taiKhoan } = data;
 
+      // 🌟 KIỂM TRA PHÂN QUYỀN RBAC: Chỉ duy nhất ADMIN mới có quyền truy cập Cổng Quản Trị
+      if (vaiTro && vaiTro !== 'ADMIN') {
+        setErrorMessage(`Từ chối truy cập: Tài khoản của bạn có vai trò [${vaiTro}]. Chỉ Quản trị viên (ADMIN) mới có quyền truy cập Cổng Quản Trị Hệ Thống!`);
+        return;
+      }
+
       // 3. Đóng gói dữ liệu người dùng để truyền vào Context
       const userData = {
         name: hoTen || taiKhoan || 'Quản trị viên', // Ưu tiên tên thật, nếu không có thì lấy tài khoản
@@ -50,7 +56,8 @@ const Login = () => {
     } catch (error) {
       // Bắt lỗi nếu sai tài khoản/mật khẩu hoặc Backend không phản hồi
       console.error("Lỗi đăng nhập:", error);
-      setErrorMessage('Tài khoản hoặc mật khẩu không chính xác. Vui lòng thử lại!');
+      const backendMsg = error?.response?.data?.message || error?.response?.data;
+      setErrorMessage(typeof backendMsg === 'string' ? backendMsg : 'Tài khoản hoặc mật khẩu không chính xác. Vui lòng thử lại!');
     } finally {
       setIsLoading(false);
     }
@@ -77,14 +84,14 @@ const Login = () => {
           <h1>Cổng Quản Trị Hệ Thống</h1>
           <p>Đăng nhập để truy cập bảng điều khiển vận hành</p>
           <div className="module-badge">
-            <FiShield size={14} /> Phân hệ Quản trị viên & Vận hành WMS
+            <FiShield size={14} /> Phân hệ Quản trị viên Toàn quyền (ADMIN ONLY)
           </div>
         </div>
 
         <form className="login-form" onSubmit={handleLogin}>
           {/* Hiển thị lỗi nếu có */}
           {errorMessage && (
-            <div className="error-message" style={{ color: 'red', marginBottom: '15px', fontSize: '14px', textAlign: 'center' }}>
+            <div className="error-message" style={{ color: '#dc2626', background: '#fee2e2', border: '1px solid #fca5a5', padding: '10px 14px', borderRadius: '8px', marginBottom: '15px', fontSize: '13px', textAlign: 'center', fontWeight: '600' }}>
               {errorMessage}
             </div>
           )}
@@ -140,18 +147,20 @@ const Login = () => {
         <div className="security-warning">
           <FiShield size={16} className="warning-icon" />
           <p>
-            Chỉ dành cho cán bộ quản trị và nhân viên được cấp quyền truy cập.<br />
-            Mọi hành vi truy cập trái phép đều được ghi lại trong nhật ký hệ thống.
+            Chỉ dành cho Quản trị viên (ADMIN) được cấp quyền tối cao.<br />
+            Thủ kho, Nhân viên kho, Chủ shop và Khách hàng vui lòng truy cập đúng cổng phân hệ của mình.
           </p>
         </div>
       </div>
 
       <div className="login-footer">
-        <p><strong>CTUT Gear Enterprise Platform v1.0.4</strong> <FiShield size={12} /> Bảo mật đa lớp 2FA</p>
+        <p><strong>CTUT Gear Enterprise Platform v1.0.4</strong> <FiShield size={12} /> Bảo mật đa lớp RBAC</p>
         <p className="footer-links">
-          <a href="#">Hỗ trợ kỹ thuật</a>
-          <a href="#">Điều khoản bảo mật nội bộ</a>
-          <a href="#">Nhật ký Audit</a>
+          <a href="http://localhost:5173" target="_blank" rel="noreferrer">🏢 Cổng Kho Vận (WMS)</a>
+          <span style={{ margin: '0 8px', color: '#94a3b8' }}>•</span>
+          <a href="http://localhost:5175/seller" target="_blank" rel="noreferrer">🏪 Kênh Người Bán</a>
+          <span style={{ margin: '0 8px', color: '#94a3b8' }}>•</span>
+          <a href="http://localhost:5175" target="_blank" rel="noreferrer">🛒 Sàn TMĐT</a>
         </p>
         <p className="ssl-text">HỆ THỐNG BẢO MẬT 256-BIT SSL | ĐỒ ÁN TMĐT CTUT</p>
       </div>
