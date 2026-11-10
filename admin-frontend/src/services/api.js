@@ -5,7 +5,7 @@ import axios from 'axios';
 const api = axios.create({
   // ĐÃ SỬA: Xóa chữ '/api' ở cuối để khớp với cấu hình API Gateway
 
-  baseURL: 'localhostttp://:8080', // Thay bằng địa chỉ IP của máy chạy Backend
+  baseURL: 'http://10.10.9.58:8080', // Thay bằng địa chỉ IP của máy chạy Backend
   timeout: 10000, // Nếu quá 10 giây không có phản hồi thì báo lỗi
 
   headers: {

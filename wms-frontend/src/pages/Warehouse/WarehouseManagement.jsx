@@ -1,29 +1,48 @@
+/**
+ * ==============================================================================
+ * Module: WarehouseManagement.jsx
+ * Phân hệ: Quản Lý Danh Sách Cửa Hàng (Store Management)
+ * Mô tả: Giao diện quản lý các chi nhánh cửa hàng kết nối Backend WMS Core.
+ * ==============================================================================
+ */
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiHome, FiRefreshCw, FiMapPin } from 'react-icons/fi';
+import { 
+  FiSearch, FiRefreshCw, 
+  FiMapPin, FiShoppingBag, FiCheckCircle, FiAlertCircle 
+} from 'react-icons/fi';
 import { wmsCoreService } from '../../services/wmsCoreService';
 import './WarehouseManagement.css';
 
 const WarehouseManagement = () => {
-  const navigate = useNavigate();
-
-  const [warehouses, setWarehouses] = useState([]);
+  const [stores, setStores] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
 
-  const fetchWarehouses = async () => {
+  // Hàm nạp danh sách và lọc chỉ lấy CỬA HÀNG
+  const fetchStores = async () => {
     try {
       setIsLoading(true);
       const data = await wmsCoreService.getWarehouses();
+      
       if (Array.isArray(data)) {
-        setWarehouses(data);
+        const onlyStores = data.filter(w => {
+          const code = (w.maKho || '').toUpperCase();
+          const name = (w.tenKho || '').toUpperCase();
+          
+          if (code.startsWith('KHO-') && !name.includes('SHOP') && !name.includes('STORE')) {
+            return false;
+          }
+          return true;
+        });
+
+        setStores(onlyStores);
         setIsBackendConnected(true);
       } else {
-        setWarehouses([]);
+        setStores([]);
       }
     } catch (e) {
-      console.warn('Lỗi lấy danh sách kho từ Backend:', e.message);
+      console.warn('Lỗi lấy danh sách cửa hàng từ Backend:', e.message);
       setIsBackendConnected(false);
     } finally {
       setIsLoading(false);
@@ -31,145 +50,139 @@ const WarehouseManagement = () => {
   };
 
   useEffect(() => {
-    fetchWarehouses();
+    fetchStores();
   }, []);
 
-  const handleDelete = async (id, name) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa kho "${name}"?`)) {
-      try {
-        await wmsCoreService.deleteWarehouse(id);
-        alert('Đã xóa kho thành công!');
-        fetchWarehouses();
-      } catch (err) {
-        alert('Lỗi xóa kho: ' + (err.response?.data || err.message));
-      }
-    }
-  };
-
-  const filteredWarehouses = warehouses.filter(w => {
-    const code = w.maKho || '';
-    const name = w.tenKho || '';
-    const addr = w.diaChi || '';
+  // Lọc danh sách theo từ khóa tìm kiếm
+  const filteredStores = stores.filter(s => {
+    const code = s.maKho || '';
+    const name = s.tenKho || '';
+    const addr = s.diaChi || '';
     return code.toLowerCase().includes(searchTerm.toLowerCase()) ||
            name.toLowerCase().includes(searchTerm.toLowerCase()) ||
            addr.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
+  // Tính toán số liệu thống kê
+  const activeCount = stores.filter(s => s.trangThai === 'HOAT_DONG').length;
+  const inactiveCount = stores.length - activeCount;
+
   return (
-    <div className="warehouse-container">
-      <div className="warehouse-header">
+    <div className="store-container">
+      {/* Header Chuyên Nghiệp */}
+      <div className="store-header">
         <div>
-          <h2>Quản Lý Danh Sách Kho Hàng</h2>
-          <p>Mạng lưới các chi nhánh kho vật lý, địa chỉ và sức chứa vận hành</p>
+          <h2>Quản Lý Danh Sách Cửa Hàng</h2>
+          <p>Mạng lưới các chi nhánh cửa hàng bán hàng trực thuộc hệ thống</p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="btn-secondary" onClick={fetchWarehouses} disabled={isLoading} title="Làm mới">
-            <FiRefreshCw className={isLoading ? 'spin-icon' : ''} /> {isBackendConnected ? 'Backend Live' : 'Đồng bộ'}
-          </button>
-          <button 
-            className="btn-primary" 
-            onClick={() => navigate('/warehouses/create')}
-          >
-            <FiPlus size={16} /> Thêm Kho Bãi Mới
+        
+        <div className="store-actions-top">
+          <button className="btn-secondary-live" onClick={fetchStores} disabled={isLoading}>
+            <FiRefreshCw className={isLoading ? 'spin-icon' : ''} size={15} /> 
+            {isBackendConnected ? 'Đã kết nối Backend' : 'Đồng bộ'}
           </button>
         </div>
       </div>
 
-      <div className="warehouse-toolbar">
+      {/* Thẻ Thống Kê Tổng Quan UI Nâng Cấp */}
+      <div className="store-stats-grid">
+        <div className="store-stat-card primary-gradient">
+          <div className="stat-content">
+            <span className="stat-label">Tổng số cửa hàng</span>
+            <div className="stat-value">{stores.length}</div>
+          </div>
+          <div className="stat-icon-bg white-translucent"><FiShoppingBag size={24} /></div>
+        </div>
+
+        <div className="store-stat-card success-gradient">
+          <div className="stat-content">
+            <span className="stat-label">Đang hoạt động</span>
+            <div className="stat-value">{activeCount}</div>
+          </div>
+          <div className="stat-icon-bg white-translucent"><FiCheckCircle size={24} /></div>
+        </div>
+
+        <div className="store-stat-card warning-gradient">
+          <div className="stat-content">
+            <span className="stat-label">Tạm dừng</span>
+            <div className="stat-value">{inactiveCount}</div>
+          </div>
+          <div className="stat-icon-bg white-translucent"><FiAlertCircle size={24} /></div>
+        </div>
+      </div>
+
+      {/* Thanh Tìm Kiếm */}
+      <div className="store-toolbar">
         <div className="search-box">
-          <FiSearch className="search-icon" />
+          <FiSearch className="search-icon" size={16} />
           <input 
             type="text" 
-            placeholder="Tìm theo mã kho, tên kho hoặc địa chỉ..." 
+            placeholder="Tìm kiếm theo mã, tên hoặc địa chỉ cửa hàng..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="table-responsive">
-        <table className="warehouse-table">
+      {/* Bảng Hiển Thị Dữ Liệu Nâng Cấp UI */}
+      <div className="table-card-wrapper">
+        <table className="store-table">
           <thead>
             <tr>
-              <th style={{ width: '140px' }}>Mã Kho</th>
-              <th>Tên Kho Bãi</th>
-              <th>Địa Chỉ Vật Lý</th>
-              <th style={{ textAlign: 'center', width: '160px' }}>Sức Chứa Tối Đa</th>
-              <th style={{ textAlign: 'center', width: '130px' }}>Trạng Thái</th>
-              <th style={{ textAlign: 'right', width: '120px' }}>Hành Động</th>
+              <th style={{ width: '160px' }}>MÃ CỬA HÀNG</th>
+              <th>TÊN CỬA HÀNG</th>
+              <th>ĐỊA CHỈ</th>
+              <th style={{ textAlign: 'center', width: '150px' }}>TRẠNG THÁI</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '40px' }}>
-                  <FiRefreshCw className="spin-icon" size={24} style={{ color: '#dc2626' }} />
-                  <p style={{ marginTop: '8px', color: '#64748b' }}>Đang nạp danh sách kho...</p>
+                <td colSpan="4" style={{ textAlign: 'center', padding: '60px 20px' }}>
+                  <FiRefreshCw className="spin-icon" size={28} style={{ color: '#3b82f6', marginBottom: '12px' }} />
+                  <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>Đang đồng bộ dữ liệu cửa hàng...</p>
                 </td>
               </tr>
-            ) : filteredWarehouses.length === 0 ? (
+            ) : filteredStores.length === 0 ? (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-                  <FiHome size={36} style={{ marginBottom: '8px', opacity: 0.5 }} />
-                  <p>Chưa có kho hàng nào trong hệ thống.</p>
-                  <button 
-                    className="btn-primary" 
-                    style={{ marginTop: '12px' }}
-                    onClick={() => navigate('/warehouses/create')}
-                  >
-                    <FiPlus size={16} /> Thêm Kho Mới
-                  </button>
+                <td colSpan="4" style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
+                  <FiShoppingBag size={48} style={{ marginBottom: '16px', opacity: 0.3 }} />
+                  <p style={{ margin: 0, fontSize: '15px' }}>Không tìm thấy cửa hàng nào phù hợp.</p>
                 </td>
               </tr>
             ) : (
-              filteredWarehouses.map((w) => (
-                <tr key={w.id}>
-                  <td>
-                    <span className="sku-badge">{w.maKho}</span>
-                  </td>
-                  <td>
-                    <strong style={{ color: '#0f172a' }}>{w.tenKho}</strong>
-                  </td>
-                  <td>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#475569' }}>
-                      <FiMapPin size={14} style={{ color: '#94a3b8' }} /> {w.diaChi || 'Chưa cập nhật'}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'center', fontWeight: 600, color: '#0f172a' }}>
-                    {w.sucChuaToiDa ? Number(w.sucChuaToiDa).toLocaleString('vi-VN') + ' món' : '50.000 món'}
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    <span className={`status-tag ${w.trangThai === 'HOAT_DONG' ? 'active' : 'inactive'}`}>
-                      {w.trangThai === 'HOAT_DONG' ? 'Hoạt động' : 'Tạm dừng'}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <div className="action-btns">
-                      <button 
-                        className="btn-icon edit" 
-                        title="Sửa kho"
-                        onClick={() => navigate(`/warehouses/edit/${w.id}`)}
-                      >
-                        <FiEdit2 size={15} />
-                      </button>
-                      <button 
-                        className="btn-icon delete" 
-                        title="Xóa kho"
-                        onClick={() => handleDelete(w.id, w.tenKho)}
-                      >
-                        <FiTrash2 size={15} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+              filteredStores.map((s) => {
+                const isActive = s.trangThai === 'HOAT_DONG';
+                return (
+                  <tr key={s.id}>
+                    <td>
+                      <span className="store-code-badge">{s.maKho}</span>
+                    </td>
+                    <td>
+                      <strong className="store-name-text">{s.tenKho}</strong>
+                    </td>
+                    <td>
+                      <span className="store-address-flex">
+                        <FiMapPin size={15} style={{ color: '#ef4444', flexShrink: 0 }} /> 
+                        {s.diaChi || 'Chưa cập nhật địa chỉ'}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className={`status-badge-pill ${isActive ? 'active' : 'inactive'}`}>
+                        <span className={`status-dot ${isActive ? 'green' : 'gray'}`}></span>
+                        {isActive ? 'Hoạt động' : 'Tạm dừng'}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
       </div>
 
-      <div className="warehouse-footer">
-        <span>Tổng cộng: <strong>{filteredWarehouses.length}</strong> kho</span>
+      <div className="store-footer">
+        <span>Hiển thị <strong>{filteredStores.length}</strong> cửa hàng</span>
       </div>
     </div>
   );

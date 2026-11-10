@@ -21,7 +21,8 @@ import ActualImportNote from './pages/ImportNote/ActualImportNote';
 import ExportNoteList from './pages/ExportNote/ExportNoteList';
 import ExportNoteCreate from './pages/ExportNote/ExportNoteCreate';
 import ExportNoteDetail from './pages/ExportNote/ExportNoteDetail';
-import ActualExportNote from './pages/ExportNote/ActualExportNote'; // 🌟 ĐÃ THÊM MỚI
+import ActualExportNote from './pages/ExportNote/ActualExportNote'; 
+import ExportApprovalList from './pages/ExportNote/ExportApprovalList';
 
 // Import các trang Danh mục Master
 import ProductManagement from './pages/Product/ProductManagement';
@@ -36,15 +37,18 @@ import ShippingForm from './pages/Shipping/ShippingForm';
 // Import Danh mục & Kho bãi
 import CategoryManagement from './pages/Category/CategoryManagement';
 import WarehouseManagement from './pages/Warehouse/WarehouseManagement';
-import WarehouseForm from './pages/Warehouse/WarehouseForm';
 
-// Component bảo vệ Route: Kiểm tra trạng thái đăng nhập & Phân quyền Thủ kho / Nhân viên kho / Admin
+// Component bảo vệ Route: Kiểm tra trạng thái đăng nhập & Phân quyền
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, user, ALLOWED_WMS_ROLES } = useContext(AuthContext);
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
   const roles = ALLOWED_WMS_ROLES || ['ADMIN', 'WAREHOUSE_MANAGER', 'WAREHOUSE_STAFF', 'THUKHO', 'NVKHO'];
   const userRole = user?.role ? user.role.toUpperCase() : '';
+  
   if (userRole && !roles.includes(userRole)) {
     return <Navigate to="/login" replace />;
   }
@@ -55,8 +59,10 @@ const ProtectedRoute = ({ children }) => {
 const AppRoutes = () => {
   return (
     <Routes>
+      {/* Tuyến đường cho trang Đăng nhập */}
       <Route path="/login" element={<Login />} />
 
+      {/* Các tuyến đường được bảo vệ nằm trong Layout */}
       <Route path="/" element={<ProtectedRoute><WmsLayout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<WmsDashboard />} />
@@ -78,7 +84,8 @@ const AppRoutes = () => {
         <Route path="export-notes" element={<ExportNoteList />} />
         <Route path="export-notes/create" element={<ExportNoteCreate />} />
         <Route path="export-notes/:id" element={<ExportNoteDetail />} />
-        <Route path="actual-exports" element={<ActualExportNote />} /> {/* 🌟 ĐÃ THÊM ROUTE MỚI */}
+        <Route path="actual-exports" element={<ActualExportNote />} />
+        <Route path="export-approve" element={<ExportApprovalList />} />
         
         {/* Danh mục Master */}
         <Route path="products" element={<ProductManagement />} />
@@ -88,9 +95,8 @@ const AppRoutes = () => {
 
         <Route path="categories" element={<CategoryManagement />} />
 
+        {/* Cấu hình Route cho Kho bãi (Chỉ giữ lại Management, không còn Form) */}
         <Route path="warehouses" element={<WarehouseManagement />} />
-        <Route path="warehouses/create" element={<WarehouseForm />} />
-        <Route path="warehouses/edit/:id" element={<WarehouseForm />} />
         
         <Route path="suppliers" element={<SupplierManagement />} />
         <Route path="suppliers/create" element={<SupplierCreate />} />
@@ -101,6 +107,7 @@ const AppRoutes = () => {
         <Route path="shipping/edit/:id" element={<ShippingForm />} />
       </Route>
 
+      {/* Tuyến đường dự phòng nếu nhập URL không tồn tại */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
