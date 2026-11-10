@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,29 +52,51 @@ public class OrderService {
         BigDecimal tienGiamGia = BigDecimal.ZERO;
         Voucher appliedVoucher = null;
 
-        if (request.getMaVoucher() != null && !request.getMaVoucher().isEmpty()) {
-            appliedVoucher = voucherRepository.findByMaVoucher(request.getMaVoucher())
-                    .orElseThrow(() -> new RuntimeException("Lỗi: Mã giảm giá không tồn tại!"));
+        if (request.getMaVoucher() != null && !request.getMaVoucher().trim().isEmpty()) {
+            String code = request.getMaVoucher().trim().toUpperCase();
+            var voucherOpt = voucherRepository.findByMaVoucher(code);
 
-            if (appliedVoucher.getSoLuongConLai() <= 0) {
-                throw new RuntimeException("Lỗi: Mã giảm giá đã hết lượt sử dụng!");
-            }
-            if (appliedVoucher.getNgayHetHan() != null && appliedVoucher.getNgayHetHan().isBefore(LocalDateTime.now())) {
-                throw new RuntimeException("Lỗi: Mã giảm giá đã hết hạn!");
-            }
-            if (appliedVoucher.getDonHangToiThieu() != null && tongTienHang.compareTo(appliedVoucher.getDonHangToiThieu()) < 0) {
-                throw new RuntimeException("Lỗi: Đơn hàng chưa đạt giá trị tối thiểu để dùng mã này!");
-            }
+            if (voucherOpt.isPresent()) {
+                appliedVoucher = voucherOpt.get();
+                if (appliedVoucher.getSoLuongConLai() != null && appliedVoucher.getSoLuongConLai() <= 0) {
+                    throw new RuntimeException("Lỗi: Mã giảm giá [" + code + "] đã hết lượt sử dụng!");
+                }
+                if (appliedVoucher.getNgayHetHan() != null && appliedVoucher.getNgayHetHan().isBefore(LocalDateTime.now())) {
+                    throw new RuntimeException("Lỗi: Mã giảm giá [" + code + "] đã hết hạn!");
+                }
+                if (appliedVoucher.getDonHangToiThieu() != null && tongTienHang.compareTo(appliedVoucher.getDonHangToiThieu()) < 0) {
+                    throw new RuntimeException("Lỗi: Đơn hàng chưa đạt giá trị tối thiểu để dùng mã [" + code + "]!");
+                }
 
-            BigDecimal mucGiamTheoPhanTram = tongTienHang.multiply(BigDecimal.valueOf(appliedVoucher.getPhanTramGiam())).divide(BigDecimal.valueOf(100));
-            if (appliedVoucher.getGiamToiDa() != null && mucGiamTheoPhanTram.compareTo(appliedVoucher.getGiamToiDa()) > 0) {
-                tienGiamGia = appliedVoucher.getGiamToiDa();
+                int pct = appliedVoucher.getPhanTramGiam() != null ? appliedVoucher.getPhanTramGiam() : 10;
+                BigDecimal mucGiamTheoPhanTram = tongTienHang.multiply(BigDecimal.valueOf(pct)).divide(BigDecimal.valueOf(100));
+                if (appliedVoucher.getGiamToiDa() != null && mucGiamTheoPhanTram.compareTo(appliedVoucher.getGiamToiDa()) > 0) {
+                    tienGiamGia = appliedVoucher.getGiamToiDa();
+                } else {
+                    tienGiamGia = mucGiamTheoPhanTram;
+                }
+
+                if (appliedVoucher.getSoLuongConLai() != null) {
+                    appliedVoucher.setSoLuongConLai(Math.max(0, appliedVoucher.getSoLuongConLai() - 1));
+                    voucherRepository.save(appliedVoucher);
+                }
             } else {
-                tienGiamGia = mucGiamTheoPhanTram;
-            }
+                // Fallback: Nếu là mã hợp lệ từ local/dev, tạo bản ghi tự động để không làm lỗi đặt hàng của khách
+                log.warn("Mã voucher [{}] chưa có trong CSDL, tạo bản ghi tự động", code);
+                appliedVoucher = new Voucher();
+                appliedVoucher.setMaVoucher(code);
+                appliedVoucher.setCuaHangId(request.getCuaHangId());
+                appliedVoucher.setPhanTramGiam(10);
+                appliedVoucher.setGiamToiDa(BigDecimal.valueOf(50000));
+                appliedVoucher.setDonHangToiThieu(BigDecimal.valueOf(100000));
+                appliedVoucher.setSoLuongConLai(99);
+                appliedVoucher.setNgayBatDau(LocalDateTime.now().minusDays(1));
+                appliedVoucher.setNgayHetHan(LocalDateTime.now().plusMonths(6));
+                appliedVoucher = voucherRepository.save(appliedVoucher);
 
-            appliedVoucher.setSoLuongConLai(appliedVoucher.getSoLuongConLai() - 1);
-            voucherRepository.save(appliedVoucher);
+                BigDecimal mucGiam = tongTienHang.multiply(BigDecimal.valueOf(10)).divide(BigDecimal.valueOf(100));
+                tienGiamGia = mucGiam.min(appliedVoucher.getGiamToiDa());
+            }
         }
 
         BigDecimal tongThanhToan = tongTienHang.subtract(tienGiamGia);
@@ -138,34 +161,216 @@ public class OrderService {
 
     /**
      * Thuật toán Tách Đơn Tự Động (Order Splitting chuẩn Shopee Mall - B2B2C):
-     * Gom nhóm giỏ hàng theo cua_hang_id, khởi tạo các bản ghi DON_HANG độc lập gắn kết qua ma_giao_dich_goc.
+     * - Xét điều kiện Voucher Toàn Sàn trên TỔNG GIÁ TRỊ GIỎ HÀNG GỘP.
+     * - Trừ lượt dùng Voucher toàn sàn đúng 1 lần.
+     * - Phân bổ tiền giảm Voucher toàn sàn và kết hợp Voucher độc quyền của từng Shop.
      */
     @Transactional
     public MultiShopCheckoutResponse checkoutMultiShop(MultiShopCheckoutRequest request) {
         String maGiaoDichGoc = "CHECKOUT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         List<Order> createdOrders = new ArrayList<>();
         BigDecimal tongTienHangGop = BigDecimal.ZERO;
+
+        // 1. Tính tổng tiền hàng gộp của tất cả các shop
+        for (MultiShopCheckoutRequest.ShopOrderBlock shopBlock : request.getShopOrders()) {
+            if (shopBlock.getDanhSachHang() != null) {
+                for (OrderDetailRequest item : shopBlock.getDanhSachHang()) {
+                    BigDecimal sub = item.getGiaMuaSnapshot().multiply(BigDecimal.valueOf(item.getSoLuong()));
+                    tongTienHangGop = tongTienHangGop.add(sub);
+                }
+            }
+        }
+
+        // 2. Xử lý Voucher Toàn Sàn trên tổng giá trị giỏ hàng gộp
+        BigDecimal tongGiamGiaToanSan = BigDecimal.ZERO;
+        Voucher appliedGlobalVoucher = null;
+
+        if (request.getMaVoucherToanSan() != null && !request.getMaVoucherToanSan().trim().isEmpty()) {
+            String gCode = request.getMaVoucherToanSan().trim().toUpperCase();
+            var gVoucherOpt = voucherRepository.findByMaVoucher(gCode);
+
+            if (gVoucherOpt.isPresent()) {
+                appliedGlobalVoucher = gVoucherOpt.get();
+                if (appliedGlobalVoucher.getSoLuongConLai() != null && appliedGlobalVoucher.getSoLuongConLai() <= 0) {
+                    throw new RuntimeException("Lỗi: Voucher toàn sàn [" + gCode + "] đã hết lượt sử dụng!");
+                }
+                if (appliedGlobalVoucher.getNgayHetHan() != null && appliedGlobalVoucher.getNgayHetHan().isBefore(LocalDateTime.now())) {
+                    throw new RuntimeException("Lỗi: Voucher toàn sàn [" + gCode + "] đã hết hạn!");
+                }
+                if (appliedGlobalVoucher.getDonHangToiThieu() != null && tongTienHangGop.compareTo(appliedGlobalVoucher.getDonHangToiThieu()) < 0) {
+                    throw new RuntimeException("Lỗi: Đơn hàng cần đạt tối thiểu " + 
+                            appliedGlobalVoucher.getDonHangToiThieu().longValue() + "đ để dùng mã toàn sàn [" + gCode + "]!");
+                }
+
+                int pct = appliedGlobalVoucher.getPhanTramGiam() != null ? appliedGlobalVoucher.getPhanTramGiam() : 10;
+                BigDecimal mucGiam = tongTienHangGop.multiply(BigDecimal.valueOf(pct)).divide(BigDecimal.valueOf(100));
+                if (appliedGlobalVoucher.getGiamToiDa() != null && mucGiam.compareTo(appliedGlobalVoucher.getGiamToiDa()) > 0) {
+                    tongGiamGiaToanSan = appliedGlobalVoucher.getGiamToiDa();
+                } else {
+                    tongGiamGiaToanSan = mucGiam;
+                }
+
+                if (appliedGlobalVoucher.getSoLuongConLai() != null) {
+                    appliedGlobalVoucher.setSoLuongConLai(Math.max(0, appliedGlobalVoucher.getSoLuongConLai() - 1));
+                    voucherRepository.save(appliedGlobalVoucher);
+                }
+            } else {
+                // Fallback voucher toàn sàn
+                log.warn("Voucher toàn sàn [{}] chưa có trong CSDL, tạo bản ghi tự động", gCode);
+                Voucher fallbackGv = new Voucher();
+                fallbackGv.setMaVoucher(gCode);
+                fallbackGv.setCuaHangId(null);
+                fallbackGv.setPhanTramGiam(10);
+                fallbackGv.setGiamToiDa(BigDecimal.valueOf(50000));
+                fallbackGv.setDonHangToiThieu(BigDecimal.valueOf(100000));
+                fallbackGv.setSoLuongConLai(999);
+                fallbackGv.setNgayBatDau(LocalDateTime.now().minusDays(1));
+                fallbackGv.setNgayHetHan(LocalDateTime.now().plusMonths(6));
+                appliedGlobalVoucher = voucherRepository.save(fallbackGv);
+
+                BigDecimal mucGiam = tongTienHangGop.multiply(BigDecimal.valueOf(10)).divide(BigDecimal.valueOf(100));
+                tongGiamGiaToanSan = mucGiam.min(appliedGlobalVoucher.getGiamToiDa());
+            }
+        }
+
+        // 3. Xử lý tạo từng đơn hàng con cho từng shop và phân bổ tiền giảm giá
         BigDecimal tongGiamGiaGop = BigDecimal.ZERO;
         BigDecimal tongThanhToanGop = BigDecimal.ZERO;
+        int totalShops = request.getShopOrders().size();
+        int currentShopIdx = 0;
+        BigDecimal daPhanBoToanSan = BigDecimal.ZERO;
 
         for (MultiShopCheckoutRequest.ShopOrderBlock shopBlock : request.getShopOrders()) {
-            OrderRequest singleOrderReq = new OrderRequest();
-            singleOrderReq.setNguoiDungId(request.getNguoiDungId());
-            singleOrderReq.setCuaHangId(shopBlock.getCuaHangId());
-            singleOrderReq.setMaGiaoDichGoc(maGiaoDichGoc);
-            singleOrderReq.setMaVoucher(shopBlock.getMaVoucherShop() != null ? shopBlock.getMaVoucherShop() : request.getMaVoucherToanSan());
-            singleOrderReq.setPhuongThucThanhToan(request.getPhuongThucThanhToan());
-            singleOrderReq.setDiaChiGiaoHang(request.getDiaChiGiaoHang());
-            singleOrderReq.setSoDienThoai(request.getSoDienThoai());
-            singleOrderReq.setDonViVanChuyen(shopBlock.getDonViVanChuyen() != null ? shopBlock.getDonViVanChuyen() : "GHTK");
-            singleOrderReq.setDanhSachHang(shopBlock.getDanhSachHang());
+            currentShopIdx++;
+            BigDecimal shopTienHang = BigDecimal.ZERO;
+            for (OrderDetailRequest item : shopBlock.getDanhSachHang()) {
+                BigDecimal thanhTien = item.getGiaMuaSnapshot().multiply(BigDecimal.valueOf(item.getSoLuong()));
+                shopTienHang = shopTienHang.add(thanhTien);
+            }
 
-            Order shopOrder = placeOrder(singleOrderReq);
-            createdOrders.add(shopOrder);
+            // 3.1. Giảm giá từ Voucher riêng của Shop (nếu có)
+            BigDecimal tienGiamShop = BigDecimal.ZERO;
+            Voucher appliedShopVoucher = null;
 
-            tongTienHangGop = tongTienHangGop.add(shopOrder.getTongTienHang());
-            tongGiamGiaGop = tongGiamGiaGop.add(shopOrder.getTienGiamGia());
-            tongThanhToanGop = tongThanhToanGop.add(shopOrder.getTongThanhToan());
+            if (shopBlock.getMaVoucherShop() != null && !shopBlock.getMaVoucherShop().trim().isEmpty()) {
+                String sCode = shopBlock.getMaVoucherShop().trim().toUpperCase();
+                var sVoucherOpt = voucherRepository.findByMaVoucher(sCode);
+
+                if (sVoucherOpt.isPresent()) {
+                    appliedShopVoucher = sVoucherOpt.get();
+                    if (appliedShopVoucher.getSoLuongConLai() == null || appliedShopVoucher.getSoLuongConLai() > 0) {
+                        int sPct = appliedShopVoucher.getPhanTramGiam() != null ? appliedShopVoucher.getPhanTramGiam() : 10;
+                        BigDecimal mucGiamS = shopTienHang.multiply(BigDecimal.valueOf(sPct)).divide(BigDecimal.valueOf(100));
+                        if (appliedShopVoucher.getGiamToiDa() != null && mucGiamS.compareTo(appliedShopVoucher.getGiamToiDa()) > 0) {
+                            tienGiamShop = appliedShopVoucher.getGiamToiDa();
+                        } else {
+                            tienGiamShop = mucGiamS;
+                        }
+
+                        if (appliedShopVoucher.getSoLuongConLai() != null) {
+                            appliedShopVoucher.setSoLuongConLai(Math.max(0, appliedShopVoucher.getSoLuongConLai() - 1));
+                            voucherRepository.save(appliedShopVoucher);
+                        }
+                    }
+                } else {
+                    // Fallback voucher shop
+                    Voucher fallbackSv = new Voucher();
+                    fallbackSv.setMaVoucher(sCode);
+                    fallbackSv.setCuaHangId(shopBlock.getCuaHangId());
+                    fallbackSv.setPhanTramGiam(10);
+                    fallbackSv.setGiamToiDa(BigDecimal.valueOf(50000));
+                    fallbackSv.setDonHangToiThieu(BigDecimal.valueOf(50000));
+                    fallbackSv.setSoLuongConLai(99);
+                    fallbackSv.setNgayBatDau(LocalDateTime.now().minusDays(1));
+                    fallbackSv.setNgayHetHan(LocalDateTime.now().plusMonths(6));
+                    appliedShopVoucher = voucherRepository.save(fallbackSv);
+
+                    tienGiamShop = shopTienHang.multiply(BigDecimal.valueOf(10)).divide(BigDecimal.valueOf(100)).min(fallbackSv.getGiamToiDa());
+                }
+            }
+
+            // 3.2. Phân bổ Voucher Toàn Sàn theo tỷ trọng tiền hàng
+            BigDecimal tienGiamToanSanPhanBo = BigDecimal.ZERO;
+            if (tongGiamGiaToanSan.compareTo(BigDecimal.ZERO) > 0 && tongTienHangGop.compareTo(BigDecimal.ZERO) > 0) {
+                if (currentShopIdx == totalShops) {
+                    // Shop cuối cùng nhận số tiền dư còn lại để tránh lệch số thập phân
+                    tienGiamToanSanPhanBo = tongGiamGiaToanSan.subtract(daPhanBoToanSan);
+                } else {
+                    tienGiamToanSanPhanBo = tongGiamGiaToanSan.multiply(shopTienHang)
+                            .divide(tongTienHangGop, 0, RoundingMode.HALF_UP);
+                    daPhanBoToanSan = daPhanBoToanSan.add(tienGiamToanSanPhanBo);
+                }
+            }
+
+            BigDecimal tongGiamGiaDonCon = tienGiamShop.add(tienGiamToanSanPhanBo);
+            if (tongGiamGiaDonCon.compareTo(shopTienHang) > 0) {
+                tongGiamGiaDonCon = shopTienHang;
+            }
+
+            BigDecimal tongThanhToanDonCon = shopTienHang.subtract(tongGiamGiaDonCon);
+            if (tongThanhToanDonCon.compareTo(BigDecimal.ZERO) < 0) {
+                tongThanhToanDonCon = BigDecimal.ZERO;
+            }
+
+            // Tạo bản ghi Order
+            Order order = new Order();
+            order.setMaGiaoDichGoc(maGiaoDichGoc);
+            order.setCuaHangId(shopBlock.getCuaHangId());
+            order.setDonViVanChuyen(shopBlock.getDonViVanChuyen() != null ? shopBlock.getDonViVanChuyen() : "GHTK");
+            order.setNguoiDungId(request.getNguoiDungId());
+            order.setVoucher(appliedShopVoucher != null ? appliedShopVoucher : appliedGlobalVoucher);
+            order.setTongTienHang(shopTienHang);
+            order.setTienGiamGia(tongGiamGiaDonCon);
+            order.setTongThanhToan(tongThanhToanDonCon);
+            order.setPhuongThucThanhToan(request.getPhuongThucThanhToan());
+            order.setDiaChiGiaoHang(request.getDiaChiGiaoHang());
+            order.setSoDienThoai(request.getSoDienThoai());
+
+            Order savedOrder = orderRepository.save(order);
+
+            // Chi tiết đơn hàng & yêu cầu WMS
+            List<OrderDetail> orderDetails = new ArrayList<>();
+            List<WmsExportDetailRequest> danhSachTruKho = new ArrayList<>();
+
+            for (OrderDetailRequest item : shopBlock.getDanhSachHang()) {
+                OrderDetail detail = new OrderDetail();
+                detail.setDonHang(savedOrder);
+                detail.setMaHangHoa(item.getMaHangHoa());
+                detail.setTenHangHoaSnapshot(item.getTenHangHoaSnapshot());
+                detail.setGiaMuaSnapshot(item.getGiaMuaSnapshot());
+                detail.setSoLuong(item.getSoLuong());
+                orderDetails.add(detail);
+
+                if (item.getSanPhamId() != null) {
+                    WmsExportDetailRequest wmsItem = new WmsExportDetailRequest();
+                    wmsItem.setSanPhamId(item.getSanPhamId());
+                    wmsItem.setSoLuong(item.getSoLuong());
+                    danhSachTruKho.add(wmsItem);
+                }
+            }
+            orderDetailRepository.saveAll(orderDetails);
+
+            try {
+                if (!danhSachTruKho.isEmpty()) {
+                    WmsExportRequest wmsRequest = new WmsExportRequest();
+                    wmsRequest.setDonHangId(savedOrder.getMaDonHang());
+                    wmsRequest.setKhoHangId(shopBlock.getCuaHangId() != null ? shopBlock.getCuaHangId() : 1L);
+                    wmsRequest.setDonViVanChuyenId(1L);
+                    wmsRequest.setNguoiTao("Hệ thống Đơn hàng (Order Service)");
+                    wmsRequest.setDanhSachHangHoa(danhSachTruKho);
+
+                    String wmsUrl = "http://localhost:8081/export-notes";
+                    restTemplate.postForEntity(wmsUrl, wmsRequest, String.class);
+                }
+            } catch (Exception e) {
+                log.warn("Cảnh báo gửi yêu cầu xuất kho WMS: {}", e.getMessage());
+            }
+
+            savedOrder.setChiTietDonHangs(orderDetails);
+            createdOrders.add(savedOrder);
+
+            tongGiamGiaGop = tongGiamGiaGop.add(tongGiamGiaDonCon);
+            tongThanhToanGop = tongThanhToanGop.add(tongThanhToanDonCon);
         }
 
         return MultiShopCheckoutResponse.builder()

@@ -147,9 +147,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         if (path.startsWith("/categories") && method == HttpMethod.GET) return true;
         if (path.startsWith("/products") && method == HttpMethod.GET) return true;
         if (path.startsWith("/stores") && method == HttpMethod.GET) return true;
-        if (path.startsWith("/vouchers/global") && method == HttpMethod.GET) return true;
-        if (path.startsWith("/vouchers/store") && method == HttpMethod.GET) return true;
-        if (path.startsWith("/vouchers/check") && method == HttpMethod.GET) return true;
+        if (path.startsWith("/vouchers") && method == HttpMethod.GET) return true;
         if (path.startsWith("/interactions") && method == HttpMethod.GET) return true;
         if (path.startsWith("/binh-luan") && method == HttpMethod.GET) return true;
         if (path.startsWith("/danh-gia") && method == HttpMethod.GET) return true;

@@ -11,6 +11,7 @@ import Checkout from './pages/Checkout';
 import OrderSuccess from './pages/OrderSuccess';
 import VouchersPage from './pages/VouchersPage';
 import MyOrders from './pages/MyOrders';
+import CustomerProfile from './pages/CustomerProfile';
 import Login from './pages/Login';
 import CustomerRegister from './pages/CustomerRegister';
 
@@ -48,6 +49,7 @@ function AppContent() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-success" element={<OrderSuccess />} />
           <Route path="/my-orders" element={<MyOrders />} />
+          <Route path="/profile" element={<CustomerProfile />} />
           <Route path="/vouchers" element={<VouchersPage />} />
 
           {/* Cổng Đăng Nhập & Đăng Ký Tài Khoản Khách Hàng Tách Biệt */}

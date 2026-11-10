@@ -26,5 +26,7 @@ public class UserProfileResponse {
     private LocalDate ngaySinh; // Thêm ngày sinh
     private String gioiTinh; // Thêm giới tính
     private String anhDaiDien; // Thêm link ảnh
+    private Boolean trangThai;
+    private Boolean isApproved;
 }
 

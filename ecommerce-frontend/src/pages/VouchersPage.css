@@ -249,3 +249,42 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+
+.voucher-toast-alert {
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  background: #059669;
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(5, 150, 105, 0.3);
+  z-index: 9999;
+  animation: slideInToast 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideInToast {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.btn-copy-code.is-saved {
+  background: #059669;
+  color: #ffffff;
+}
+
+.btn-copy-code.is-saved:hover {
+  background: #047857;
+}

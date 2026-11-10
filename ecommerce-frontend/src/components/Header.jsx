@@ -5,7 +5,8 @@ import { CartContext } from '../context/CartContext';
 import { authService } from '../services/authService';
 import {
   FiShoppingCart, FiSearch, FiShoppingBag, FiExternalLink,
-  FiUser, FiTag, FiPackage, FiChevronDown, FiLogOut, FiLogIn, FiUserPlus
+  FiUser, FiTag, FiPackage, FiChevronDown, FiLogOut, FiLogIn, FiUserPlus,
+  FiCreditCard, FiMessageSquare
 } from 'react-icons/fi';
 import './Header.css';
 
@@ -146,6 +147,15 @@ const Header = ({ onSearch }) => {
                       <small>{customer.email || `${customer.taiKhoan}@ctutgear.vn`}</small>
                     </div>
                     <div className="dropdown-divider"></div>
+                    <Link to="/profile" className="dropdown-item profile-link-item">
+                      <FiUser size={16} /> Tài Khoản Của Tôi
+                    </Link>
+                    <Link to="/profile" state={{ activeTab: 'wallet' }} className="dropdown-item">
+                      <FiCreditCard size={16} /> Ví Điện Tử CTUT Pay
+                    </Link>
+                    <Link to="/profile" state={{ activeTab: 'chat' }} className="dropdown-item">
+                      <FiMessageSquare size={16} /> Tin Nhắn & Chat Shop
+                    </Link>
                     <Link to="/my-orders" className="dropdown-item">
                       <FiPackage size={16} /> Đơn Mua Của Tôi
                     </Link>

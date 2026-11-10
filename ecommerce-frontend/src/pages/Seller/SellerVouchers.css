@@ -105,3 +105,27 @@
   font-size: 13px;
 }
 
+
+
+.v-top-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-seller-del-v {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.btn-seller-del-v:hover {
+  color: #dc2626;
+  background: #fee2e2;
+}

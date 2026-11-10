@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { marketplaceService } from '../../services/marketplaceService';
-import { FiTag, FiPlus, FiCheckCircle, FiCopy, FiCalendar } from 'react-icons/fi';
+import { FiTag, FiPlus, FiCheckCircle, FiCopy, FiCalendar, FiTrash2 } from 'react-icons/fi';
 import './SellerVouchers.css';
 
 const SellerVouchers = () => {
@@ -74,6 +74,14 @@ const SellerVouchers = () => {
     }
   };
 
+  const handleDeleteVoucher = async (maVoucher) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn hủy phát hành mã "${maVoucher}" không?`)) return;
+    await marketplaceService.deleteStoreVoucher(storeId, maVoucher);
+    setAlertNotice(`Đã hủy phát hành mã "${maVoucher}"!`);
+    setTimeout(() => setAlertNotice(''), 3000);
+    await fetchVouchers();
+  };
+
   return (
     <div className="seller-vouchers-page">
       {alertNotice && (
@@ -112,7 +120,17 @@ const SellerVouchers = () => {
             <div key={v.id} className="seller-voucher-card">
               <div className="v-card-top">
                 <span className="v-code-tag">{v.maVoucher}</span>
-                <span className="v-discount-badge">Giảm {v.phanTramGiam}%</span>
+                <div className="v-top-right-actions">
+                  <span className="v-discount-badge">Giảm {v.phanTramGiam}%</span>
+                  <button 
+                    type="button" 
+                    className="btn-seller-del-v" 
+                    onClick={() => handleDeleteVoucher(v.maVoucher)}
+                    title="Hủy phát hành mã này"
+                  >
+                    <FiTrash2 size={13} />
+                  </button>
+                </div>
               </div>
               <p className="v-desc">{v.moTa || `Đơn hàng tối thiểu ${Number(v.donHangToiThieu).toLocaleString('vi-VN')} đ`}</p>
               <div className="v-meta-grid">

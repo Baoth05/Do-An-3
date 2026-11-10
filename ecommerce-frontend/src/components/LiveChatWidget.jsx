@@ -1,8 +1,8 @@
 // src/components/LiveChatWidget.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  FiMessageSquare, FiX, FiSend, FiHelpCircle, FiAlertTriangle, 
-  FiCheckCircle, FiClock, FiShoppingBag, FiShield, FiPhoneCall, FiChevronRight 
+import {
+  FiMessageSquare, FiX, FiSend, FiHelpCircle, FiAlertTriangle,
+  FiCheckCircle, FiClock, FiShoppingBag, FiShield, FiPhoneCall, FiChevronRight
 } from 'react-icons/fi';
 import { authService } from '../services/authService';
 import './LiveChatWidget.css';
@@ -182,11 +182,10 @@ export const LiveChatWidget = () => {
       contactPhone: ''
     });
   };
-
   return (
     <div className="live-chat-floating-wrapper">
       {/* Nút Tròn Bật/Tắt Chatbot */}
-      <button 
+      <button
         className={`chat-launcher-btn ${isOpen ? 'active' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Hỗ trợ & Khiếu nại trực tuyến"
@@ -201,7 +200,6 @@ export const LiveChatWidget = () => {
           </>
         )}
       </button>
-
       {/* Cửa Sổ Hộp Thoại Chat */}
       {isOpen && (
         <div className="chat-window-card">
@@ -226,13 +224,13 @@ export const LiveChatWidget = () => {
 
           {/* Tab Chọn Chức Năng: Tư Vấn vs Khiếu Nại */}
           <div className="chat-mode-tabs">
-            <button 
+            <button
               className={`mode-tab ${activeTab === 'consult' ? 'active' : ''}`}
               onClick={() => setActiveTab('consult')}
             >
               <FiHelpCircle size={15} /> Tư Vấn Mua Sắm
             </button>
-            <button 
+            <button
               className={`mode-tab ${activeTab === 'complaint' ? 'active' : ''}`}
               onClick={() => setActiveTab('complaint')}
             >
@@ -242,14 +240,13 @@ export const LiveChatWidget = () => {
               )}
             </button>
           </div>
-
           {/* NỘI DUNG TAB 1: TƯ VẤN MUA HÀNG */}
           {activeTab === 'consult' && (
             <div className="chat-consult-pane">
               <div className="chat-messages-container">
                 {messages.map((msg) => (
-                  <div 
-                    key={msg.id} 
+                  <div
+                    key={msg.id}
                     className={`chat-message-row ${msg.sender === 'user' ? 'outgoing' : 'incoming'}`}
                   >
                     {msg.sender === 'bot' && (
@@ -277,8 +274,8 @@ export const LiveChatWidget = () => {
               <div className="quick-prompts-bar">
                 <div className="quick-prompts-scroll">
                   {QUICK_CONSULT_PROMPTS.map((prompt, idx) => (
-                    <button 
-                      key={idx} 
+                    <button
+                      key={idx}
                       className="prompt-chip"
                       onClick={() => handleSendMessage(prompt)}
                     >
@@ -297,7 +294,7 @@ export const LiveChatWidget = () => {
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                 />
-                <button 
+                <button
                   className="chat-send-btn"
                   onClick={() => handleSendMessage()}
                   disabled={!inputValue.trim()}

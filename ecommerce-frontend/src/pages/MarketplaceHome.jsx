@@ -3,7 +3,8 @@
  * Module: MarketplaceHome.jsx
  * Mô tả: Trang chủ Sàn Thương Mại Điện Tử Tập Trung (CTUT Gear Marketplace).
  * Chức năng:
- *   - Lấy danh sách sản phẩm & Gian hàng từ API/Mock.
+ *   - Slider Banner Quảng cáo tuyển chọn bởi hệ thống (Sản phẩm mới & Bán chạy).
+ *   - Lấy danh sách sản phẩm & Gian hàng từ API.
  *   - Tìm kiếm từ URL param (?q=...) kết hợp tìm kiếm nội trang.
  *   - Bộ lọc danh mục đa tầng, bộ lọc theo Gian hàng.
  *   - Sắp xếp giá tăng/giảm, bán chạy nhất, tên A-Z.
@@ -18,6 +19,7 @@ import {
   FiCheck, FiShoppingCart, FiStar, FiTruck, FiShield, 
   FiZap, FiGrid, FiSearch, FiFilter, FiX, FiTrendingUp 
 } from 'react-icons/fi';
+import PromoSlider from '../components/PromoSlider';
 import './MarketplaceHome.css';
 
 const MarketplaceHome = () => {
@@ -124,6 +126,13 @@ const MarketplaceHome = () => {
         <div className="toast-notification">
           <FiCheck size={18} /> {addedNotice}
         </div>
+      )}
+
+      {/* 🌟 THANH TRƯỢT QUẢNG CÁO TỰ ĐỘNG TUYỂN CHỌN BỞI HỆ THỐNG (MỚI ĐƯA LÊN & BÁN CHẠY NHẤT) */}
+      {!queryParam && (
+        <section className="container promo-slider-section" style={{ marginTop: '24px' }}>
+          <PromoSlider products={products} stores={stores} />
+        </section>
       )}
 
       {/* Hero Banner Sàn */}

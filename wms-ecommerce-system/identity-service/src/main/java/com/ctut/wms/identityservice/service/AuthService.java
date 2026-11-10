@@ -1,10 +1,3 @@
-/**
- * ==============================================================================
- * Service: AuthService
- * Phân hệ: Identity Service (Quản lý định danh & Phân quyền RBAC - Port 8084)
- * Mô tả: Cung cấp logic nghiệp vụ, giao dịch cơ sở dữ liệu và xử lý dữ liệu cho AuthService.
- * ==============================================================================
- */
 package com.ctut.wms.identityservice.service;
 
 import com.ctut.wms.identityservice.dto.*;
@@ -46,13 +39,21 @@ public class AuthService {
         String maHoaMatKhau = passwordEncoder.encode(request.getMatKhau());
         newuser.setMatKhau(maHoaMatKhau);
         newuser.setEmail(request.getEmail());
-        newuser.setTrangThai(true);
+
         newuser.setNgayTao(LocalDateTime.now());
         newuser.setNgayCapNhat(LocalDateTime.now());
 
-        // Gán quyền
+        // 1. Gán quyền
         String maQuyen = (request.getVaiTro() != null && !request.getVaiTro().isEmpty()) ? request.getVaiTro() : "CUSTOMER";
         newuser.setVaiTro(maQuyen);
+
+        // 2. LOGIC MỚI: Xử lý trạng thái tài khoản dựa trên vai trò
+        // Nếu là chủ cửa hàng (người bán), tài khoản sẽ bị khóa (false) chờ Admin duyệt
+        if (maQuyen.equalsIgnoreCase("STORE_OWNER")) {
+            newuser.setTrangThai(false);
+        } else {
+            newuser.setTrangThai(true); // Khách hàng bình thường thì hoạt động ngay
+        }
 
         roleRepository.findByMaVaiTro(maQuyen).ifPresent(role -> {
             newuser.getRoles().add(role);
@@ -74,16 +75,21 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        // 1. Tìm người dùng trong cơ sở dữ liệu
         User user = userRepository.findByTaiKhoan(request.getTaiKhoan())
                 .orElseThrow(() -> new RuntimeException("Lỗi: Tài khoản không tồn tại!"));
 
-        // 2. So sánh mật khẩu đã được mã hóa
         if (!passwordEncoder.matches(request.getMatKhau(), user.getMatKhau())) {
             throw new RuntimeException("Lỗi: Sai mật khẩu!");
         }
 
-        // 3. Nếu đúng, tạo Token và chuẩn bị thông tin trả về
+        // MỚI THÊM: Kiểm tra nếu tài khoản chưa được duyệt hoặc bị khóa
+        if (Boolean.FALSE.equals(user.getIsApproved())) {
+            throw new RuntimeException("Lỗi: Tài khoản của bạn đang chờ quản trị viên phê duyệt!");
+        }
+        if (Boolean.FALSE.equals(user.getTrangThai())) {
+            throw new RuntimeException("Lỗi: Tài khoản của bạn đã bị khóa!");
+        }
+
         UserInfo userInfo = userInfoRepository.findByUser(user).orElse(null);
         String hoTen = (userInfo != null && userInfo.getHoTen() != null) ? userInfo.getHoTen() : user.getTaiKhoan();
 
@@ -120,7 +126,6 @@ public class AuthService {
         jwtService.validateToken(token);
     }
 
-    // --- LẤY THÔNG TIN CÁ NHÂN ---
     public UserProfileResponse getUserProfile(String taiKhoan) {
         User user = userRepository.findByTaiKhoan(taiKhoan)
                 .orElseThrow(() -> new RuntimeException("Lỗi: Tài khoản không tồn tại!"));
@@ -128,6 +133,7 @@ public class AuthService {
         UserInfo userInfo = userInfoRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy thông tin chi tiết!"));
 
+        // MỚI THÊM: Trả về trạng thái và isApproved ở cuối
         return new UserProfileResponse(
                 user.getId(),
                 user.getTaiKhoan(),
@@ -138,7 +144,9 @@ public class AuthService {
                 userInfo.getDiaChi(),
                 userInfo.getNgaySinh(),
                 userInfo.getGioiTinh(),
-                userInfo.getAnhDaiDien()
+                userInfo.getAnhDaiDien(),
+                user.getTrangThai(),
+                user.getIsApproved()
         );
     }
 
@@ -172,13 +180,13 @@ public class AuthService {
         User user = userRepository.findByTaiKhoan(taiKhoan)
                 .orElseThrow(() -> new RuntimeException("Lỗi: Tài khoản không tồn tại!"));
 
-        // Cập nhật trực tiếp mật khẩu mới mà không cần check matKhauCu
         String matKhauMoiDaMaHoa = passwordEncoder.encode(request.getMatKhauMoi());
         user.setMatKhau(matKhauMoiDaMaHoa);
         userRepository.save(user);
 
         return "Đổi mật khẩu thành công!";
     }
+
     @Transactional
     public List<UserProfileResponse> getAllUsers() {
         List<User> users = userRepository.findAll();
@@ -193,6 +201,7 @@ public class AuthService {
                 maVaiTro = u.getVaiTro();
             }
 
+            // MỚI THÊM: Truyền thêm trạng thái và isApproved vào hàm tạo
             return new UserProfileResponse(
                     u.getId(),
                     u.getTaiKhoan(),
@@ -203,7 +212,9 @@ public class AuthService {
                     userInfo.getDiaChi(),
                     userInfo.getNgaySinh(),
                     userInfo.getGioiTinh(),
-                    userInfo.getAnhDaiDien()
+                    userInfo.getAnhDaiDien(),
+                    u.getTrangThai(),
+                    u.getIsApproved()
             );
         }).collect(Collectors.toList());
     }
@@ -216,5 +227,22 @@ public class AuthService {
         user.setTrangThai(!current);
         userRepository.save(user);
         return user.getTrangThai() ? "Hoạt động" : "Đã khóa";
+    }
+
+    // MỚI THÊM: Hàm xử lý Duyệt Tài Khoản
+    @Transactional
+    public String approveUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy người dùng!"));
+
+        if (Boolean.TRUE.equals(user.getIsApproved())) {
+            return "Tài khoản này đã được duyệt trước đó!";
+        }
+
+        user.setIsApproved(true);
+        user.setTrangThai(true); // Khi duyệt thành công thì mở khóa cho phép hoạt động
+        userRepository.save(user);
+
+        return "Duyệt tài khoản bán hàng thành công!";
     }
 }

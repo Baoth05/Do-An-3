@@ -1,0 +1,320 @@
+/* src/components/PromoSlider.css */
+.promo-slider-wrapper {
+  margin-bottom: 32px;
+  position: relative;
+}
+
+.promo-slider-container {
+  background: linear-gradient(135deg, #090e17 0%, #0f172a 50%, #1e1b4b 100%);
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+  min-height: 380px;
+}
+
+.promo-slide-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 44px 56px;
+  gap: 36px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Cột Trái: Thông tin sản phẩm quảng cáo */
+.slide-content-left {
+  flex: 1;
+  max-width: 620px;
+  color: #ffffff;
+}
+
+.promo-badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.promo-badge-tag.BEST_SELLER {
+  background: linear-gradient(90deg, #ef4444 0%, #f97316 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+
+.promo-badge-tag.NEW_ARRIVAL {
+  background: linear-gradient(90deg, #06b6d4 0%, #3b82f6 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35);
+}
+
+.promo-badge-tag.HOT_DEAL {
+  background: linear-gradient(90deg, #f59e0b 0%, #eab308 100%);
+  color: #0f172a;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+}
+
+.slide-shop-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.slide-title {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin: 0 0 12px 0;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.slide-desc {
+  font-size: 13.5px;
+  color: #cbd5e1;
+  line-height: 1.55;
+  margin: 0 0 14px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.slide-highlight-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #e2e8f0;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+.slide-pricing-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.slide-current-price {
+  font-size: 26px;
+  font-weight: 800;
+  color: #f43f5e;
+}
+
+.slide-original-price {
+  font-size: 16px;
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+
+.slide-discount-badge {
+  background: #f43f5e;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.slide-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.btn-slide-cta {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 12px 22px;
+  border-radius: 10px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.5px;
+  transition: all 0.25s;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
+}
+
+.btn-slide-cta:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.55);
+}
+
+.slide-trust-tags {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.slide-trust-tags span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Cột Phải: Ảnh sản phẩm */
+.slide-content-right {
+  flex: 0 0 340px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.slide-img-link {
+  position: relative;
+  display: block;
+}
+
+.slide-img-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.3) 0%, rgba(37, 99, 235, 0) 70%);
+  border-radius: 50%;
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+.slide-product-img {
+  width: 320px;
+  height: 240px;
+  object-fit: cover;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  position: relative;
+  z-index: 2;
+  transition: transform 0.3s;
+}
+
+.slide-img-link:hover .slide-product-img {
+  transform: scale(1.04);
+}
+
+/* Mũi tên điều hướng */
+.slider-arrow-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s;
+}
+
+.slider-arrow-btn:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-50%) scale(1.08);
+}
+
+.slider-arrow-btn.prev {
+  left: 14px;
+}
+
+.slider-arrow-btn.next {
+  right: 14px;
+}
+
+/* Dots Indicator Bar */
+.slider-dots-bar {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.dot-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s;
+  padding: 0;
+}
+
+.dot-indicator.active {
+  width: 28px;
+  border-radius: 10px;
+  background: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .promo-slide-item {
+    flex-direction: column-reverse;
+    padding: 30px 24px;
+    gap: 20px;
+  }
+
+  .slide-content-left {
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .slide-shop-name,
+  .slide-pricing-row,
+  .slide-actions-row {
+    justify-content: center;
+  }
+
+  .slide-product-img {
+    width: 260px;
+    height: 190px;
+  }
+
+  .slider-arrow-btn {
+    display: none;
+  }
+}
+

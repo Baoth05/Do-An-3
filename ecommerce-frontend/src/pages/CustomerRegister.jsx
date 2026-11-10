@@ -61,7 +61,40 @@ const CustomerRegister = () => {
         matKhau: formData.matKhau,
       });
 
-      setSuccessNotice('🎉 Đăng ký tài khoản khách hàng thành công! Đang chuyển hướng...');
+      // Tặng ngay gói Voucher Chào Mừng vào ví tài khoản khách hàng mới
+      const welcomeVouchers = [
+        {
+          id: 'welcome-1',
+          maVoucher: 'CTUT50K',
+          phanTramGiam: 10,
+          giamToiDa: 50000,
+          donHangToiThieu: 150000,
+          soLuongConLai: 500,
+          moTa: '🎁 Quà Chào Mừng Thành Viên Mới - Giảm 10% tối đa 50.000đ toàn sàn'
+        },
+        {
+          id: 'welcome-2',
+          maVoucher: 'FREESHIP',
+          phanTramGiam: 100,
+          giamToiDa: 30000,
+          donHangToiThieu: 200000,
+          soLuongConLai: 1000,
+          moTa: '🚚 Miễn phí vận chuyển toàn quốc 30.000đ cho đơn từ 200.000đ'
+        },
+        {
+          id: 'welcome-3',
+          maVoucher: 'CTUTNEW50',
+          phanTramGiam: 15,
+          giamToiDa: 50000,
+          donHangToiThieu: 150000,
+          soLuongConLai: 500,
+          moTa: '🎉 Ưu đãi đơn hàng đầu tiên - Giảm ngay 15% tối đa 50.000đ'
+        }
+      ];
+      localStorage.setItem(`customer_vouchers_${formData.taiKhoan.trim()}`, JSON.stringify(welcomeVouchers));
+      localStorage.setItem('user_saved_vouchers', JSON.stringify(welcomeVouchers));
+
+      setSuccessNotice('🎉 Đăng ký tài khoản thành công! Đã tặng 3 Voucher chào mừng vào ví!');
       setTimeout(() => {
         navigate('/');
       }, 1500);

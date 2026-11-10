@@ -10,6 +10,7 @@ import { useContext, useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 import { marketplaceService } from '../services/marketplaceService';
+import { authService } from '../services/authService';
 import { 
   FiMapPin, FiTruck, FiCreditCard, FiCheckCircle, FiShield, 
   FiLock, FiCopy, FiExternalLink, FiDollarSign 
@@ -24,13 +25,17 @@ const Checkout = () => {
   const checkoutShopBlocks = selectedGroupedByShop.length > 0 ? selectedGroupedByShop : groupedByShop;
   const currentTotal = selectedGroupedByShop.length > 0 ? selectedTotalPrice : totalPrice;
 
-  const globalDiscount = location.state?.globalDiscount || 0;
+  const globalDiscount = Number(location.state?.globalDiscount || 0);
   const shopVouchers = location.state?.shopVouchers || {};
+  const totalShopDiscounts = location.state?.totalShopDiscounts !== undefined
+    ? Number(location.state.totalShopDiscounts)
+    : Object.values(shopVouchers).reduce((s, v) => s + (v?.discount || (typeof v === 'number' ? v : 0)), 0);
 
+  const loggedCustomer = authService.getCurrentCustomer();
   const [customerInfo, setCustomerInfo] = useState({
-    hoTen: 'Trần Minh Quân',
-    soDienThoai: '0901234567',
-    diaChiGiaoHang: 'Đại học Kỹ Thuật - Công Nghệ Cần Thơ, 256 Nguyễn Văn Cừ, Cần Thơ',
+    hoTen: loggedCustomer?.hoTen || 'Trần Minh Quân',
+    soDienThoai: loggedCustomer?.soDienThoai || '0901234567',
+    diaChiGiaoHang: loggedCustomer?.diaChi || 'Đại học Kỹ Thuật - Công Nghệ Cần Thơ, 256 Nguyễn Văn Cừ, Cần Thơ',
     ghiChu: '',
   });
 
@@ -42,7 +47,7 @@ const Checkout = () => {
   const [paymentModal, setPaymentModal] = useState(null); // { isOpen, qrCodeUrl, payUrl, momoOrderId, maGiaoDichGoc, amount }
   const [cryptoTxHash, setCryptoTxHash] = useState('');
 
-  const finalTotal = Math.max(0, currentTotal - globalDiscount);
+  const finalTotal = Math.max(0, currentTotal - globalDiscount - totalShopDiscounts);
 
   const handleSubmitOrder = async (e) => {
     e.preventDefault();
@@ -55,7 +60,7 @@ const Checkout = () => {
     try {
       // 1. Chuẩn bị Payload Tách Đơn Hàng Đa Shop (Order Splitting)
       const payload = {
-        nguoiDungId: 101, // Mock Customer ID
+        nguoiDungId: loggedCustomer?.id || 101,
         hoTen: customerInfo.hoTen,
         diaChiGiaoHang: customerInfo.diaChiGiaoHang,
         soDienThoai: customerInfo.soDienThoai,
@@ -248,95 +253,110 @@ const Checkout = () => {
                   <label 
                     key={s.id} 
                     className={`shipping-option-card ${shippingProvider === s.id ? 'active' : ''}`}
+                    onClick={() => setShippingProvider(s.id)}
                   >
-                    <input
-                      type="radio"
-                      name="shipping"
+                    <input 
+                      type="radio" 
+                      name="shippingProvider" 
                       value={s.id}
                       checked={shippingProvider === s.id}
-                      onChange={() => setShippingProvider(s.id)}
+                      onChange={() => setShippingProvider(s.id)} 
                     />
-                    <div className="ship-meta">
+                    <div className="shipping-info">
                       <strong>{s.name}</strong>
-                      <span className="ship-time">Thời gian: {s.time}</span>
+                      <small>Thời gian dự kiến: {s.time}</small>
                     </div>
-                    <span className="ship-price">{s.price}</span>
+                    <span className="shipping-price">{s.price}</span>
                   </label>
                 ))}
               </div>
             </div>
 
-            {/* Khối 3: Phương thức thanh toán (MoMo, Web3 Crypto, COD) */}
+            {/* Khối 3: Phương thức thanh toán */}
             <div className="checkout-card">
               <div className="card-header-line">
                 <FiCreditCard className="card-icon" />
                 <h3>Phương Thức Thanh Toán</h3>
               </div>
-              <div className="payment-methods-list">
-                {/* Option 1: MoMo */}
-                <label className={`payment-method-item ${paymentMethod === 'MOMO' ? 'active' : ''}`}>
-                  <input
-                    type="radio"
-                    name="payment"
+
+              <div className="payment-options-grid">
+                {/* Option 1: MoMo QR */}
+                <label 
+                  className={`payment-option-card ${paymentMethod === 'MOMO' ? 'active' : ''}`}
+                  onClick={() => setPaymentMethod('MOMO')}
+                >
+                  <input 
+                    type="radio" 
+                    name="paymentMethod" 
                     value="MOMO"
                     checked={paymentMethod === 'MOMO'}
-                    onChange={() => setPaymentMethod('MOMO')}
+                    onChange={() => setPaymentMethod('MOMO')} 
                   />
-                  <div className="method-logo-badge momo-badge">MoMo</div>
-                  <div className="method-details">
-                    <strong>Ví Điện Tử MoMo (Khuyên dùng)</strong>
-                    <p>Quét mã VietQR chuyển trực tiếp vào ví MoMo hoặc mở App MoMo thanh toán tức thì.</p>
+                  <div className="payment-badge momo-badge">MoMo</div>
+                  <div className="payment-info">
+                    <strong>Ví Điện Tử MoMo / Quét Mã QR</strong>
+                    <small>Quét mã VietQR bằng app MoMo hoặc bất kỳ ứng dụng Mobile Banking</small>
                   </div>
                 </label>
 
                 {/* Option 2: Web3 Crypto */}
-                <label className={`payment-method-item ${paymentMethod === 'CRYPTO' ? 'active' : ''}`}>
-                  <input
-                    type="radio"
-                    name="payment"
+                <label 
+                  className={`payment-option-card ${paymentMethod === 'CRYPTO' ? 'active' : ''}`}
+                  onClick={() => setPaymentMethod('CRYPTO')}
+                >
+                  <input 
+                    type="radio" 
+                    name="paymentMethod" 
                     value="CRYPTO"
                     checked={paymentMethod === 'CRYPTO'}
-                    onChange={() => setPaymentMethod('CRYPTO')}
+                    onChange={() => setPaymentMethod('CRYPTO')} 
                   />
-                  <div className="method-logo-badge crypto-badge">Web3</div>
-                  <div className="method-details">
-                    <strong>Thanh Toán Web3 Crypto (USDT / BNB / ETH)</strong>
-                    <p>Xác thực giao dịch On-chain chống gian lận qua Blockchain Smart Contract.</p>
+                  <div className="payment-badge crypto-badge">Web3</div>
+                  <div className="payment-info">
+                    <strong>Thanh Toán On-Chain Crypto (USDT)</strong>
+                    <small>Chuyển khoản USDT mạng BSC / ERC20, xác thực tự động bằng TxHash</small>
                   </div>
                 </label>
 
                 {/* Option 3: COD */}
-                <label className={`payment-method-item ${paymentMethod === 'COD' ? 'active' : ''}`}>
-                  <input
-                    type="radio"
-                    name="payment"
+                <label 
+                  className={`payment-option-card ${paymentMethod === 'COD' ? 'active' : ''}`}
+                  onClick={() => setPaymentMethod('COD')}
+                >
+                  <input 
+                    type="radio" 
+                    name="paymentMethod" 
                     value="COD"
                     checked={paymentMethod === 'COD'}
-                    onChange={() => setPaymentMethod('COD')}
+                    onChange={() => setPaymentMethod('COD')} 
                   />
-                  <div className="method-logo-badge cod-badge">COD</div>
-                  <div className="method-details">
+                  <div className="payment-badge cod-badge">COD</div>
+                  <div className="payment-info">
                     <strong>Thanh Toán Khi Nhận Hàng (COD)</strong>
-                    <p>Thanh toán tiền mặt cho nhân viên giao hàng khi nhận kiện hàng từ từng Cửa hàng.</p>
+                    <small>Kiểm tra hàng và thanh toán tiền mặt cho nhân viên giao hàng</small>
                   </div>
                 </label>
               </div>
             </div>
           </div>
 
-          {/* Cột Phải: Kiểm Tra Danh Sách Tách Đơn & Nút Mua */}
-          <div className="checkout-side-column">
+          {/* Cột Phải: Bảng Tóm Tắt Kiện Hàng & Tổng Tiền */}
+          <div className="checkout-summary-column">
             <div className="checkout-summary-card">
-              <h3>Kiểm Tra Đơn Hàng ({checkoutShopBlocks.length} Cửa Hàng)</h3>
+              <h3>Kiện Hàng Đặt Mua ({checkoutShopBlocks.length} shop)</h3>
 
-              <div className="split-orders-preview">
-                {checkoutShopBlocks.map((shop, idx) => (
-                  <div key={shop.cuaHangId} className="split-shop-item">
-                    <div className="split-shop-header">
-                      <span className="split-shop-badge">Gói hàng #{idx + 1}</span>
-                      <strong>{shop.tenShop}</strong>
+              <div className="checkout-shops-review">
+                {checkoutShopBlocks.map((shop) => (
+                  <div key={shop.cuaHangId} className="review-shop-item">
+                    <div className="review-shop-name">
+                      🏪 {shop.tenShop}
+                      {shopVouchers[shop.cuaHangId] && (
+                        <span className="review-shop-vc-badge">
+                          ✓ Đã dùng mã {shopVouchers[shop.cuaHangId].code || shopVouchers[shop.cuaHangId]}
+                        </span>
+                      )}
                     </div>
-                    <ul className="split-items-mini">
+                    <ul className="review-items-list">
                       {shop.items.map((i) => (
                         <li key={i.sku}>
                           <span>{i.name} (x{i.quantity})</span>
@@ -350,13 +370,19 @@ const Checkout = () => {
 
               <div className="summary-breakdown">
                 <div className="breakdown-row">
-                  <span>Tổng tiền hàng:</span>
-                  <span>{Number(totalPrice).toLocaleString('vi-VN')} đ</span>
+                  <span>Tiền hàng đã chọn:</span>
+                  <span>{Number(currentTotal).toLocaleString('vi-VN')} đ</span>
                 </div>
                 {globalDiscount > 0 && (
                   <div className="breakdown-row discount">
-                    <span>Voucher toàn sàn:</span>
+                    <span>Voucher toàn sàn {location.state?.appliedVoucherCode ? `(${location.state.appliedVoucherCode})` : ''}:</span>
                     <span>-{Number(globalDiscount).toLocaleString('vi-VN')} đ</span>
+                  </div>
+                )}
+                {totalShopDiscounts > 0 && (
+                  <div className="breakdown-row discount">
+                    <span>Voucher các gian hàng:</span>
+                    <span>-{Number(totalShopDiscounts).toLocaleString('vi-VN')} đ</span>
                   </div>
                 )}
                 <div className="breakdown-row">
@@ -495,4 +521,3 @@ const Checkout = () => {
 };
 
 export default Checkout;
-

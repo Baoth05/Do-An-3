@@ -1,0 +1,1081 @@
+/* src/pages/CustomerProfile.css */
+.customer-profile-page {
+  background-color: #f8fafc;
+  min-height: 85vh;
+  padding: 36px 0 60px 0;
+}
+
+.profile-container {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+}
+
+/* Sidebar Menu */
+.profile-sidebar {
+  flex: 0 0 280px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.profile-user-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.profile-avatar-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  flex-shrink: 0;
+}
+
+.profile-user-meta h4 {
+  margin: 0 0 4px 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.user-vip-pill {
+  display: inline-block;
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-bottom: 2px;
+}
+
+.user-login-id {
+  display: block;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.profile-balance-glance {
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 18px 0;
+}
+
+.bal-label {
+  display: block;
+  font-size: 11px;
+  color: #1e40af;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.bal-num {
+  font-size: 17px;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.profile-nav-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.p-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.p-nav-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.p-nav-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+/* Main Content Area */
+.profile-main-content {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  min-height: 520px;
+}
+
+.pane-header {
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 18px;
+  margin-bottom: 24px;
+}
+
+.pane-header h3 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.pane-header p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Profile Form */
+.profile-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 650px;
+}
+
+.form-group-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.form-group-row label {
+  width: 170px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+  flex-shrink: 0;
+}
+
+.form-group-row input,
+.form-group-row textarea {
+  flex: 1;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.form-group-row input:focus,
+.form-group-row textarea:focus {
+  border-color: #2563eb;
+}
+
+.input-readonly {
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.gender-radios {
+  display: flex;
+  gap: 20px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+}
+
+.btn-save-profile {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  transition: all 0.2s;
+}
+
+.btn-save-profile:hover {
+  background: #1d4ed8;
+}
+
+/* Password Change Box */
+.password-change-box {
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.password-change-box h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: #0f172a;
+  margin: 0 0 14px 0;
+}
+
+.pass-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 12px;
+}
+
+.pass-form-grid input {
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  outline: none;
+}
+
+.btn-update-pass {
+  background: #0f172a;
+  color: #ffffff;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Wallet Card Hero */
+.wallet-card-hero {
+  background: linear-gradient(135deg, #1e1b4b 0%, #1e293b 50%, #0f172a 100%);
+  border-radius: 16px;
+  padding: 24px 28px;
+  color: #ffffff;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 24px rgba(30, 27, 75, 0.25);
+}
+
+.wallet-card-chip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.card-brand {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #38bdf8;
+}
+
+.wallet-label {
+  font-size: 11px;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+.wallet-amount {
+  font-size: 32px;
+  font-weight: 800;
+  color: #fcd34d;
+  margin: 4px 0 12px 0;
+}
+
+.wallet-holder {
+  font-size: 12px;
+  color: #cbd5e1;
+  font-family: monospace;
+}
+
+.wallet-quick-deposit h4,
+.wallet-history-section h4 {
+  font-size: 14px;
+  color: #334155;
+  margin: 0 0 12px 0;
+}
+
+.deposit-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.btn-deposit-pill {
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-deposit-pill:hover {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.history-tx-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.tx-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tx-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.tx-icon.DEPOSIT { background: #dcfce7; color: #15803d; }
+.tx-icon.PAYMENT { background: #fee2e2; color: #b91c1c; }
+
+.tx-left strong {
+  display: block;
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.tx-left small {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.tx-amount {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.tx-amount.DEPOSIT { color: #16a34a; }
+.tx-amount.PAYMENT { color: #dc2626; }
+
+/* Orders Tab */
+.orders-filter-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.order-tab-btn {
+  background: transparent;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.order-tab-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.profile-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.profile-order-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  background: #ffffff;
+}
+
+.order-card-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.order-shop-tag {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 13.5px;
+}
+
+.order-status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+}
+
+.order-status-badge.PENDING { background: #fef3c7; color: #b45309; }
+.order-status-badge.CONFIRMED { background: #e0f2fe; color: #0369a1; }
+.order-status-badge.DELIVERING { background: #ede9fe; color: #6d28d9; }
+.order-status-badge.COMPLETED { background: #dcfce7; color: #15803d; }
+.order-status-badge.CANCELLED { background: #fee2e2; color: #b91c1c; }
+
+.order-items-snippet {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.order-actions-bottom {
+  margin-top: 10px;
+  text-align: right;
+}
+
+.btn-detail-link {
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* Vouchers Grid */
+.saved-vouchers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.saved-voucher-box {
+  display: flex;
+  border: 1px dashed #f59e0b;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.v-box-left {
+  background: #fef3c7;
+  color: #b45309;
+  padding: 14px;
+  width: 95px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px dashed #f59e0b;
+}
+
+.v-box-pct {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.v-box-left small {
+  font-size: 9px;
+  text-align: center;
+}
+
+.v-box-right {
+  padding: 12px 14px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.v-box-code {
+  font-family: monospace;
+  font-weight: 800;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.v-box-desc {
+  font-size: 11px;
+  color: #64748b;
+  margin: 4px 0 6px 0;
+}
+
+.v-box-store {
+  font-size: 10px;
+  color: #d97706;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.btn-use-now {
+  background: #f59e0b;
+  color: #ffffff;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+/* SHOPEE MULTI-STORE CHAT WINDOW */
+.shopee-chat-window {
+  display: flex;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  height: 540px;
+  overflow: hidden;
+}
+
+.chat-store-list {
+  width: 260px;
+  border-right: 1px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+}
+
+.store-list-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  background: #ffffff;
+}
+
+.store-items-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.chat-store-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.15s;
+}
+
+.chat-store-item:hover {
+  background: #f1f5f9;
+}
+
+.chat-store-item.active {
+  background: #eff6ff;
+  border-left: 3px solid #2563eb;
+}
+
+.store-chat-avatar {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+}
+
+.store-chat-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.active-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background: #10b981;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+}
+
+.store-chat-meta strong {
+  display: block;
+  font-size: 12.5px;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 170px;
+}
+
+.store-chat-meta small {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* Chat Conversation Pane */
+.chat-conversation-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+}
+
+.convo-header {
+  padding: 12px 18px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+}
+
+.convo-store-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.convo-store-info img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.convo-store-info h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.convo-store-info span {
+  font-size: 11px;
+  color: #10b981;
+}
+
+.btn-view-shop-convo {
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.convo-messages-body {
+  flex: 1;
+  padding: 16px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #f8fafc;
+}
+
+.convo-msg-row {
+  display: flex;
+  max-width: 80%;
+}
+
+.convo-msg-row.incoming {
+  align-self: flex-start;
+}
+
+.convo-msg-row.outgoing {
+  align-self: flex-end;
+}
+
+.convo-msg-bubble {
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.convo-msg-row.incoming .convo-msg-bubble {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+}
+
+.convo-msg-row.outgoing .convo-msg-bubble {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.msg-sender-name {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  margin-bottom: 2px;
+  opacity: 0.8;
+}
+
+.convo-msg-bubble p {
+  margin: 0;
+}
+
+.msg-time {
+  display: block;
+  font-size: 10px;
+  margin-top: 4px;
+  opacity: 0.6;
+  text-align: right;
+}
+
+.convo-typing-bubble {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  display: flex;
+  gap: 4px;
+}
+
+.convo-typing-bubble span {
+  width: 6px;
+  height: 6px;
+  background: #94a3b8;
+  border-radius: 50%;
+  animation: typing-dots 1.2s infinite ease-in-out;
+}
+
+@keyframes typing-dots {
+  0%, 100% { transform: scale(0.6); }
+  50% { transform: scale(1.2); }
+}
+
+.quick-chat-prompts-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 12px;
+  background: #ffffff;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-quick-prompt {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 5px 10px;
+  border-radius: 14px;
+  font-size: 11.5px;
+  color: #334155;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-quick-prompt:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.convo-input-row {
+  display: flex;
+  padding: 10px 14px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  gap: 8px;
+}
+
+.convo-input-row input {
+  flex: 1;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 9px 16px;
+  font-size: 13px;
+  outline: none;
+}
+
+.convo-input-row input:focus {
+  border-color: #2563eb;
+}
+
+.btn-send-convo {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.btn-send-convo:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.btn-send-convo:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
+/* Feedback Pane */
+.tickets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.ticket-item-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+  background: #ffffff;
+}
+
+.tk-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.tk-id {
+  font-weight: 800;
+  color: #2563eb;
+  font-size: 13px;
+}
+
+.tk-status-pill {
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.tk-cat {
+  font-size: 12.5px;
+  color: #334155;
+  margin-bottom: 4px;
+}
+
+.tk-desc {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+
+.tk-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #94a3b8;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 8px;
+}
+
+/* Empty State */
+.pane-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.btn-go-shopping {
+  display: inline-block;
+  background: #2563eb;
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+  margin-top: 10px;
+}
+
+.profile-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  background: #10b981;
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+  z-index: 999999;
+}
+
+@media (max-width: 900px) {
+  .profile-container {
+    flex-direction: column;
+  }
+  .profile-sidebar {
+    width: 100%;
+  }
+  .pass-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-group-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .form-group-row label {
+    width: 100%;
+  }
+  .shopee-chat-window {
+    flex-direction: column;
+    height: 600px;
+  }
+  .chat-store-list {
+    width: 100%;
+    height: 180px;
+  }
+}
+
+
+
+/* Additional Customer Profile Voucher Styles */
+.profile-v-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.btn-collect-more-v {
+  background: #f59e0b;
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn-collect-more-v:hover {
+  background: #fbbf24;
+}
+
+.empty-profile-vouchers {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 40px 20px;
+  text-align: center;
+  margin-top: 16px;
+}
+
+.empty-v-icon {
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+
+.empty-profile-vouchers h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+}
+
+.empty-profile-vouchers p {
+  color: #64748b;
+  font-size: 13px;
+  margin: 0 0 16px 0;
+}
+
+.btn-explore-vouchers {
+  display: inline-block;
+  background: #2563eb;
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.btn-explore-vouchers:hover {
+  background: #1d4ed8;
+}
+
+.v-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-trash-v {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.btn-trash-v:hover {
+  color: #dc2626;
+}
+
+.v-box-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.btn-copy-v-pill {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+}
+
+.btn-copy-v-pill:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
