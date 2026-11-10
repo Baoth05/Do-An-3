@@ -9,16 +9,19 @@
       <change beforePath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/admin-frontend/.env" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin-frontend/src/pages/UserManagementDashboard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/src/pages/UserManagementDashboard.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/admin-frontend/src/services/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/src/services/api.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin-frontend/src/services/userService.js" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/src/services/userService.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/admin-frontend/vite.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/vite.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecommerce-frontend/src/services/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/ecommerce-frontend/src/services/api.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wms-frontend/.env" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wms-frontend/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/App.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wms-frontend/src/components/Layout/WmsLayout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/components/Layout/WmsLayout.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteCreate.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteCreate.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteDetail.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteDetail.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteForm.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteList.css" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteList.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteList.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ImportNote/ImportNoteList.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteCreate.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteCreate.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteDetail.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteDetail.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteForm.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteList.css" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteList.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteList.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteList.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wms-frontend/src/utils/constants.js" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/utils/constants.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -253,6 +256,8 @@
       <workItem from="1793176439493" duration="7195000" />
       <workItem from="1793699127368" duration="1352000" />
       <workItem from="1793706993364" duration="3976000" />
+      <workItem from="1793956253953" duration="4771000" />
+      <workItem from="1793964699846" duration="4716000" />
     </task>
     <servers />
   </component>

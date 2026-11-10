@@ -1,0 +1,67 @@
+/* src/pages/ExportNote/ActualExportNote.css */
+
+.actual-export-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.actual-header {
+  margin-bottom: 10px;
+}
+
+.actual-header h2 {
+  font-size: 22px;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+}
+
+.actual-header p {
+  color: #64748b;
+  font-size: 14px;
+  margin: 0;
+}
+
+.actual-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.actual-info h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #1e293b;
+}
+
+.actual-info p {
+  margin: 0;
+  color: #475569;
+  font-size: 13.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-confirm-actual {
+  background-color: #16a34a;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.btn-confirm-actual:hover {
+  background-color: #15803d;
+}

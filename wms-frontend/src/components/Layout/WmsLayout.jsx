@@ -101,7 +101,7 @@ const WmsLayout = () => {
 
           <Link to="/warehouses" className={`wms-menu-item ${isActive('warehouses') ? 'active' : ''}`}>
             <FiHome size={18} />
-            <span>Kho Bãi Chi Nhánh</span>
+            <span>Danh sách kho & cửa hàng</span>
           </Link>
 
           <Link to="/suppliers" className={`wms-menu-item ${isActive('suppliers') ? 'active' : ''}`}>

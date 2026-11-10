@@ -1,3 +1,4 @@
+// src/App.jsx
 import { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
@@ -6,7 +7,7 @@ import { AuthProvider, AuthContext } from './context/AuthContext';
 import WmsLayout from './components/Layout/WmsLayout';
 import Login from './pages/Auth/Login';
 
-// Import các trang nghiệp vụ
+// Import các trang nghiệp vụ Nhập Kho
 import WmsDashboard from './pages/Dashboard/WmsDashboard';
 import InventoryStock from './pages/Inventory/InventoryStock';
 import ImportNoteList from './pages/ImportNote/ImportNoteList';
@@ -16,9 +17,13 @@ import ApproveImportNote from './pages/ImportNote/ApproveImportNote';
 import CreatePurchaseOrder from './pages/PurchaseOrder/CreatePurchaseOrder';
 import ActualImportNote from './pages/ImportNote/ActualImportNote';
 
+// Import các trang nghiệp vụ Xuất Kho
 import ExportNoteList from './pages/ExportNote/ExportNoteList';
 import ExportNoteCreate from './pages/ExportNote/ExportNoteCreate';
 import ExportNoteDetail from './pages/ExportNote/ExportNoteDetail';
+import ActualExportNote from './pages/ExportNote/ActualExportNote'; // 🌟 ĐÃ THÊM MỚI
+
+// Import các trang Danh mục Master
 import ProductManagement from './pages/Product/ProductManagement';
 import ProductForm from './pages/Product/ProductForm';
 import ProductDetail from './pages/Product/ProductDetail';
@@ -28,7 +33,7 @@ import SupplierEdit from './pages/Supplier/SupplierEdit';
 import ShippingManagement from './pages/Shipping/ShippingManagement';
 import ShippingForm from './pages/Shipping/ShippingForm';
 
-// Import các trang mới: Danh mục, Kho bãi
+// Import Danh mục & Kho bãi
 import CategoryManagement from './pages/Category/CategoryManagement';
 import WarehouseManagement from './pages/Warehouse/WarehouseManagement';
 import WarehouseForm from './pages/Warehouse/WarehouseForm';
@@ -69,10 +74,11 @@ const AppRoutes = () => {
         <Route path="import-notes/:id" element={<ImportNoteDetail />} />
         <Route path="actual-imports" element={<ActualImportNote />} />
         
-        {/* Xuất kho */}
+        {/* Vận hành Xuất kho */}
         <Route path="export-notes" element={<ExportNoteList />} />
         <Route path="export-notes/create" element={<ExportNoteCreate />} />
         <Route path="export-notes/:id" element={<ExportNoteDetail />} />
+        <Route path="actual-exports" element={<ActualExportNote />} /> {/* 🌟 ĐÃ THÊM ROUTE MỚI */}
         
         {/* Danh mục Master */}
         <Route path="products" element={<ProductManagement />} />

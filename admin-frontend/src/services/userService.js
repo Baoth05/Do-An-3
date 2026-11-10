@@ -2,7 +2,8 @@
  * ==============================================================================
  * Module: userService.js
  * Mô tả: Dịch vụ API phía Admin kết nối với Identity Service (Port 8084).
- * Chức năng: Lấy danh sách tài khoản, thêm mới nhân viên, cập nhật thông tin và khóa/mở khóa tài khoản.
+ * Chức năng: Lấy danh sách tài khoản, thêm mới nhân viên, cập nhật thông tin, 
+ *           duyệt tài khoản và khóa/mở khóa tài khoản.
  * ==============================================================================
  */
 import api from './api';
@@ -28,8 +29,23 @@ const isStaff = (user) => {
   const role = normalize(user?.vaiTro ?? user?.role ?? user?.maVaiTro);
   return (
     role.includes('admin') ||
+    role.includes('quan tri') ||     // Khớp "Quản trị viên"
     role.includes('thukho') ||
-    role.includes('nvkho')
+    role.includes('thu kho') ||      // Khớp "Thủ kho trưởng"
+    role.includes('nvkho') ||
+    role.includes('nhan vien kho') || // Khớp "Nhân viên kho"
+    role.includes('staff')
+  );
+};
+
+const isSales = (user) => {
+  const role = normalize(user?.vaiTro ?? user?.role ?? user?.maVaiTro);
+  return (
+    role.includes('sales') ||
+    role.includes('banhang') ||
+    role.includes('nhanvienbanhang') ||
+    role.includes('store_owner') ||  // Khớp mã ma_vai_tro trong DB
+    role.includes('chu cua hang')     // Khớp tên ten_vai_tro tiếng Việt
   );
 };
 
@@ -90,12 +106,19 @@ export const userService = {
 
   // 2. Thống kê số lượng
   getStats: async () => {
-    const users = await userService.getAllUsers();
-    return {
-      totalUsers: users.length,
-      totalCustomers: users.filter(isCustomer).length,
-      totalStaff: users.filter(isStaff).length,
-    };
+    try {
+      const users = await userService.getAllUsers(); 
+
+      return {
+        totalUsers: users.length,
+        totalCustomers: users.filter(u => isCustomer(u)).length,
+        totalStaff: users.filter(u => isStaff(u)).length,
+        totalSales: users.filter(u => isSales(u)).length, 
+      };
+    } catch (error) {
+      console.error('Lỗi khi đếm thống kê:', error);
+      return null;
+    }
   },
 
   // 3. Lọc danh sách khách hàng
@@ -118,7 +141,15 @@ export const userService = {
       });
   },
 
-  // 5. Tạo nhân viên mới
+  // 5. Lọc danh sách bán hàng / Chủ cửa hàng
+  getSalesUsers: async (search = '') => {
+    const users = await userService.getAllUsers();
+    return users
+      .filter(isSales)
+      .filter((user) => matchesSearch(user, search));
+  },
+
+  // 6. Tạo nhân viên mới
   createStaff: async (staffData) => {
     const payload = {
       taiKhoan: staffData.taiKhoan,
@@ -133,7 +164,7 @@ export const userService = {
     return response.data;
   },
 
-  // 6. Cập nhật nhân viên
+  // 7. Cập nhật nhân viên
   updateStaff: async (id, staffData) => {
     const payload = {
       hoTen: staffData.hoTen,
@@ -146,24 +177,38 @@ export const userService = {
     return response.data;
   },
 
-  // 7. Khóa / Mở khóa tài khoản
+  // 8. Khóa / Mở khóa tài khoản
   toggleUserStatus: async (id) => {
     const response = await api.put(`/auth/users/${id}/toggle-status`);
     return response.data;
   },
- changePassword: async (taiKhoan, newPassword) => {
+
+  // 9. BỔ SUNG: Duyệt tài khoản người dùng
+  approveUser: async (id) => {
+    try {
+      // Gọi endpoint toggle-status để chuyển trangThai từ false -> true (hoặc endpoint approve riêng nếu Backend có)
+      const response = await api.put(`/auth/users/${id}/toggle-status`);
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi duyệt tài khoản:', error);
+      throw error;
+    }
+  },
+
+  // 10. Đổi mật khẩu
+  changePassword: async (taiKhoan, newPassword) => {
     const payload = {
-      matKhauCu: "", // Gửi rỗng vì Admin đổi trực tiếp không cần mật khẩu cũ
+      matKhauCu: "", 
       matKhauMoi: newPassword
     };
 
     const response = await api.put(`/auth/change-password/${taiKhoan}`, payload);
     return response.data;
   },
-  // Khóa/Mở khóa tài khoản nhân viên
+
+  // 11. Khóa tài khoản
   lockAccount: async (taiKhoan) => {
     try {
-      // Gọi API khóa tài khoản (Bạn cần đảm bảo Backend có API này, ví dụ: /auth/lock/{taiKhoan})
       const response = await api.put(`/auth/lock/${taiKhoan}`);
       return response.data;
     } catch (error) {

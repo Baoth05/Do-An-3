@@ -73,3 +73,26 @@
   font-weight: 600;
   display: inline-block;
 }
+/* Thêm style cho trạng thái Hủy Bỏ */
+.status-tag.cancelled, .badge-export-cancelled {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+/* Thêm style cho trạng thái Chờ Xử Lý (nếu có dùng sau này) */
+.status-tag.pending, .badge-export-pending {
+  background-color: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
