@@ -4,7 +4,8 @@ import { useOutletContext, Link, useLocation } from 'react-router-dom';
 import { marketplaceService } from '../../services/marketplaceService';
 import { 
   FiFileText, FiPlus, FiCheckCircle, FiShield, 
-  FiPackage, FiTruck, FiBox, FiArrowRight, FiX, FiCheck, FiDownload 
+  FiPackage, FiTruck, FiBox, FiArrowRight, FiX, FiCheck, FiDownload,
+  FiClock, FiSend, FiAlertCircle, FiCheckSquare, FiAlertTriangle
 } from 'react-icons/fi';
 import './SellerContracts.css';
 
@@ -16,38 +17,40 @@ const SellerContracts = () => {
   const [loading, setLoading] = useState(true);
   const [alertNotice, setAlertNotice] = useState(
     location.state?.justRegistered 
-      ? `Chào mừng ${location.state?.storeName || 'Cửa hàng'}! Vui lòng ký hợp đồng cung ứng đầu tiên để nhập hàng về kho.` 
+      ? `Chào mừng ${location.state?.storeName || 'Cửa hàng'}! Vui lòng gửi yêu cầu cung ứng đầu tiên để nhập hàng về kho.` 
       : ''
   );
 
-  // Modal tạo & ký hợp đồng
+  // Chế độ mô phỏng quyền (Dành cho Admin duyệt và Thủ kho lên đơn)
+  const [simulatedRole, setSimulatedRole] = useState(() => {
+    return currentSeller?.vaiTro === 'ADMIN' ? 'ADMIN' : 'SHOP';
+  });
+
+  // Modal tạo yêu cầu hợp đồng mới (2 bước: 1. Chọn hàng trong kho thật, 2. Xem văn bản & Gửi yêu cầu)
   const [modalOpen, setModalOpen] = useState(false);
-  const [step, setStep] = useState(1); // 1: Chọn hàng, 2: Xem điều khoản hợp đồng, 3: Ký số
+  const [step, setStep] = useState(1);
   const [centralWarehouses, setCentralWarehouses] = useState([]);
   const [selectedCentralId, setSelectedCentralId] = useState('');
   const [masterProducts, setMasterProducts] = useState([]);
   const [selectedItems, setSelectedItems] = useState({}); // { [sanPhamId]: quantity }
+  const [loadingProducts, setLoadingProducts] = useState(false);
 
-  // Thông tin ký số hợp đồng
+  // Modal Ký số điện tử dành cho hợp đồng ở trạng thái CHO_SHOP_KY
+  const [signingContract, setSigningContract] = useState(null);
   const [signerInfo, setSignerInfo] = useState({
     signerName: currentSeller?.hoTen || currentSeller?.taiKhoan || '',
     signerRole: 'Chủ Cửa Hàng / Đại Diện Pháp Luật',
     signaturePin: '123456',
     agreedTerms: true,
   });
-  const [isSubmittingContract, setIsSubmittingContract] = useState(false);
+  const [isSubmittingSign, setIsSubmittingSign] = useState(false);
 
-  useEffect(() => {
-    if (currentSeller && (!signerInfo.signerName || signerInfo.signerName === 'Trần Minh Quân')) {
-      setSignerInfo((prev) => ({
-        ...prev,
-        signerName: currentSeller.hoTen || currentSeller.taiKhoan || '',
-      }));
-    }
-  }, [currentSeller]);
-
-  // Modal xem chi tiết hợp đồng đã ký
+  // Modal xem chi tiết hợp đồng
   const [viewingContract, setViewingContract] = useState(null);
+
+  // Modal từ chối
+  const [rejectingContract, setRejectingContract] = useState(null);
+  const [rejectReason, setRejectReason] = useState('Kho tổng tạm thời hết hàng hoặc vượt hạn mức cung ứng.');
 
   const fetchContracts = async () => {
     setLoading(true);
@@ -65,52 +68,89 @@ const SellerContracts = () => {
     if (storeId) {
       fetchContracts();
     }
+    const handleUpdate = () => {
+      fetchContracts();
+    };
+    window.addEventListener('supply-contracts-updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('supply-contracts-updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, [storeId]);
 
-  // Mở modal tạo hợp đồng mới
+  useEffect(() => {
+    if (currentSeller && (!signerInfo.signerName || signerInfo.signerName === 'Trần Minh Quân')) {
+      setSignerInfo((prev) => ({
+        ...prev,
+        signerName: currentSeller.hoTen || currentSeller.taiKhoan || '',
+      }));
+    }
+  }, [currentSeller]);
+
+  // Tải danh sách sản phẩm THẬT trong kho được chọn
+  const loadWarehouseInventory = async (whId) => {
+    setLoadingProducts(true);
+    try {
+      const inventoryList = await marketplaceService.getWarehouseInventory(whId);
+      const realProds = (inventoryList || []).map((p) => {
+        const qty = p.soLuongKhaDung !== undefined ? p.soLuongKhaDung : (p.soLuongThucTe || 0);
+        return {
+          id: p.sanPhamId || p.id,
+          sku: p.sku || `SP00${p.sanPhamId || p.id}`,
+          tenHangHoa: p.tenSanPham || p.tenHangHoa || 'Sản phẩm kho tổng',
+          donViTinh: p.donViTinh || 'Cái',
+          giaBan: p.giaBan || p.giaBanHienTai || 1000000,
+          soLuongTonKho: qty,
+          danhMuc: p.danhMuc || 'Thiết bị công nghệ',
+          hinhAnh: p.hinhAnh,
+        };
+      });
+      setMasterProducts(realProds);
+    } catch (err) {
+      console.error('Lỗi tải sản phẩm trong kho:', err);
+      setMasterProducts([]);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  // Mở modal tạo yêu cầu hợp đồng mới
   const handleOpenCreateContract = async () => {
     setStep(1);
     setSelectedItems({});
     setModalOpen(true);
 
     try {
-      const [warehouses, prods] = await Promise.all([
-        marketplaceService.getCentralWarehouses(),
-        marketplaceService.getMasterProducts(),
-      ]);
-
+      const warehouses = await marketplaceService.getCentralWarehouses();
       setCentralWarehouses(warehouses);
-      if (warehouses.length > 0) {
-        setSelectedCentralId(String(warehouses[0].id));
-      }
-
-      // Format Master Products
-      setMasterProducts(
-        prods.length > 0
-          ? prods
-          : [
-              { id: 1, sku: 'SP001', tenHangHoa: 'iPhone 15 Pro Max 256GB Titan Tự Nhiên', giaBan: 28000000, donViTinh: 'Cái', danhMuc: 'Điện Thoại' },
-              { id: 2, sku: 'SP002', tenHangHoa: 'Chuột Không Dây Logitech MX Master 3S', giaBan: 2100000, donViTinh: 'Cái', danhMuc: 'Phụ Kiện' },
-              { id: 3, sku: 'SP003', tenHangHoa: 'Bàn Phím Cơ Keychron K2 Pro Wireless', giaBan: 1950000, donViTinh: 'Cái', danhMuc: 'Phụ Kiện' },
-              { id: 4, sku: 'SP004', tenHangHoa: 'MacBook Air 15 inch M3 16GB / 512GB Midnight', giaBan: 32000000, donViTinh: 'Cái', danhMuc: 'Laptop' },
-            ]
-      );
+      const chosenId = warehouses.length > 0 ? String(warehouses[0].id) : '1';
+      setSelectedCentralId(chosenId);
+      await loadWarehouseInventory(chosenId);
     } catch (err) {
-      console.error('Lỗi tải dữ liệu kho tổng hoặc sản phẩm:', err);
+      console.error('Lỗi tải danh sách kho:', err);
     }
   };
 
-  // Thay đổi số lượng sản phẩm nhập
-  const handleItemQtyChange = (prodId, qty) => {
+  // Khi đổi kho cung ứng
+  const handleCentralWarehouseChange = async (newWhId) => {
+    setSelectedCentralId(newWhId);
+    setSelectedItems({});
+    await loadWarehouseInventory(newWhId);
+  };
+
+  // Thay đổi số lượng sản phẩm nhập (Giới hạn theo tồn kho thực tế của kho)
+  const handleItemQtyChange = (prodId, qty, maxStock) => {
     const val = parseInt(qty, 10);
     if (isNaN(val) || val <= 0) {
       const next = { ...selectedItems };
       delete next[prodId];
       setSelectedItems(next);
     } else {
+      const boundedVal = Math.min(val, maxStock > 0 ? maxStock : val);
       setSelectedItems((prev) => ({
         ...prev,
-        [prodId]: val,
+        [prodId]: boundedVal,
       }));
     }
   };
@@ -124,6 +164,7 @@ const SellerContracts = () => {
       sanPhamId: Number(id),
       sku: prod?.sku || `SP00${id}`,
       tenHangHoa: prod?.tenHangHoa || prod?.tenSanPham || 'Sản phẩm',
+      donViTinh: prod?.donViTinh || 'Cái',
       soLuong: qty,
       donGiaSi: wholesalePrice,
       thanhTien: wholesalePrice * qty,
@@ -133,67 +174,174 @@ const SellerContracts = () => {
   const totalContractAmount = contractItemsList.reduce((sum, i) => sum + i.thanhTien, 0);
   const totalItemCount = contractItemsList.reduce((sum, i) => sum + i.soLuong, 0);
 
-  // Ký Hợp Đồng & Kích Hoạt Nhập Hàng
-  const handleSignContract = async () => {
-    if (!signerInfo.signerName.trim()) {
-      alert('Vui lòng nhập họ tên người đại diện ký hợp đồng!');
-      return;
-    }
+  // BƯỚC 1 CỦA SHOP: Gửi Yêu Cầu Hợp Đồng Nhập Hàng Đến Admin (Chờ duyệt vòng 1)
+  const handleSubmitContractRequest = async () => {
     if (contractItemsList.length === 0) {
-      alert('Vui lòng chọn ít nhất 1 sản phẩm để nhập kho!');
+      alert('Vui lòng chọn ít nhất 1 sản phẩm có trong kho để yêu cầu nhập hàng!');
       return;
     }
 
-    setIsSubmittingContract(true);
     try {
       const selectedWh = centralWarehouses.find((w) => w.id === Number(selectedCentralId)) || {
+        id: Number(selectedCentralId) || 1,
         tenKho: 'Kho Tổng Trung Tâm CTUT Logistics',
         diaChi: '256 Nguyễn Văn Cừ, Cần Thơ',
       };
 
-      const contractCode = `HDCU-${new Date().getFullYear()}/03-${currentStore?.maKho || 'STORE'}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const contractCode = `HDCU-${new Date().getFullYear()}/${currentStore?.maKho || 'STORE'}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-      // 1. Nhập tồn kho từng sản phẩm vào kho riêng của Cửa Hàng qua API /inventory/add
-      for (const item of contractItemsList) {
-        try {
-          await marketplaceService.importStockToStore({
-            sanPhamId: item.sanPhamId,
-            khoHangId: Number(storeId),
-            soLuong: item.soLuong,
-          });
-        } catch (e) {
-          console.warn(`Lỗi nhập món #${item.sanPhamId} vào kho:`, e?.message);
-        }
-      }
-
-      // 2. Tạo bản hợp đồng hoàn chỉnh lưu trữ
       const newContract = {
         id: Date.now(),
         maHopDong: contractCode,
-        ngayKy: new Date().toISOString(),
+        ngayTao: new Date().toISOString(),
         storeId: Number(storeId),
         tenKhoCuaHang: currentStore?.tenKho || 'Gian Hàng Của Bạn',
+        maKhoCuaHang: currentStore?.maKho || 'STORE',
+        khoTongId: selectedWh.id,
         khoCungUng: selectedWh.tenKho || 'Kho Tổng Trung Tâm CTUT',
         diaChiKhoCungUng: selectedWh.diaChi || 'Cần Thơ',
         tongTien: totalContractAmount,
         soLuongMatHang: contractItemsList.length,
         tongSoLuongHang: totalItemCount,
         danhSachHang: contractItemsList,
-        nguoiKy: signerInfo.signerName,
-        chucVu: signerInfo.signerRole,
-        trangThai: 'DA_KY_VA_NHAP_KHO',
-        maChuKySo: `DS-SHA256-${Math.random().toString(36).substring(2, 12).toUpperCase()}`,
+        nguoiYeuCau: currentSeller?.hoTen || currentSeller?.taiKhoan || 'Chủ Shop',
+        chucVuYeuCau: 'Chủ Cửa Hàng / Đại Diện Gian Hàng',
       };
 
-      await marketplaceService.saveStoreContract(storeId, newContract);
+      await marketplaceService.createSupplyContractRequest(newContract);
 
-      setAlertNotice(`🎉 Ký thành công hợp đồng ${contractCode}! Đã nhập ${totalItemCount} sản phẩm về kho riêng của bạn.`);
+      setAlertNotice(`🎉 Đã gửi yêu cầu hợp đồng ${contractCode} đến Admin! Chờ Admin duyệt yêu cầu trước khi ký.`);
       setModalOpen(false);
       await fetchContracts();
     } catch (err) {
-      alert('Lỗi ký hợp đồng: ' + err.message);
+      alert('Lỗi gửi yêu cầu hợp đồng: ' + err.message);
+    }
+  };
+
+  // BƯỚC 2: Admin Duyệt Yêu Cầu Cung Ứng (Vòng 1) -> Cho phép Shop ký số
+  const handleAdminApproveRound1 = async (contractId, code) => {
+    try {
+      await marketplaceService.adminApproveContractRequest(contractId, {
+        name: currentSeller?.hoTen || 'Quản Trị Viên (Admin)',
+        note: 'Đã thẩm định yêu cầu, phê duyệt cho phép chủ cửa hàng tiến hành ký số hợp đồng.',
+      });
+      setAlertNotice(`✅ [Admin] Đã duyệt yêu cầu hợp đồng ${code}! Hợp đồng chuyển sang trạng thái chờ Shop ký số.`);
+      await fetchContracts();
+    } catch (e) {
+      alert('Lỗi duyệt: ' + e.message);
+    }
+  };
+
+  // BƯỚC 3 CỦA SHOP: Ký Số Điện Tử Hợp Đồng
+  const handleOpenSigningModal = (contract) => {
+    setSigningContract(contract);
+    setSignerInfo({
+      signerName: currentSeller?.hoTen || currentSeller?.taiKhoan || '',
+      signerRole: 'Chủ Cửa Hàng / Đại Diện Pháp Luật',
+      signaturePin: '123456',
+      agreedTerms: true,
+    });
+  };
+
+  const handleExecuteSignContract = async () => {
+    if (!signerInfo.signerName.trim()) {
+      alert('Vui lòng nhập họ tên người đại diện ký hợp đồng!');
+      return;
+    }
+    if (!signerInfo.agreedTerms) {
+      alert('Vui lòng chấp thuận các điều khoản hợp đồng!');
+      return;
+    }
+
+    setIsSubmittingSign(true);
+    try {
+      await marketplaceService.shopSignContract(signingContract.id, signerInfo);
+      setAlertNotice(`🎉 Ký số thành công hợp đồng ${signingContract.maHopDong}! Hợp đồng đang chờ Admin duyệt chuyển kho.`);
+      setSigningContract(null);
+      await fetchContracts();
+    } catch (e) {
+      alert('Lỗi ký số: ' + e.message);
     } finally {
-      setIsSubmittingContract(false);
+      setIsSubmittingSign(false);
+    }
+  };
+
+  // BƯỚC 4: Admin Duyệt Lần 2 -> Chuyển Qua Kho Tổng Lên Đơn
+  const handleAdminApproveRound2 = async (contractId, code) => {
+    try {
+      await marketplaceService.adminApproveAndTransferToWarehouse(contractId, {
+        name: currentSeller?.hoTen || 'Quản Trị Viên (Admin)',
+        note: 'Hợp đồng đã có chữ ký số hợp lệ của chủ shop. Phê duyệt chuyển lệnh xuất kho sang Kho Tổng.',
+      });
+      setAlertNotice(`🏢 [Admin] Đã duyệt hợp đồng ${code} và chuyển lệnh sang Kho Tổng lên đơn.`);
+      await fetchContracts();
+    } catch (e) {
+      alert('Lỗi duyệt chuyển kho: ' + e.message);
+    }
+  };
+
+  // BƯỚC 5: Kho Tổng Lên Đơn Xuất Kho & Bàn Giao Vận Chuyển
+  const handleWarehouseDispatchOrder = async (contractId, code) => {
+    try {
+      await marketplaceService.warehouseDispatchContractOrder(contractId, {
+        name: 'Thủ Kho Trưởng Kho Tổng CTUT',
+        shippingProvider: 'CTUT Express Logistics',
+      });
+      setAlertNotice(`📦 [Kho Tổng] Đã lên đơn xuất kho cho hợp đồng ${code}! Hàng đang được vận chuyển sang kho shop.`);
+      await fetchContracts();
+    } catch (e) {
+      alert('Lỗi lên đơn xuất kho: ' + e.message);
+    }
+  };
+
+  // BƯỚC 6 CỦA SHOP: Xác Nhận Đã Nhận Hàng & Nhập Kho Riêng
+  const handleCompleteDelivery = async (contractId, code) => {
+    if (!window.confirm(`Xác nhận hàng của hợp đồng [${code}] đã giao tới kho riêng của bạn và hoàn tất nhập kho?`)) {
+      return;
+    }
+    try {
+      await marketplaceService.completeContractDelivery(contractId);
+      setAlertNotice(`🎉 Nhận hàng thành công! Hàng hóa của hợp đồng ${code} đã chính thức được nạp vào kho riêng.`);
+      await fetchContracts();
+    } catch (e) {
+      alert('Lỗi nhận hàng: ' + e.message);
+    }
+  };
+
+  // Từ chối hợp đồng
+  const handleRejectContract = async () => {
+    if (!rejectingContract) return;
+    try {
+      await marketplaceService.rejectSupplyContract(rejectingContract.id, rejectReason, {
+        name: currentSeller?.hoTen || 'Quản Trị Viên',
+      });
+      setAlertNotice(`❌ Đã từ chối hợp đồng ${rejectingContract.maHopDong}.`);
+      setRejectingContract(null);
+      await fetchContracts();
+    } catch (e) {
+      alert('Lỗi từ chối: ' + e.message);
+    }
+  };
+
+  // Helper hiển thị Huy hiệu trạng thái 5 bước
+  const renderStatusBadge = (status) => {
+    switch (status) {
+      case 'CHO_ADMIN_DUYET':
+        return <span className="badge-status-pending-admin"><FiClock /> 1. Chờ Admin Duyệt Yêu Cầu</span>;
+      case 'CHO_SHOP_KY':
+        return <span className="badge-status-pending-sign"><FiSend /> 2. Chờ Shop Ký Số</span>;
+      case 'DA_KY_CHO_DUYET_KHO':
+        return <span className="badge-status-pending-warehouse"><FiShield /> 3. Đã Ký - Chờ Duyệt Chuyển Kho</span>;
+      case 'CHUYEN_QUA_KHO':
+        return <span className="badge-status-warehouse-transfer"><FiBox /> 4. Đã Chuyển Kho - Chờ Lên Đơn</span>;
+      case 'DANG_GIAO_HANG':
+        return <span className="badge-status-shipping"><FiTruck /> 5. Đang Vận Chuyển Sang Shop</span>;
+      case 'HOAN_THANH':
+        return <span className="badge-status-completed"><FiCheckCircle /> Hoàn Thành & Đã Nhập Kho</span>;
+      case 'TU_CHOI':
+        return <span className="badge-status-rejected"><FiX /> Yêu Cầu Bị Từ Chối</span>;
+      default:
+        return <span className="badge-contract-active"><FiCheckCircle /> Đã Duyệt</span>;
     }
   };
 
@@ -206,52 +354,100 @@ const SellerContracts = () => {
         </div>
       )}
 
+      {/* Thanh Demo Chuyển Quyền: Chủ Shop / Admin Duyệt / Kho Tổng Lên Đơn */}
+      <div className="contract-quick-role-bar">
+        <div className="role-bar-title">
+          <span className="pill-tag">QUY TRÌNH 5 BƯỚC</span>
+          <span>Mô Phỏng Phân Quyền Thao Tác:</span>
+        </div>
+        <div className="role-bar-actions">
+          <button
+            type="button"
+            className={`role-toggle-btn ${simulatedRole === 'SHOP' ? 'active' : ''}`}
+            onClick={() => setSimulatedRole('SHOP')}
+          >
+            🏪 Vai Trò: Chủ Shop
+          </button>
+          <button
+            type="button"
+            className={`role-toggle-btn ${simulatedRole === 'ADMIN' ? 'active' : ''}`}
+            onClick={() => setSimulatedRole('ADMIN')}
+          >
+            👑 Vai Trò: Admin Duyệt (Vòng 1 & 2)
+          </button>
+          <button
+            type="button"
+            className={`role-toggle-btn ${simulatedRole === 'WAREHOUSE' ? 'active' : ''}`}
+            onClick={() => setSimulatedRole('WAREHOUSE')}
+          >
+            🏢 Vai Trò: Thủ Kho Lên Đơn
+          </button>
+        </div>
+      </div>
+
       {/* Header trang */}
       <div className="seller-page-header-flex">
         <div>
-          <h2>Hợp Đồng Cung Ứng & Nhập Kho Hàng Hóa (B2B2C)</h2>
+          <h2>Hợp Đồng Cung Ứng & Nhập Hàng Chuỗi Cung Ứng B2B2C</h2>
           <p>
-            Cửa hàng liên kết và ký hợp đồng cung ứng với Kho Tổng Trung Tâm để nhập sản phẩm chính hãng về kho riêng.
-            Sau khi nhập kho thành công, bạn có thể chủ động chọn đăng bán lên Sàn TMĐT.
+            Chủ cửa hàng gửi yêu cầu nhập sản phẩm <strong>thực tế có sẵn trong Kho Tổng</strong>. Yêu cầu được 
+            <strong> Admin duyệt vòng 1</strong> mới được ký số, sau đó <strong>Admin duyệt vòng 2</strong> để chuyển lệnh 
+            sang <strong>Kho Tổng lên đơn xuất kho</strong> và giao tới kho riêng của shop.
           </p>
         </div>
 
         <button className="btn-create-contract" onClick={handleOpenCreateContract}>
-          <FiPlus /> Ký Hợp Đồng Nhập Hàng Mới
+          <FiPlus /> Gửi Yêu Cầu Cung Ứng Mới
         </button>
       </div>
 
-      {/* Thẻ quy trình tóm tắt */}
+      {/* Thẻ 5 bước quy trình chuẩn hóa */}
       <div className="contract-workflow-steps">
         <div className="wf-step">
           <div className="wf-step-num">1</div>
           <div className="wf-step-text">
-            <strong>Chọn Kho Tổng & Hàng Hóa</strong>
-            <span>Lựa chọn sản phẩm chính hãng từ Master Catalog và số lượng nhập</span>
+            <strong>Gửi Yêu Cầu</strong>
+            <span>Chọn hàng thật trong kho tổng</span>
           </div>
         </div>
         <div className="wf-arrow">→</div>
         <div className="wf-step">
           <div className="wf-step-num">2</div>
           <div className="wf-step-text">
-            <strong>Ký Hợp Đồng Cung Ứng Điện Tử</strong>
-            <span>Xác nhận điều khoản chất lượng, bảo hành và ký số điện tử</span>
+            <strong>Admin Duyệt Yêu Cầu</strong>
+            <span>Xem xét định mức & mở quyền ký</span>
           </div>
         </div>
         <div className="wf-arrow">→</div>
         <div className="wf-step">
           <div className="wf-step-num">3</div>
           <div className="wf-step-text">
-            <strong>Nhập Về Kho & Đăng Bán Lên Sàn</strong>
-            <span>Hàng về kho riêng của shop, chủ shop chủ động bật bán lên sàn</span>
+            <strong>Shop Ký Số</strong>
+            <span>Ký hợp đồng điện tử với mã PIN</span>
+          </div>
+        </div>
+        <div className="wf-arrow">→</div>
+        <div className="wf-step">
+          <div className="wf-step-num">4</div>
+          <div className="wf-step-text">
+            <strong>Admin Duyệt Lần 2</strong>
+            <span>Chuyển lệnh sang Kho Tổng</span>
+          </div>
+        </div>
+        <div className="wf-arrow">→</div>
+        <div className="wf-step">
+          <div className="wf-step-num">5</div>
+          <div className="wf-step-text">
+            <strong>Kho Lên Đơn & Giao</strong>
+            <span>Tạo phiếu xuất và nạp vào shop</span>
           </div>
         </div>
       </div>
 
-      {/* Danh sách hợp đồng đã ký */}
+      {/* Danh sách hợp đồng */}
       <div className="contracts-table-card">
         <div className="contracts-card-header">
-          <h3>Danh Sách Hợp Đồng Cung Ứng Đã Ký Của Gian Hàng ({contracts.length})</h3>
+          <h3>Danh Sách Hợp Đồng Cung Ứng Của Gian Hàng ({contracts.length})</h3>
         </div>
 
         {loading ? (
@@ -262,13 +458,13 @@ const SellerContracts = () => {
         ) : contracts.length === 0 ? (
           <div className="seller-empty-state">
             <FiFileText size={48} className="empty-icon" />
-            <h3>Gian hàng chưa ký hợp đồng cung ứng nào</h3>
+            <h3>Gian hàng chưa có hợp đồng cung ứng nào</h3>
             <p>
-              Kho riêng của bạn hiện chưa có sản phẩm. Hãy ký hợp đồng cung ứng với Kho Tổng để nhập lô hàng
-              đầu tiên về kho và tiến hành đăng bán trên Sàn!
+              Kho riêng của bạn hiện chưa có sản phẩm. Hãy gửi yêu cầu cung ứng từ Kho Tổng để nhập lô hàng
+              đầu tiên và tiến hành đăng bán trên Sàn!
             </p>
             <button className="btn-create-contract" onClick={handleOpenCreateContract}>
-              <FiPlus /> Ký Hợp Đồng Nhập Hàng Đầu Tiên
+              <FiPlus /> Gửi Yêu Cầu Nhập Hàng Đầu Tiên
             </button>
           </div>
         ) : (
@@ -277,10 +473,10 @@ const SellerContracts = () => {
               <tr>
                 <th>Mã Hợp Đồng</th>
                 <th>Kho Cung Ứng (Bên A)</th>
-                <th>Ngày Ký</th>
                 <th>Số Lượng Hàng</th>
                 <th>Tổng Giá Trị</th>
-                <th>Trạng Thái</th>
+                <th>Trạng Thái Quy Trình</th>
+                <th>Hành Động Nghiệp Vụ</th>
                 <th>Chi Tiết</th>
               </tr>
             </thead>
@@ -289,13 +485,12 @@ const SellerContracts = () => {
                 <tr key={c.id}>
                   <td>
                     <strong className="contract-code-tag">{c.maHopDong}</strong>
-                    <small className="contract-sub-sig">Ký số: {c.maChuKySo}</small>
+                    <small className="contract-sub-sig">
+                      Tạo lúc: {new Date(c.ngayTao || c.ngayKy).toLocaleDateString('vi-VN')}
+                    </small>
                   </td>
                   <td>
                     <strong>{c.khoCungUng}</strong>
-                  </td>
-                  <td>
-                    {new Date(c.ngayKy).toLocaleDateString('vi-VN')}
                   </td>
                   <td>
                     <strong>{c.tongSoLuongHang}</strong> sản phẩm ({c.soLuongMatHang} mã)
@@ -304,16 +499,136 @@ const SellerContracts = () => {
                     <strong className="contract-amount">{Number(c.tongTien).toLocaleString('vi-VN')} đ</strong>
                   </td>
                   <td>
-                    <span className="badge-contract-active">
-                      <FiCheckCircle /> ĐÃ KÝ & NHẬP KHO
-                    </span>
+                    {renderStatusBadge(c.trangThai)}
+                    {c.thongTinXuatKho?.maPhieuXuat && (
+                      <small style={{ display: 'block', color: '#0284c7', marginTop: '4px', fontSize: '11px' }}>
+                        📦 Phiếu xuất: {c.thongTinXuatKho.maPhieuXuat}
+                      </small>
+                    )}
+                    {c.lyDoTuChoi && (
+                      <small style={{ display: 'block', color: '#dc2626', marginTop: '2px', fontSize: '11px' }}>
+                        Lý do: {c.lyDoTuChoi}
+                      </small>
+                    )}
+                  </td>
+                  <td>
+                    <div className="contract-actions-cell">
+                      {/* BƯỚC 2: Admin Duyệt Vòng 1 */}
+                      {c.trangThai === 'CHO_ADMIN_DUYET' && (
+                        <>
+                          {(simulatedRole === 'ADMIN' || currentSeller?.vaiTro === 'ADMIN') ? (
+                            <>
+                              <button
+                                type="button"
+                                className="btn-contract-action-success"
+                                onClick={() => handleAdminApproveRound1(c.id, c.maHopDong)}
+                              >
+                                <FiCheck /> Duyệt Yêu Cầu (Vòng 1)
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-contract-action-reject"
+                                onClick={() => setRejectingContract(c)}
+                              >
+                                <FiX /> Từ Chối
+                              </button>
+                            </>
+                          ) : (
+                            <span style={{ fontSize: '12px', color: '#b45309' }}>
+                              ⏳ Đang chờ Admin duyệt yêu cầu
+                            </span>
+                          )}
+                        </>
+                      )}
+
+                      {/* BƯỚC 3: Shop Ký Số */}
+                      {c.trangThai === 'CHO_SHOP_KY' && (
+                        <button
+                          type="button"
+                          className="btn-contract-action-primary"
+                          onClick={() => handleOpenSigningModal(c)}
+                        >
+                          <FiShield /> Ký Số Hợp Đồng Này
+                        </button>
+                      )}
+
+                      {/* BƯỚC 4: Admin Duyệt Vòng 2 */}
+                      {c.trangThai === 'DA_KY_CHO_DUYET_KHO' && (
+                        <>
+                          {(simulatedRole === 'ADMIN' || currentSeller?.vaiTro === 'ADMIN') ? (
+                            <>
+                              <button
+                                type="button"
+                                className="btn-contract-action-primary"
+                                onClick={() => handleAdminApproveRound2(c.id, c.maHopDong)}
+                              >
+                                <FiBox /> Duyệt & Chuyển Sang Kho Tổng
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-contract-action-reject"
+                                onClick={() => setRejectingContract(c)}
+                              >
+                                <FiX /> Từ Chối
+                              </button>
+                            </>
+                          ) : (
+                            <span style={{ fontSize: '12px', color: '#6d28d9' }}>
+                              📜 Đã ký số - Chờ Admin chuyển kho
+                            </span>
+                          )}
+                        </>
+                      )}
+
+                      {/* BƯỚC 5: Kho Tổng Lên Đơn */}
+                      {c.trangThai === 'CHUYEN_QUA_KHO' && (
+                        <>
+                          {(simulatedRole === 'WAREHOUSE' || simulatedRole === 'ADMIN' || currentSeller?.vaiTro === 'ADMIN') ? (
+                            <button
+                              type="button"
+                              className="btn-contract-action-amber"
+                              onClick={() => handleWarehouseDispatchOrder(c.id, c.maHopDong)}
+                            >
+                              <FiTruck /> Lên Đơn Xuất Kho & Giao Hàng
+                            </button>
+                          ) : (
+                            <span style={{ fontSize: '12px', color: '#4338ca' }}>
+                              🏢 Kho tổng đang chuẩn bị soạn hàng
+                            </span>
+                          )}
+                        </>
+                      )}
+
+                      {/* BƯỚC 6: Nhận Hàng & Nhập Kho */}
+                      {c.trangThai === 'DANG_GIAO_HANG' && (
+                        <button
+                          type="button"
+                          className="btn-contract-action-success"
+                          onClick={() => handleCompleteDelivery(c.id, c.maHopDong)}
+                        >
+                          <FiPackage /> Xác Nhận Đã Nhận & Nhập Kho
+                        </button>
+                      )}
+
+                      {c.trangThai === 'HOAN_THANH' && (
+                        <span style={{ fontSize: '12px', color: '#059669', fontWeight: '700' }}>
+                          ✓ Hàng đã có trong kho shop
+                        </span>
+                      )}
+
+                      {c.trangThai === 'TU_CHOI' && (
+                        <span style={{ fontSize: '12px', color: '#dc2626' }}>
+                          Đã hủy yêu cầu
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td>
                     <button 
                       className="btn-view-contract-doc"
                       onClick={() => setViewingContract(c)}
                     >
-                      <FiFileText /> Xem Bản Hợp Đồng
+                      <FiFileText /> Xem Hợp Đồng
                     </button>
                   </td>
                 </tr>
@@ -323,83 +638,109 @@ const SellerContracts = () => {
         )}
       </div>
 
-      {/* MODAL TẠO & KÝ HỢP ĐỒNG (3 BƯỚC) */}
+      {/* MODAL BƯỚC 1: TẠO VÀ GỬI YÊU CẦU CUNG ỨNG (CHỌN HÀNG THẬT TRONG KHO TỔNG) */}
       {modalOpen && (
         <div className="modal-backdrop-overlay" onClick={() => setModalOpen(false)}>
           <div className="contract-wizard-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div>
-                <h3>📝 Hợp Đồng Cung Ứng & Nhập Kho Hàng Hóa</h3>
-                <span className="wizard-step-tag">Bước {step} / 3: {step === 1 ? 'Chọn Sản Phẩm Nhập' : step === 2 ? 'Xem Văn Bản Hợp Đồng' : 'Ký Số Xác Nhận'}</span>
+                <h3>📝 Gửi Yêu Cầu Hợp Đồng Cung Ứng & Nhập Kho</h3>
+                <span className="wizard-step-tag">
+                  Bước {step} / 2: {step === 1 ? 'Chọn Sản Phẩm Thực Tế Có Sẵn Trong Kho' : 'Xem Văn Bản & Gửi Yêu Cầu Đến Admin'}
+                </span>
               </div>
               <FiX className="btn-close-modal" onClick={() => setModalOpen(false)} />
             </div>
 
-            {/* BƯỚC 1: CHỌN HÀNG HÓA NHẬP KHO */}
+            {/* BƯỚC 1: CHỌN SẢN PHẨM THẬT TRONG KHO */}
             {step === 1 && (
               <div className="wizard-step-content">
                 <div className="form-group-seller">
                   <label>Chọn Kho Cung Ứng / Kho Tổng Trung Tâm (Bên A) *</label>
                   <select 
                     value={selectedCentralId}
-                    onChange={(e) => setSelectedCentralId(e.target.value)}
+                    onChange={(e) => handleCentralWarehouseChange(e.target.value)}
                   >
                     {centralWarehouses.map((w) => (
                       <option key={w.id} value={w.id}>
-                        {w.tenKho} (Địa chỉ: {w.diaChi || 'Cần Thơ'})
+                        {w.tenKho} (Mã: {w.maKho} - {w.diaChi || 'Cần Thơ'})
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="catalog-selection-header">
-                  <h4>Danh Mục Sản Phẩm Master Catalog Đạt Chuẩn Cung Ứng:</h4>
+                  <h4>Sản Phẩm Đang Có Sẵn Trong Kho Này:</h4>
                   <span className="selected-summary-pill">
                     Đã chọn: <strong>{totalItemCount} sản phẩm</strong> ({Number(totalContractAmount).toLocaleString('vi-VN')} đ)
                   </span>
                 </div>
 
-                <div className="import-products-picker-list">
-                  {masterProducts.map((p) => {
-                    const wholesalePrice = p.giaBan ? Math.round(p.giaBan * 0.9) : 1000000;
-                    const selectedQty = selectedItems[p.id] || 0;
+                {loadingProducts ? (
+                  <div style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>
+                    <div className="spinner" style={{ margin: '0 auto 10px auto' }}></div>
+                    Đang kiểm tra tồn kho thực tế...
+                  </div>
+                ) : masterProducts.length === 0 ? (
+                  <div style={{ padding: '30px', textAlign: 'center', background: '#fffbeb', borderRadius: '8px', color: '#b45309' }}>
+                    <FiAlertTriangle size={32} style={{ marginBottom: '8px' }} />
+                    <p style={{ margin: 0, fontWeight: '700' }}>Kho này hiện chưa có sản phẩm sẵn trong kho để cung ứng.</p>
+                    <small>Vui lòng chọn Kho Tổng khác hoặc liên hệ Quản trị viên nhập hàng vào kho tổng trước.</small>
+                  </div>
+                ) : (
+                  <div className="import-products-picker-list">
+                    {masterProducts.map((p) => {
+                      const wholesalePrice = p.giaBan ? Math.round(p.giaBan * 0.9) : 1000000;
+                      const selectedQty = selectedItems[p.id] || 0;
+                      const isOutOfStock = p.soLuongTonKho <= 0;
 
-                    return (
-                      <div key={p.id} className={`picker-item-card ${selectedQty > 0 ? 'selected' : ''}`}>
-                        <div className="p-card-left">
-                          <strong>{p.tenHangHoa || p.tenSanPham}</strong>
-                          <div className="p-meta-sub">
-                            <span>SKU: {p.sku}</span> • <span>Giá sỉ B2B: {Number(wholesalePrice).toLocaleString('vi-VN')} đ</span>
+                      return (
+                        <div key={p.id} className={`picker-item-card ${selectedQty > 0 ? 'selected' : ''}`}>
+                          <div className="p-card-left">
+                            <strong>{p.tenHangHoa}</strong>
+                            <div className="p-meta-sub">
+                              <span>Mã SKU: <strong>{p.sku}</strong></span> • 
+                              <span> Giá sỉ B2B: <strong>{Number(wholesalePrice).toLocaleString('vi-VN')} đ</strong></span>
+                              {isOutOfStock ? (
+                                <span className="stock-out-tag">⚠️ Hết hàng trong kho tổng</span>
+                              ) : (
+                                <span className="stock-available-tag">✓ Có sẵn trong kho: {p.soLuongTonKho} {p.donViTinh}</span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="p-card-right">
+                            <label>Số lượng nhập:</label>
+                            <div className="qty-input-group">
+                              <button 
+                                type="button" 
+                                disabled={isOutOfStock || selectedQty <= 0}
+                                onClick={() => handleItemQtyChange(p.id, Math.max(0, selectedQty - 1), p.soLuongTonKho)}
+                              >
+                                -
+                              </button>
+                              <input
+                                type="number"
+                                min="0"
+                                max={p.soLuongTonKho}
+                                disabled={isOutOfStock}
+                                value={selectedQty}
+                                onChange={(e) => handleItemQtyChange(p.id, e.target.value, p.soLuongTonKho)}
+                              />
+                              <button 
+                                type="button" 
+                                disabled={isOutOfStock || selectedQty >= p.soLuongTonKho}
+                                onClick={() => handleItemQtyChange(p.id, selectedQty + 1, p.soLuongTonKho)}
+                              >
+                                +
+                              </button>
+                            </div>
                           </div>
                         </div>
-
-                        <div className="p-card-right">
-                          <label>Số lượng nhập:</label>
-                          <div className="qty-input-group">
-                            <button 
-                              type="button" 
-                              onClick={() => handleItemQtyChange(p.id, Math.max(0, selectedQty - 1))}
-                            >
-                              -
-                            </button>
-                            <input
-                              type="number"
-                              min="0"
-                              value={selectedQty}
-                              onChange={(e) => handleItemQtyChange(p.id, e.target.value)}
-                            />
-                            <button 
-                              type="button" 
-                              onClick={() => handleItemQtyChange(p.id, selectedQty + 1)}
-                            >
-                              +
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 <div className="modal-actions-footer">
                   <button className="btn-cancel" onClick={() => setModalOpen(false)}>Hủy</button>
@@ -408,13 +749,13 @@ const SellerContracts = () => {
                     disabled={totalItemCount === 0}
                     onClick={() => setStep(2)}
                   >
-                    Tiếp Tục: Soạn Hợp Đồng ({totalItemCount} sản phẩm) <FiArrowRight />
+                    Tiếp Tục: Soạn Yêu Cầu Hợp Đồng ({totalItemCount} sản phẩm) <FiArrowRight />
                   </button>
                 </div>
               </div>
             )}
 
-            {/* BƯỚC 2: XEM VĂN BẢN HỢP ĐỒNG PHÁP LÝ */}
+            {/* BƯỚC 2: XEM VĂN BẢN HỢP ĐỒNG & GỬI YÊU CẦU ĐẾN ADMIN */}
             {step === 2 && (
               <div className="wizard-step-content">
                 <div className="contract-document-preview">
@@ -422,28 +763,27 @@ const SellerContracts = () => {
                     <h4>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</h4>
                     <p>Độc lập - Tự do - Hạnh phúc</p>
                     <div className="doc-divider"></div>
-                    <h3>HỢP ĐỒNG CUNG ỨNG HÀNG HÓA VÀ LƯU KHO B2B2C</h3>
-                    <small>Số: HDCU-2026/CTUT-{currentStore?.maKho || 'STORE'}-AUTO</small>
+                    <h3>YÊU CẦU KÝ HỢP ĐỒNG CUNG ỨNG HÀNG HÓA B2B2C</h3>
+                    <small>Dự thảo hợp đồng nhập hàng từ Kho Tổng vào Kho Cửa Hàng</small>
                   </div>
 
                   <div className="contract-parties-box">
                     <div className="party-block">
-                      <strong>BÊN A (BÊN CUNG ỨNG & QUẢN TRỊ KHO TỔNG):</strong>
-                      <p>Đơn vị: Kho Tổng Trung Tâm CTUT Logistics</p>
-                      <p>Địa chỉ: 256 Nguyễn Văn Cừ, Quận Ninh Kiều, TP. Cần Thơ</p>
-                      <p>Đại diện: Ban Điều Hành Chuỗi Cung Ứng CTUT Gear</p>
+                      <strong>BÊN CUNG ỨNG (KHO TỔNG - BÊN A):</strong>
+                      <p>{centralWarehouses.find((w) => w.id === Number(selectedCentralId))?.tenKho || 'Kho Tổng Trung Tâm CTUT'}</p>
+                      <p>Địa chỉ: 256 Nguyễn Văn Cừ, Ninh Kiều, Cần Thơ</p>
                     </div>
 
                     <div className="party-block">
-                      <strong>BÊN B (BÊN NHẬN CUNG ỨNG / CHỦ GIAN HÀNG):</strong>
+                      <strong>BÊN NHẬN HÀNG (CHỦ GIAN HÀNG - BÊN B):</strong>
                       <p>Cửa hàng: <strong>{currentStore?.tenKho || 'Gian Hàng Bán Lẻ'}</strong></p>
                       <p>Mã kho riêng: <strong>{currentStore?.maKho || 'STORE-RETAIL'}</strong></p>
-                      <p>Địa chỉ kho riêng: {currentStore?.diaChi || 'Cần Thơ'}</p>
+                      <p>Người yêu cầu: {currentSeller?.hoTen || currentSeller?.taiKhoan}</p>
                     </div>
                   </div>
 
                   <div className="contract-terms-text">
-                    <h5>ĐIỀU 1: DANH MỤC VÀ ĐƠN GIÁ HÀNG HÓA NHẬP KHO</h5>
+                    <h5>ĐIỀU 1: DANH MỤC SẢN PHẨM YÊU CẦU NHẬP TỪ KHO TỔNG</h5>
                     <table className="contract-items-table">
                       <thead>
                         <tr>
@@ -461,7 +801,7 @@ const SellerContracts = () => {
                             <td>{idx + 1}</td>
                             <td>{item.tenHangHoa}</td>
                             <td>{item.sku}</td>
-                            <td><strong>{item.soLuong}</strong></td>
+                            <td><strong>{item.soLuong}</strong> {item.donViTinh}</td>
                             <td>{Number(item.donGiaSi).toLocaleString('vi-VN')} đ</td>
                             <td>{Number(item.thanhTien).toLocaleString('vi-VN')} đ</td>
                           </tr>
@@ -469,102 +809,27 @@ const SellerContracts = () => {
                       </tbody>
                       <tfoot>
                         <tr>
-                          <td colSpan="5"><strong>TỔNG GIÁ TRỊ HỢP ĐỒNG CUNG ỨNG:</strong></td>
+                          <td colSpan="5"><strong>TỔNG GIÁ TRỊ YÊU CẦU CUNG ỨNG:</strong></td>
                           <td><strong className="text-danger">{Number(totalContractAmount).toLocaleString('vi-VN')} đ</strong></td>
                         </tr>
                       </tfoot>
                     </table>
 
-                    <h5>ĐIỀU 2: TIÊU CHUẨN XUẤT KHO VÀ ĐĂNG BÁN</h5>
-                    <p>
-                      1. Bên A có trách nhiệm chuyển giao đúng số lượng, chất lượng hàng hóa nguyên seal theo bảng kê Điều 1 
-                      vào Kho riêng của Bên B trong hệ thống WMS.<br/>
-                      2. Bên B sau khi tiếp nhận hàng về kho riêng có toàn quyền quyết định danh mục sản phẩm muốn mở bán 
-                      trên Sàn TMĐT (thông qua chức năng Đăng Bán) và tự chủ thiết lập giá bán lẻ.
-                    </p>
-
-                    <h5>ĐIỀU 3: BẢO HÀNH VÀ CAM KẾT CHÍNH HÃNG</h5>
-                    <p>
-                      Toàn bộ sản phẩm được bảo hành chính hãng 12 tháng tại hệ thống Kho Tổng Trung Tâm CTUT.
-                    </p>
+                    <div style={{ background: '#f8fafc', padding: '12px', borderLeft: '4px solid #2563eb', fontSize: '13px', margin: '14px 0' }}>
+                      <strong>📌 Quy định luồng phê duyệt & ký kết hợp đồng:</strong>
+                      <ol style={{ margin: '6px 0 0 18px', padding: 0 }}>
+                        <li>Yêu cầu này sẽ được gửi đến <strong>Trang Quản Trị (Admin)</strong> để thẩm định hạn mức.</li>
+                        <li>Sau khi <strong>Admin phê duyệt yêu cầu (Vòng 1)</strong>, chủ shop mới tiến hành <strong>Ký số điện tử</strong>.</li>
+                        <li>Hợp đồng đã ký sẽ được <strong>Admin duyệt chuyển kho (Vòng 2)</strong> để chuyển sang <strong>Kho Tổng lên đơn</strong> và giao hàng.</li>
+                      </ol>
+                    </div>
                   </div>
                 </div>
 
                 <div className="modal-actions-footer">
                   <button className="btn-cancel" onClick={() => setStep(1)}>Quay Lại Chọn Hàng</button>
-                  <button className="btn-next-step" onClick={() => setStep(3)}>
-                    Tiến Hành Ký Số Hợp Đồng <FiArrowRight />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* BƯỚC 3: KÝ SỐ ĐIỆN TỬ */}
-            {step === 3 && (
-              <div className="wizard-step-content">
-                <div className="digital-signature-card">
-                  <div className="sig-header-badge">
-                    <FiShield size={24} /> XÁC NHẬN KÝ SỐ HỢP ĐỒNG ĐIỆN TỬ (DIGITAL SIGNATURE)
-                  </div>
-                  <p>
-                    Vui lòng xác thực thông tin chữ ký số của người đại diện hợp pháp gian hàng <strong>{currentStore?.tenKho}</strong>:
-                  </p>
-
-                  <div className="form-group-seller">
-                    <label>Họ và Tên Người Đại Diện Ký Hợp Đồng *</label>
-                    <input
-                      type="text"
-                      required
-                      value={signerInfo.signerName}
-                      onChange={(e) => setSignerInfo({ ...signerInfo, signerName: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="form-group-seller">
-                    <label>Chức Vụ / Thẩm Quyền Ký *</label>
-                    <input
-                      type="text"
-                      required
-                      value={signerInfo.signerRole}
-                      onChange={(e) => setSignerInfo({ ...signerInfo, signerRole: e.target.value })}
-                    />
-                  </div>
-
-                  {/* Bản hiển thị mẫu con dấu chữ ký số điện tử */}
-                  <div className="digital-stamp-preview">
-                    <div className="stamp-box">
-                      <div className="stamp-title">ĐÃ KÝ ĐIỆN TỬ BỞI:</div>
-                      <div className="stamp-name">{signerInfo.signerName || 'CHỦ CỬA HÀNG'}</div>
-                      <div className="stamp-role">{signerInfo.signerRole}</div>
-                      <div className="stamp-meta">
-                        Thời gian: {new Date().toLocaleString('vi-VN')}<br/>
-                        Xác thực chuẩn: CTUT WMS CA SHA-256
-                      </div>
-                    </div>
-                  </div>
-
-                  <label className="checkbox-agreement" style={{ marginTop: '16px' }}>
-                    <input
-                      type="checkbox"
-                      checked={signerInfo.agreedTerms}
-                      onChange={(e) => setSignerInfo({ ...signerInfo, agreedTerms: e.target.checked })}
-                    />
-                    <div>
-                      <strong>Tôi cam kết các thông tin khai báo trên là chính xác và chấp thuận toàn văn hợp đồng.</strong>
-                      <small>Hàng hóa sẽ được nạp trực tiếp vào kho riêng của shop ngay sau khi xác nhận.</small>
-                    </div>
-                  </label>
-                </div>
-
-                <div className="modal-actions-footer">
-                  <button className="btn-cancel" onClick={() => setStep(2)}>Quay Lại</button>
-                  <button 
-                    className="btn-complete-sign"
-                    disabled={isSubmittingContract || !signerInfo.agreedTerms}
-                    onClick={handleSignContract}
-                  >
-                    <FiCheckCircle />
-                    {isSubmittingContract ? 'Đang Ký Số & Nạp Kho...' : 'Xác Nhận Ký Số & Kích Hoạt Nhập Hàng'}
+                  <button className="btn-next-step" onClick={handleSubmitContractRequest}>
+                    <FiSend /> Gửi Yêu Cầu Đến Admin Để Phê Duyệt
                   </button>
                 </div>
               </div>
@@ -573,12 +838,141 @@ const SellerContracts = () => {
         </div>
       )}
 
-      {/* MODAL XEM CHI TIẾT HỢP ĐỒNG ĐÃ KÝ */}
+      {/* MODAL KÝ SỐ ĐIỆN TỬ (CHỈ MỞ KHI ADMIN ĐÃ DUYỆT YÊU CẦU) */}
+      {signingContract && (
+        <div className="modal-backdrop-overlay" onClick={() => setSigningContract(null)}>
+          <div className="contract-wizard-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>✍️ Ký Số Điện Tử Hợp Đồng Cung Ứng: {signingContract.maHopDong}</h3>
+              <FiX className="btn-close-modal" onClick={() => setSigningContract(null)} />
+            </div>
+
+            <div className="wizard-step-content">
+              <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', color: '#065f46', fontSize: '13px' }}>
+                <FiCheckCircle style={{ marginRight: '6px' }} />
+                <strong>Yêu cầu hợp đồng đã được Admin phê duyệt (Vòng 1)!</strong> Vui lòng ký số điện tử để xác nhận cam kết hợp đồng.
+              </div>
+
+              <div className="digital-signature-card">
+                <div className="sig-header-badge">
+                  <FiShield size={22} /> XÁC NHẬN CHỮ KÝ SỐ ĐIỆN TỬ (DIGITAL SIGNATURE)
+                </div>
+
+                <div className="form-group-seller">
+                  <label>Họ và Tên Người Đại Diện Ký Hợp Đồng *</label>
+                  <input
+                    type="text"
+                    required
+                    value={signerInfo.signerName}
+                    onChange={(e) => setSignerInfo({ ...signerInfo, signerName: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group-seller">
+                  <label>Chức Vụ / Thẩm Quyền Ký *</label>
+                  <input
+                    type="text"
+                    required
+                    value={signerInfo.signerRole}
+                    onChange={(e) => setSignerInfo({ ...signerInfo, signerRole: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group-seller">
+                  <label>Mã PIN Chứng Thư Số Xác Thực *</label>
+                  <input
+                    type="password"
+                    required
+                    value={signerInfo.signaturePin}
+                    onChange={(e) => setSignerInfo({ ...signerInfo, signaturePin: e.target.value })}
+                  />
+                  <small style={{ color: '#64748b' }}>Mã PIN xác thực chuẩn demo: 123456</small>
+                </div>
+
+                {/* Mẫu con dấu chữ ký số điện tử */}
+                <div className="digital-stamp-preview">
+                  <div className="stamp-box">
+                    <div className="stamp-title">ĐÃ KÝ ĐIỆN TỬ BỞI:</div>
+                    <div className="stamp-name">{signerInfo.signerName || 'CHỦ CỬA HÀNG'}</div>
+                    <div className="stamp-role">{signerInfo.signerRole}</div>
+                    <div className="stamp-meta">
+                      Thời gian ký: {new Date().toLocaleString('vi-VN')}<br/>
+                      Thuật toán: CTUT CA RSA-SHA256
+                    </div>
+                  </div>
+                </div>
+
+                <label className="checkbox-agreement" style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
+                  <input
+                    type="checkbox"
+                    checked={signerInfo.agreedTerms}
+                    onChange={(e) => setSignerInfo({ ...signerInfo, agreedTerms: e.target.checked })}
+                  />
+                  <div>
+                    <strong>Tôi xác nhận nội dung hợp đồng và đồng ý ký số điện tử.</strong>
+                    <small style={{ display: 'block', color: '#64748b' }}>
+                      Sau khi ký, hợp đồng sẽ được gửi sang Admin duyệt lần 2 để chuyển lệnh xuất kho sang Kho Tổng.
+                    </small>
+                  </div>
+                </label>
+              </div>
+
+              <div className="modal-actions-footer">
+                <button className="btn-cancel" onClick={() => setSigningContract(null)}>Đóng</button>
+                <button 
+                  className="btn-complete-sign"
+                  disabled={isSubmittingSign || !signerInfo.agreedTerms}
+                  onClick={handleExecuteSignContract}
+                >
+                  <FiCheckCircle />
+                  {isSubmittingSign ? 'Đang Xác Thực Chữ Ký...' : 'Xác Nhận Ký Số Hợp Đồng'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL TỪ CHỐI HỢP ĐỒNG */}
+      {rejectingContract && (
+        <div className="modal-backdrop-overlay" onClick={() => setRejectingContract(null)}>
+          <div className="contract-view-modal" style={{ maxWidth: '500px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>❌ Từ Chối Yêu Cầu Hợp Đồng</h3>
+              <FiX className="btn-close-modal" onClick={() => setRejectingContract(null)} />
+            </div>
+            <div style={{ padding: '16px 0' }}>
+              <p>Bạn đang từ chối hợp đồng <strong>{rejectingContract.maHopDong}</strong> của shop <strong>{rejectingContract.tenKhoCuaHang}</strong>.</p>
+              <div className="form-group-seller">
+                <label>Lý do từ chối *</label>
+                <textarea
+                  rows="3"
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                />
+              </div>
+            </div>
+            <div className="modal-actions-footer">
+              <button className="btn-cancel" onClick={() => setRejectingContract(null)}>Hủy</button>
+              <button 
+                type="button" 
+                style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}
+                onClick={handleRejectContract}
+              >
+                Xác Nhận Từ Chối
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL XEM CHI TIẾT HỢP ĐỒNG */}
       {viewingContract && (
         <div className="modal-backdrop-overlay" onClick={() => setViewingContract(null)}>
           <div className="contract-view-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>📄 Chi Tiết Hợp Đồng: {viewingContract.maHopDong}</h3>
+              <h3>📄 Văn Bản Hợp Đồng: {viewingContract.maHopDong}</h3>
               <FiX className="btn-close-modal" onClick={() => setViewingContract(null)} />
             </div>
 
@@ -588,7 +982,7 @@ const SellerContracts = () => {
                 <p>Độc lập - Tự do - Hạnh phúc</p>
                 <div className="doc-divider"></div>
                 <h3>HỢP ĐỒNG CUNG ỨNG HÀNG HÓA VÀ LƯU KHO B2B2C</h3>
-                <small>Mã số: {viewingContract.maHopDong} • Ngày ký: {new Date(viewingContract.ngayKy).toLocaleString('vi-VN')}</small>
+                <small>Mã số: {viewingContract.maHopDong} • Khởi tạo: {new Date(viewingContract.ngayTao || viewingContract.ngayKy).toLocaleString('vi-VN')}</small>
               </div>
 
               <div className="contract-parties-box">
@@ -599,7 +993,7 @@ const SellerContracts = () => {
                 <div className="party-block">
                   <strong>BÊN B (CHỦ GIAN HÀNG):</strong>
                   <p>{viewingContract.tenKhoCuaHang}</p>
-                  <p>Người ký: {viewingContract.nguoiKy} ({viewingContract.chucVu})</p>
+                  <p>Người đại diện: {viewingContract.chuKyShop?.nguoiKy || viewingContract.nguoiYeuCau || 'Chủ Shop'}</p>
                 </div>
               </div>
 
@@ -620,7 +1014,7 @@ const SellerContracts = () => {
                       <td>{idx + 1}</td>
                       <td>{item.tenHangHoa}</td>
                       <td>{item.sku}</td>
-                      <td><strong>{item.soLuong}</strong></td>
+                      <td><strong>{item.soLuong}</strong> {item.donViTinh || 'Cái'}</td>
                       <td>{Number(item.donGiaSi).toLocaleString('vi-VN')} đ</td>
                       <td>{Number(item.thanhTien).toLocaleString('vi-VN')} đ</td>
                     </tr>
@@ -628,23 +1022,48 @@ const SellerContracts = () => {
                 </tbody>
               </table>
 
-              <div className="contract-signed-stamp-footer">
-                <div className="stamp-box verified">
-                  <div className="stamp-title">✓ HỢP ĐỒNG ĐÃ ĐƯỢC KÝ SỐ</div>
-                  <div className="stamp-name">{viewingContract.nguoiKy}</div>
-                  <div className="stamp-role">{viewingContract.chucVu}</div>
-                  <div className="stamp-meta">
-                    Mã chứng thực: {viewingContract.maChuKySo}<br/>
-                    Trạng thái kho: Đã nạp vào kho riêng
+              {/* Lịch sử nhật ký phê duyệt & Ký số */}
+              <div style={{ marginTop: '20px', padding: '16px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px' }}>
+                <strong style={{ display: 'block', marginBottom: '8px', color: '#1e293b' }}>
+                  📋 Nhật ký quy trình xử lý hợp đồng:
+                </strong>
+                <ul style={{ margin: 0, paddingLeft: '18px', color: '#475569', lineHeight: '1.8' }}>
+                  <li>
+                    <strong>Vòng 1 (Admin duyệt yêu cầu):</strong> {viewingContract.adminDuyetVong1?.daDuyet ? `✓ Đã duyệt bởi ${viewingContract.adminDuyetVong1.nguoiDuyet} lúc ${new Date(viewingContract.adminDuyetVong1.ngayDuyet).toLocaleString('vi-VN')}` : '⏳ Chưa duyệt'}
+                  </li>
+                  <li>
+                    <strong>Ký số điện tử (Shop):</strong> {viewingContract.chuKyShop?.daKy ? `✓ Đã ký bởi ${viewingContract.chuKyShop.nguoiKy} (${viewingContract.chuKyShop.maChuKySo}) lúc ${new Date(viewingContract.chuKyShop.ngayKy).toLocaleString('vi-VN')}` : '⏳ Chưa ký'}
+                  </li>
+                  <li>
+                    <strong>Vòng 2 (Admin duyệt chuyển kho):</strong> {viewingContract.adminDuyetVong2?.daDuyet ? `✓ Đã duyệt bởi ${viewingContract.adminDuyetVong2.nguoiDuyet} lúc ${new Date(viewingContract.adminDuyetVong2.ngayDuyet).toLocaleString('vi-VN')}` : '⏳ Chưa duyệt'}
+                  </li>
+                  <li>
+                    <strong>Kho Tổng lên đơn xuất kho:</strong> {viewingContract.thongTinXuatKho?.daLenDon ? `✓ Phiếu xuất [${viewingContract.thongTinXuatKho.maPhieuXuat}] tạo bởi ${viewingContract.thongTinXuatKho.nguoiXuat} lúc ${new Date(viewingContract.thongTinXuatKho.ngayXuat).toLocaleString('vi-VN')}` : '⏳ Chưa lên đơn'}
+                  </li>
+                </ul>
+              </div>
+
+              {viewingContract.chuKyShop?.daKy && (
+                <div className="contract-signed-stamp-footer">
+                  <div className="stamp-box verified">
+                    <div className="stamp-title">✓ HỢP ĐỒNG ĐÃ ĐƯỢC KÝ SỐ HỢP PHÁP</div>
+                    <div className="stamp-name">{viewingContract.chuKyShop.nguoiKy}</div>
+                    <div className="stamp-role">{viewingContract.chuKyShop.chucVu}</div>
+                    <div className="stamp-meta">
+                      Mã chứng thực: {viewingContract.chuKyShop.maChuKySo}<br/>
+                      Thời gian ký: {new Date(viewingContract.chuKyShop.ngayKy).toLocaleString('vi-VN')}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="modal-actions-footer">
-              <Link to="/seller/products" className="btn-go-to-publish" onClick={() => setViewingContract(null)}>
-                <FiBox /> Đi Đến Quản Lý & Đăng Bán Lên Sàn
-              </Link>
+              {viewingContract.trangThai === 'HOAN_THANH' && (
+                <Link to="/seller/products" className="btn-go-to-publish" onClick={() => setViewingContract(null)}>
+                  <FiBox /> Đi Đến Quản Lý & Đăng Bán Lên Sàn
+                </Link>
+              )}
               <button className="btn-cancel" onClick={() => setViewingContract(null)}>Đóng</button>
             </div>
           </div>
@@ -655,4 +1074,3 @@ const SellerContracts = () => {
 };
 
 export default SellerContracts;
-

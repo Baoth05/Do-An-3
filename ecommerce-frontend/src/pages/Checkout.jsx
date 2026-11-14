@@ -42,7 +42,7 @@ const Checkout = () => {
         return [{
           id: 'addr-default',
           hoTen: loggedCustomer.hoTen || loggedCustomer.taiKhoan,
-          soDienThoai: loggedCustomer.soDienThoai || '0901234567',
+          soDienThoai: loggedCustomer.soDienThoai || '',
           diaChi: loggedCustomer.diaChi.trim(),
           isDefault: true,
         }];

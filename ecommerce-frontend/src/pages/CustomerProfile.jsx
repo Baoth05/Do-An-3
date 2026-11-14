@@ -7,7 +7,7 @@ import {
   FiUser, FiCreditCard, FiPackage, FiTag, FiMessageSquare,
   FiShield, FiEdit3, FiLock, FiCheckCircle, FiClock, FiPlusCircle,
   FiSend, FiShoppingBag, FiTruck, FiAlertCircle, FiArrowRight, FiCopy, FiDollarSign, FiTrash2,
-  FiBox, FiFileText, FiSettings, FiPhone, FiMapPin, FiMail, FiPlus, FiCheck, FiX
+  FiBox, FiFileText, FiSettings, FiPhone, FiMapPin, FiMail, FiPlus, FiCheck, FiX, FiLogOut
 } from 'react-icons/fi';
 import './CustomerProfile.css';
 
@@ -192,9 +192,9 @@ const CustomerProfile = () => {
     if (customer) {
       setStoreForm((prev) => ({
         ...prev,
-        diaChi: prev.diaChi || customer.diaChi || 'Cần Thơ, Việt Nam',
-        soDienThoai: prev.soDienThoai || customer.soDienThoai || '0901234567',
-        email: prev.email || customer.email || `${customer.taiKhoan}@seller.ctutgear.vn`,
+        diaChi: prev.diaChi || customer.diaChi || '',
+        soDienThoai: prev.soDienThoai || customer.soDienThoai || '',
+        email: prev.email || customer.email || (customer.taiKhoan ? `${customer.taiKhoan}@seller.ctutgear.vn` : ''),
       }));
     }
   }, [customer]);
@@ -261,9 +261,9 @@ const CustomerProfile = () => {
         ...storeForm,
         maKho: cleanMaKho,
         tenKho: storeForm.tenKho.trim(),
-        diaChi: storeForm.diaChi.trim() || customer.diaChi || 'Cần Thơ',
-        soDienThoai: storeForm.soDienThoai.trim() || customer.soDienThoai || '0901234567',
-        email: storeForm.email.trim() || customer.email || `${customer.taiKhoan}@seller.ctutgear.vn`,
+        diaChi: storeForm.diaChi.trim() || customer.diaChi || '',
+        soDienThoai: storeForm.soDienThoai.trim() || customer.soDienThoai || '',
+        email: storeForm.email.trim() || customer.email || (customer.taiKhoan ? `${customer.taiKhoan}@seller.ctutgear.vn` : ''),
         sucChuaToiDa: Number(storeForm.sucChuaToiDa) || 1000,
         anhDaiDienShop: storeForm.anhDaiDienShop.trim() || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200&auto=format&fit=crop',
         moTaGianHang: storeForm.moTaGianHang.trim() || `Gian hàng chính thức của ${storeForm.tenKho} trên Sàn CTUT Gear.`,
@@ -279,15 +279,75 @@ const CustomerProfile = () => {
     }
   };
 
-  // Check auth
+  // Check auth & synchronize data according to active logged-in customer
   useEffect(() => {
-    const cur = authService.getCurrentCustomer();
-    if (!cur) {
-      navigate('/login', { state: { from: location } });
-    } else {
+    const handleSyncUser = () => {
+      const cur = authService.getCurrentCustomer();
+      if (!cur) {
+        navigate('/login', { state: { from: location } });
+        return;
+      }
       setCustomer(cur);
-    }
-  }, [navigate, location]);
+      setProfileForm({
+        hoTen: cur.hoTen || '',
+        email: cur.email || '',
+        soDienThoai: cur.soDienThoai || '',
+        diaChi: cur.diaChi || '',
+        gioiTinh: 'Nam',
+        ngaySinh: '2000-01-01'
+      });
+
+      const savedWallet = localStorage.getItem(`customer_wallet_${cur.taiKhoan}`);
+      setWalletBalance(savedWallet !== null ? Number(savedWallet) : 5000000);
+
+      try {
+        const storeSaved = localStorage.getItem(`seller_store_${cur.taiKhoan}`);
+        if (storeSaved) {
+          const parsed = JSON.parse(storeSaved);
+          if (parsed && (parsed.quanLyId === cur.id || parsed.taiKhoan === cur.taiKhoan)) {
+            setMyStore(parsed);
+          } else {
+            setMyStore(null);
+          }
+        } else {
+          setMyStore(null);
+        }
+      } catch {
+        setMyStore(null);
+      }
+
+      try {
+        const addrSaved = localStorage.getItem(`customer_addresses_${cur.taiKhoan}`);
+        if (addrSaved) {
+          setSavedAddresses(JSON.parse(addrSaved));
+        } else if (cur.diaChi && cur.diaChi.trim()) {
+          const initial = [{
+            id: 'addr-default',
+            hoTen: cur.hoTen || cur.taiKhoan,
+            soDienThoai: cur.soDienThoai || '',
+            diaChi: cur.diaChi.trim(),
+            isDefault: true,
+            ngayTao: 'Địa chỉ ban đầu'
+          }];
+          localStorage.setItem(`customer_addresses_${cur.taiKhoan}`, JSON.stringify(initial));
+          setSavedAddresses(initial);
+        } else {
+          setSavedAddresses([]);
+        }
+      } catch {
+        setSavedAddresses([]);
+      }
+    };
+
+    handleSyncUser();
+
+    window.addEventListener('customer-user-updated', handleSyncUser);
+    window.addEventListener('storage', handleSyncUser);
+    return () => {
+      window.removeEventListener('customer-user-updated', handleSyncUser);
+      window.removeEventListener('storage', handleSyncUser);
+    };
+  }, [location.pathname]);
 
   useEffect(() => {
     if (location.state?.activeTab) {
@@ -722,6 +782,21 @@ const CustomerProfile = () => {
               onClick={() => setActiveTab('feedback')}
             >
               <FiShield /> Khiếu Nại & Báo Lỗi ({supportTickets.length})
+            </button>
+
+            <div style={{ margin: '14px 0', borderTop: '1px solid #f1f5f9' }}></div>
+
+            <button
+              className="p-nav-btn logout-nav-btn"
+              style={{ color: '#ef4444', fontWeight: '600' }}
+              onClick={() => {
+                if (window.confirm('Bạn có chắc chắn muốn đăng xuất tài khoản?')) {
+                  authService.logoutCustomer();
+                  navigate('/login');
+                }
+              }}
+            >
+              <FiLogOut /> Đăng Xuất Tài Khoản
             </button>
           </nav>
         </aside>
@@ -1304,7 +1379,7 @@ const CustomerProfile = () => {
                           <FiMapPin /> <span>Địa chỉ kho: <strong>{myStore.diaChi || 'Cần Thơ'}</strong></span>
                         </div>
                         <div className="meta-item">
-                          <FiPhone /> <span>Hotline: <strong>{myStore.soDienThoai || '0901234567'}</strong></span>
+                          <FiPhone /> <span>Hotline: <strong>{myStore.soDienThoai || 'Chưa cập nhật'}</strong></span>
                         </div>
                         <div className="meta-item">
                           <FiMail /> <span>Email: <strong>{myStore.email || `${customer?.taiKhoan}@seller.ctutgear.vn`}</strong></span>

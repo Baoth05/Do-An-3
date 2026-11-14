@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import UserManagementDashboard from './pages/UserManagementDashboard';
 import StrategicReport from './pages/StrategicReport';
 import FinancialManagement from './pages/FinancialManagement';
+import SupplyContractManagement from './pages/SupplyContractManagement';
 
 import './App.css';
 
@@ -46,6 +47,7 @@ const AppRoutes = () => {
         <Route path="strategic-report" element={<StrategicReport />} />
         <Route path="user-management" element={<UserManagementDashboard />} />
         <Route path="finance" element={<FinancialManagement />} />
+        <Route path="supply-contracts" element={<SupplyContractManagement />} />
       </Route>
 
       {/* 3. Tất cả các đường dẫn sai khác đều đẩy về /login */}

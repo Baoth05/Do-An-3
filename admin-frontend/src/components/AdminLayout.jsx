@@ -2,7 +2,7 @@
 import React, { useContext } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { FiPieChart, FiUsers, FiTrendingUp, FiLogOut } from 'react-icons/fi';
+import { FiPieChart, FiUsers, FiTrendingUp, FiLogOut, FiFileText } from 'react-icons/fi';
 import './AdminLayout.css';
 
 const AdminLayout = () => {
@@ -17,6 +17,7 @@ const AdminLayout = () => {
 
   // 🌟 Hàm chuyển đổi đường dẫn URL thành Tên trang để hiển thị Breadcrumb
   const getPageTitle = (pathname) => {
+    if (pathname.includes('/supply-contracts')) return 'Duyệt hợp đồng cung ứng';
     if (pathname.includes('/finance')) return 'Quản lý tài chính';
     if (pathname.includes('/user-management')) return 'Quản lý người dùng';
     if (pathname.includes('/strategic-report')) return 'Báo cáo chiến lược';
@@ -57,6 +58,14 @@ const AdminLayout = () => {
         <nav className="sidebar-menu">
           <div className="menu-label">BẢNG ĐIỀU KHIỂN</div>
           
+          <Link 
+            to="/supply-contracts" 
+            className={`menu-item ${location.pathname.includes('/supply-contracts') ? 'active' : ''}`}
+          >
+            <FiFileText size={18} />
+            <span>Duyệt hợp đồng cung ứng</span>
+          </Link>
+
           <Link 
             to="/finance" 
             className={`menu-item ${location.pathname.includes('/finance') ? 'active' : ''}`}
