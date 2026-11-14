@@ -4,7 +4,7 @@ import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-do
 import { CartContext } from '../context/CartContext';
 import { authService } from '../services/authService';
 import {
-  FiShoppingCart, FiSearch, FiShoppingBag, FiExternalLink,
+  FiShoppingCart, FiSearch, FiShoppingBag,
   FiUser, FiTag, FiPackage, FiChevronDown, FiLogOut, FiLogIn, FiUserPlus,
   FiCreditCard, FiMessageSquare
 } from 'react-icons/fi';
@@ -19,9 +19,32 @@ const Header = ({ onSearch }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Kiểm tra phiên đăng nhập của Khách Hàng & Chủ Shop
-  const customer = authService.getCurrentCustomer();
-  const seller = authService.getCurrentSeller();
+  // Kiểm tra phiên đăng nhập của Khách Hàng & Chủ Shop (Hệ thống tài khoản kép thống nhất)
+  const [customer, setCustomer] = useState(() => authService.getCurrentCustomer());
+  const isSeller = Boolean(
+    customer && (
+      customer.isSeller || 
+      customer.vaiTro === 'STORE_OWNER' || 
+      customer.vaiTro === 'SELLER' ||
+      !!localStorage.getItem(`seller_store_${customer.taiKhoan}`)
+    )
+  );
+
+  useEffect(() => {
+    const handleUserUpdate = () => {
+      setCustomer(authService.getCurrentCustomer());
+    };
+
+    // Luôn đồng bộ lại phiên đăng nhập khi đường dẫn hoặc URL thay đổi
+    handleUserUpdate();
+
+    window.addEventListener('customer-user-updated', handleUserUpdate);
+    window.addEventListener('storage', handleUserUpdate);
+    return () => {
+      window.removeEventListener('customer-user-updated', handleUserUpdate);
+      window.removeEventListener('storage', handleUserUpdate);
+    };
+  }, [location.pathname]);
 
   useEffect(() => {
     const q = searchParams.get('q');
@@ -45,6 +68,7 @@ const Header = ({ onSearch }) => {
 
   const handleCustomerLogout = () => {
     authService.logoutCustomer();
+    setCustomer(null);
     setShowUserDropdown(false);
     navigate('/login');
   };
@@ -57,26 +81,6 @@ const Header = ({ onSearch }) => {
 
   return (
     <header className="market-header">
-      {/* Top Banner Thông Báo */}
-      <div className="top-banner">
-        <div className="container top-banner-content">
-          <span>🔥 Siêu Hội Mua Sắm CTUT Gear - Miễn Phí Vận Chuyển Toàn Quốc Cho Đơn Từ 200.000đ!</span>
-          <div className="top-banner-links">
-            <Link 
-              to={seller ? "/seller" : "/seller/login"} 
-              className="seller-channel-link"
-              title="Cổng dành cho Đối tác & Chủ Shop"
-            >
-              <FiShoppingBag size={13} /> {seller ? `Kênh Người Bán (${seller.tenCuaHang || seller.taiKhoan})` : 'Kênh Người Bán'}
-            </Link>
-            <span className="divider-bar">|</span>
-            <a href="http://localhost:5173" target="_blank" rel="noreferrer" className="wms-portal-link">
-              <FiExternalLink size={13} /> Kênh Quản Trị & Kho Bãi (WMS)
-            </a>
-          </div>
-        </div>
-      </div>
-
       {/* Main Navigation Bar */}
       <div className="main-nav">
         <div className="container nav-content">
@@ -137,7 +141,9 @@ const Header = ({ onSearch }) => {
                 </div>
                 <div className="user-info-text">
                   <span className="user-name">{customer.hoTen || customer.taiKhoan}</span>
-                  <span className="user-role">KHÁCH HÀNG <FiChevronDown size={11} /></span>
+                  <span className="user-role">
+                    {isSeller ? 'CHỦ SHOP & KHÁCH HÀNG' : 'KHÁCH HÀNG'} <FiChevronDown size={11} />
+                  </span>
                 </div>
 
                 {showUserDropdown && (
@@ -149,6 +155,9 @@ const Header = ({ onSearch }) => {
                     <div className="dropdown-divider"></div>
                     <Link to="/profile" className="dropdown-item profile-link-item">
                       <FiUser size={16} /> Tài Khoản Của Tôi
+                    </Link>
+                    <Link to="/profile" state={{ activeTab: 'seller' }} className="dropdown-item">
+                      <FiShoppingBag size={16} /> {isSeller ? '🏬 Gian Hàng Của Tôi' : '🚀 Mở Gian Hàng Bán Hàng'}
                     </Link>
                     <Link to="/profile" state={{ activeTab: 'wallet' }} className="dropdown-item">
                       <FiCreditCard size={16} /> Ví Điện Tử CTUT Pay
@@ -166,19 +175,17 @@ const Header = ({ onSearch }) => {
                       <FiShoppingCart size={16} /> Giỏ Hàng ({totalQuantity})
                     </Link>
                     <div className="dropdown-divider"></div>
-                    <Link to={seller ? "/seller" : "/seller/login"} className="dropdown-item seller-menu-item">
-                      <FiShoppingBag size={16} /> 🏪 Kênh Người Bán (Chủ Shop)
-                    </Link>
-                    <a href="http://localhost:5173" target="_blank" rel="noreferrer" className="dropdown-item">
-                      <FiExternalLink size={16} /> Cổng Quản Trị Kho (WMS)
-                    </a>
-                    <div className="dropdown-divider"></div>
+                    {isSeller && (
+                      <Link to="/seller" className="dropdown-item seller-menu-item">
+                        <FiShoppingBag size={16} /> 🏪 Vào Kênh Người Bán
+                      </Link>
+                    )}
                     <button 
                       type="button" 
                       className="dropdown-item logout-item"
                       onClick={handleCustomerLogout}
                     >
-                      <FiLogOut size={16} /> Đăng Xuất Khách Hàng
+                      <FiLogOut size={16} /> Đăng Xuất
                     </button>
                   </div>
                 )}

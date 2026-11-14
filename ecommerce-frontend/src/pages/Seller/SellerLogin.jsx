@@ -10,11 +10,27 @@ import './SellerLogin.css';
 
 const SellerLogin = () => {
   const navigate = useNavigate();
+  const loggedCustomer = authService.getCurrentCustomer();
+  const hasStore = loggedCustomer && (
+    loggedCustomer.isSeller || 
+    loggedCustomer.vaiTro === 'STORE_OWNER' || 
+    loggedCustomer.vaiTro === 'SELLER' ||
+    !!localStorage.getItem(`seller_store_${loggedCustomer.taiKhoan}`)
+  );
+
   const [taiKhoan, setTaiKhoan] = useState('');
   const [matKhau, setMatKhau] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  const handleQuickEnterSeller = () => {
+    navigate('/seller');
+  };
+
+  const handleQuickGoRegisterStore = () => {
+    navigate('/profile', { state: { activeTab: 'seller' } });
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -22,16 +38,12 @@ const SellerLogin = () => {
     setLoading(true);
 
     try {
-      const seller = await authService.loginSeller({
+      await authService.loginSeller({
         taiKhoan: taiKhoan.trim(),
         matKhau: matKhau,
       });
 
-      // Nếu chưa có store ID được chọn, gán mặc định store 2
-      if (!localStorage.getItem('seller_selected_store_id')) {
-        localStorage.setItem('seller_selected_store_id', '2');
-      }
-
+      window.dispatchEvent(new Event('customer-user-updated'));
       navigate('/seller');
     } catch (err) {
       setErrorMsg(err.response?.data || err.message || 'Tài khoản hoặc mật khẩu không chính xác!');
@@ -95,8 +107,69 @@ const SellerLogin = () => {
           <div className="form-card-inner">
             <div className="login-header-text">
               <h2>Đăng Nhập Kênh Người Bán</h2>
-              <p>Vui lòng nhập tài khoản quản trị gian hàng của bạn</p>
+              <p>Chủ cửa hàng sử dụng tài khoản đăng nhập chung với tài khoản Khách Hàng</p>
             </div>
+
+            {/* Thẻ chuyển hướng nhanh nếu đã đăng nhập tài khoản Khách Hàng */}
+            {loggedCustomer && (
+              <div className="logged-customer-quick-box" style={{
+                background: '#eff6ff',
+                border: '1px solid #bfdbfe',
+                borderRadius: '10px',
+                padding: '14px',
+                marginBottom: '18px',
+                fontSize: '13px',
+                color: '#1e3a8a'
+              }}>
+                <div style={{ fontWeight: '700', marginBottom: '4px' }}>
+                  👋 Đang đăng nhập tài khoản: @{loggedCustomer.taiKhoan}
+                </div>
+                <div style={{ color: '#475569', marginBottom: '10px' }}>
+                  {hasStore 
+                    ? 'Tài khoản này đã mở gian hàng thành công!' 
+                    : 'Tài khoản này chưa kích hoạt gian hàng bán hàng.'}
+                </div>
+                {hasStore ? (
+                  <button
+                    type="button"
+                    onClick={handleQuickEnterSeller}
+                    style={{
+                      background: '#2563eb',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '8px 16px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <FiShoppingBag /> Vào Thẳng Kênh Người Bán
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleQuickGoRegisterStore}
+                    style={{
+                      background: '#10b981',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '8px 16px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    🚀 Mở Gian Hàng Tại Trang Cá Nhân
+                  </button>
+                )}
+              </div>
+            )}
 
             {errorMsg && (
               <div className="seller-login-alert-error">
@@ -160,9 +233,9 @@ const SellerLogin = () => {
             {/* Rẽ hướng phân luồng tài khoản */}
             <div className="seller-switch-actions">
               <div className="action-row">
-                <span>Chưa có gian hàng trên sàn?</span>
-                <Link to="/seller/register" className="highlight-link">
-                  Đăng ký mở gian hàng & tạo kho ngay
+                <span>Chưa có tài khoản trên sàn?</span>
+                <Link to="/register" className="highlight-link">
+                  Đăng ký tài khoản Khách Hàng để mở shop
                 </Link>
               </div>
 
@@ -171,9 +244,9 @@ const SellerLogin = () => {
               </div>
 
               <div className="action-row customer-portal-row">
-                <span>Bạn là khách hàng mua sắm?</span>
+                <span>Bạn muốn mua sắm công nghệ?</span>
                 <Link to="/login" className="link-customer-login">
-                  Đăng nhập tài khoản Khách Hàng →
+                  Đăng nhập mua hàng trên Sàn TMĐT →
                 </Link>
               </div>
 

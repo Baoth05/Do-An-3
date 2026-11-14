@@ -35,6 +35,7 @@ const Login = () => {
                 matKhau: password,
             });
 
+            window.dispatchEvent(new Event('customer-user-updated'));
             setSuccessNotice(`Chào mừng trở lại, ${customer.hoTen || customer.taiKhoan}! Đang chuyển hướng...`);
             setTimeout(() => {
                 navigate(from, { replace: true });

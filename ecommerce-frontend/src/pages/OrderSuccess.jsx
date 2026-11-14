@@ -75,14 +75,6 @@ const OrderSuccess = () => {
             <Link to="/" className="btn-back-home">
               <FiHome /> Tiếp Tục Mua Sắm
             </Link>
-            <a 
-              href="http://localhost:5173" 
-              target="_blank" 
-              rel="noreferrer" 
-              className="btn-view-wms"
-            >
-              <FiPackage /> Portal Quản Trị Kho (WMS)
-            </a>
           </div>
         </div>
       </div>

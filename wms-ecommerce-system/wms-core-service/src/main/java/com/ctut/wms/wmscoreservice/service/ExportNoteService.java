@@ -45,7 +45,9 @@ public class ExportNoteService {
         exportNote.setDonViVanChuyen(shippingProvider);
         exportNote.setNguoiTao(request.getNguoiTao() != null ? request.getNguoiTao() : "Thủ kho");
         exportNote.setNgayXuat(LocalDateTime.now());
-        exportNote.setTrangThai("HOÀN THÀNH");
+
+        // 🌟 SỬA Ở ĐÂY: Trạng thái ban đầu chỉ là CHỜ DUYỆT
+        exportNote.setTrangThai("CHỜ DUYỆT");
 
         ExportNote savedExportNote = exportNoteRepository.save(exportNote);
         List<ExportNoteDetailResponse> detailResponses = new ArrayList<>();
@@ -56,33 +58,7 @@ public class ExportNoteService {
                 Product product = productRepository.findById(detailRequest.getSanPhamId())
                         .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy sản phẩm ID " + detailRequest.getSanPhamId()));
 
-                Inventory inventory = inventoryRepository.findBySanPhamAndKhoHang(product, warehouse)
-                        .orElseThrow(() -> new RuntimeException("Lỗi: Sản phẩm " + product.getTenSanPham() + " không có trong kho này!"));
-
-                if (inventory.getSoLuongKhaDung() < detailRequest.getSoLuong()) {
-                    throw new RuntimeException("Lỗi: Không đủ tồn kho! Sản phẩm " + product.getTenSanPham() + " chỉ còn khả dụng: " + inventory.getSoLuongKhaDung());
-                }
-
-                // 🌟 BỔ SUNG LOGIC THẺ KHO: Lưu số lượng cũ
-                int soLuongCu = inventory.getSoLuongThucTe();
-
-                // Trừ tồn kho
-                inventory.setSoLuongThucTe(inventory.getSoLuongThucTe() - detailRequest.getSoLuong());
-                inventory.setSoLuongKhaDung(inventory.getSoLuongKhaDung() - detailRequest.getSoLuong());
-                inventoryRepository.save(inventory);
-
-                // 🌟 BỔ SUNG LOGIC THẺ KHO: Tạo bản ghi lịch sử
-                TheKho theKho = new TheKho();
-                theKho.setHangHoa(product);
-                theKho.setKhoCuaHang(warehouse);
-                theKho.setLoaiGiaoDich("XUẤT KHO"); // Đánh dấu là xuất
-                theKho.setMaChungTu(savedExportNote.getMaPhieuXuat());
-                theKho.setPhieuXuatId(savedExportNote.getId());
-                theKho.setSoLuongTruocBienDong(soLuongCu);
-                theKho.setSoLuongBienDong(detailRequest.getSoLuong()); // Số lượng xuất đi
-                theKho.setSoLuongSauBienDong(inventory.getSoLuongThucTe());
-                theKho.setNgayTao(LocalDateTime.now());
-                theKhoRepository.save(theKho);
+                // 🌟 ĐÃ XÓA LOGIC TRỪ TỒN KHO VÀ GHI THẺ KHO Ở ĐÂY
 
                 ExportNoteDetail detail = new ExportNoteDetail();
                 detail.setPhieuXuat(savedExportNote);
@@ -170,4 +146,57 @@ public class ExportNoteService {
                 .danhSachHangHoa(details != null ? details : new ArrayList<>())
                 .build();
     }
+    @Transactional
+    public ExportNoteResponse approveExportNote(Long id) {
+        ExportNote exportNote = exportNoteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy phiếu xuất có ID = " + id));
+
+        // Kiểm tra xem phiếu có đúng trạng thái chờ duyệt không
+        if (!"CHỜ DUYỆT".equalsIgnoreCase(exportNote.getTrangThai())) {
+            throw new RuntimeException("Lỗi: Chỉ có thể duyệt phiếu đang ở trạng thái CHỜ DUYỆT!");
+        }
+
+        Warehouse warehouse = exportNote.getKhoHang();
+        List<ExportNoteDetail> details = exportNoteDetailRepository.findByPhieuXuat(exportNote);
+
+        for (ExportNoteDetail detail : details) {
+            Product product = detail.getSanPham();
+
+            // Tìm và kiểm tra tồn kho
+            Inventory inventory = inventoryRepository.findBySanPhamAndKhoHang(product, warehouse)
+                    .orElseThrow(() -> new RuntimeException("Lỗi: Sản phẩm " + product.getTenSanPham() + " không có trong kho này!"));
+
+            if (inventory.getSoLuongKhaDung() < detail.getSoLuong()) {
+                throw new RuntimeException("Lỗi: Không đủ tồn kho! Sản phẩm " + product.getTenSanPham() + " chỉ còn khả dụng: " + inventory.getSoLuongKhaDung());
+            }
+
+            int soLuongCu = inventory.getSoLuongThucTe();
+
+            // Thực hiện trừ tồn kho
+            inventory.setSoLuongThucTe(inventory.getSoLuongThucTe() - detail.getSoLuong());
+            inventory.setSoLuongKhaDung(inventory.getSoLuongKhaDung() - detail.getSoLuong());
+            inventoryRepository.save(inventory);
+
+            // Ghi nhận Thẻ kho
+            TheKho theKho = new TheKho();
+            theKho.setHangHoa(product);
+            theKho.setKhoCuaHang(warehouse);
+            theKho.setLoaiGiaoDich("XUẤT KHO");
+            theKho.setMaChungTu(exportNote.getMaPhieuXuat());
+            theKho.setPhieuXuatId(exportNote.getId());
+            theKho.setSoLuongTruocBienDong(soLuongCu);
+            theKho.setSoLuongBienDong(detail.getSoLuong());
+            theKho.setSoLuongSauBienDong(inventory.getSoLuongThucTe());
+            theKho.setNgayTao(LocalDateTime.now());
+            theKhoRepository.save(theKho);
+        }
+
+        // Cập nhật trạng thái phiếu xuất thành HOÀN THÀNH
+        exportNote.setTrangThai("HOÀN THÀNH");
+        exportNoteRepository.save(exportNote);
+
+        // Gọi lại hàm getExportNoteById để trả về cục dữ liệu chuẩn cho Frontend
+        return getExportNoteById(id);
+    }
+
 }

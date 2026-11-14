@@ -2,6 +2,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { marketplaceService } from '../services/marketplaceService';
+import { authService } from '../services/authService';
 import { CartContext } from '../context/CartContext';
 import { 
   FiShoppingCart, FiStar, FiTruck, FiShield, 
@@ -109,9 +110,11 @@ const ProductDetail = () => {
 
     setIsSubmittingReview(true);
     try {
+      const currentCustomer = authService.getCurrentCustomer();
+      const currentUserId = currentCustomer?.id || 101;
       const payload = {
-        nguoiDungId: 101, // Mock User ID
-        cuaHangId: product.khoHangId,
+        nguoiDungId: currentUserId,
+        cuaHangId: product.khoHangId || 1,
         maHangHoa: product.sku,
         donHangId: 'DH-SAMPLE',
         soSao: newReviewStar,
@@ -140,9 +143,11 @@ const ProductDetail = () => {
 
     setIsSubmittingComment(true);
     try {
+      const currentCustomer = authService.getCurrentCustomer();
+      const currentUserId = currentCustomer?.id || 101;
       const payload = {
-        nguoiDungId: 101,
-        cuaHangId: product.khoHangId,
+        nguoiDungId: currentUserId,
+        cuaHangId: product.khoHangId || 1,
         maHangHoa: product.sku,
         noiDung: newCommentContent.trim(),
       };

@@ -16,8 +16,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { marketplaceService } from '../services/marketplaceService';
 import { CartContext } from '../context/CartContext';
 import { 
-  FiCheck, FiShoppingCart, FiStar, FiTruck, FiShield, 
-  FiZap, FiGrid, FiSearch, FiFilter, FiX, FiTrendingUp 
+  FiCheck, FiShoppingCart, FiStar, 
+  FiGrid, FiSearch, FiFilter, FiX, FiTrendingUp 
 } from 'react-icons/fi';
 import PromoSlider from '../components/PromoSlider';
 import './MarketplaceHome.css';
@@ -132,47 +132,6 @@ const MarketplaceHome = () => {
       {!queryParam && (
         <section className="container promo-slider-section" style={{ marginTop: '24px' }}>
           <PromoSlider products={products} stores={stores} />
-        </section>
-      )}
-
-      {/* Hero Banner Sàn */}
-      {!queryParam && (
-        <section className="market-hero">
-          <div className="container hero-container">
-            <div className="hero-text">
-              <span className="hero-badge">🌟 MÔ HÌNH SÀN TẬP TRUNG B2B2C</span>
-              <h2>Sàn Thương Mại Điện Tử & Vận Hành Kho Chuỗi</h2>
-              <p>
-                Khám phá hàng ngàn sản phẩm công nghệ chính hãng từ các Gian hàng uy tín được kiểm định 
-                và cung ứng trực tiếp từ hệ thống Kho Tổng Trung Tâm CTUT.
-              </p>
-              <div className="hero-features">
-                <div className="feature-item">
-                  <FiShield className="feat-icon" /> 100% Chính Hãng Master Catalog
-                </div>
-                <div className="feature-item">
-                  <FiTruck className="feat-icon" /> Tách Đơn Tự Động Theo Shop
-                </div>
-                <div className="feature-item">
-                  <FiZap className="feat-icon" /> Thanh Toán MoMo & Web3 Crypto
-                </div>
-              </div>
-            </div>
-            <div className="hero-stats-card">
-              <div className="stat-box">
-                <h3>{stores.length || 2}+</h3>
-                <p>Gian Hàng Uy Tín</p>
-              </div>
-              <div className="stat-box">
-                <h3>100%</h3>
-                <p>Kho Hàng Thật</p>
-              </div>
-              <div className="stat-box">
-                <h3>24/7</h3>
-                <p>Giao Vận Siêu Tốc</p>
-              </div>
-            </div>
-          </div>
         </section>
       )}
 

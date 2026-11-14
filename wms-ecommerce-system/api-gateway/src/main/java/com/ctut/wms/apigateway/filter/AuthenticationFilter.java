@@ -143,10 +143,11 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         }
 
         // Các API đọc công khai trên Sàn TMĐT cho khách hàng & người xem
-        if (path.startsWith("/inventory/marketplace")) return true;
+        if (path.startsWith("/inventory") && method == HttpMethod.GET) return true;
         if (path.startsWith("/categories") && method == HttpMethod.GET) return true;
         if (path.startsWith("/products") && method == HttpMethod.GET) return true;
         if (path.startsWith("/stores") && method == HttpMethod.GET) return true;
+        if (path.startsWith("/warehouses") && method == HttpMethod.GET) return true;
         if (path.startsWith("/vouchers") && method == HttpMethod.GET) return true;
         if (path.startsWith("/interactions") && method == HttpMethod.GET) return true;
         if (path.startsWith("/binh-luan") && method == HttpMethod.GET) return true;
@@ -170,7 +171,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         }
 
         // 2. Nhóm quyền Quản trị hệ thống (Chỉ ADMIN)
-        boolean isAdminOnlyEndpoint = path.startsWith("/auth/users") ||
+        boolean isAdminOnlyEndpoint = (path.equals("/auth/users") && (method == HttpMethod.GET || method == HttpMethod.POST)) ||
+                                      path.contains("/toggle-status") ||
                                       path.startsWith("/auth/staff") ||
                                       path.startsWith("/auth/stats") ||
                                       path.startsWith("/auth/delete");
@@ -205,6 +207,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         // 4. Nhóm quyền Kênh Người Bán (Chủ Cửa Hàng):
         // Chỉ Chủ shop (STORE_OWNER / SELLER) và Admin có quyền
         boolean isSellerEndpoint = path.contains("/publish") ||
+                                   path.startsWith("/inventory/add") ||
                                    path.startsWith("/orders/store") ||
                                    (path.startsWith("/orders/") && path.contains("/status")) ||
                                    (path.startsWith("/orders/") && path.contains("/shipping-status")) ||
@@ -236,6 +239,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
                                         path.startsWith("/binh-luan") ||
                                         path.startsWith("/danh-gia") ||
                                         path.startsWith("/auth/profile") ||
+                                        (path.startsWith("/auth/users/") && method == HttpMethod.PUT) ||
                                         path.startsWith("/auth/change-password");
             return isCustomerAllowed;
         }

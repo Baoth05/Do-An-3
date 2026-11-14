@@ -7,35 +7,6 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
-.top-banner {
-  background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%);
-  color: #e2e8f0;
-  font-size: 12px;
-  padding: 6px 0;
-  font-weight: 500;
-}
-
-.top-banner-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.wms-portal-link {
-  color: #38bdf8;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  text-decoration: none;
-  font-weight: 600;
-  transition: all 0.2s;
-}
-
-.wms-portal-link:hover {
-  color: #7dd3fc;
-  text-decoration: underline;
-}
-
 .main-nav {
   padding: 14px 0;
   border-bottom: 1px solid #f1f5f9;
@@ -291,31 +262,6 @@
 .dropdown-item:hover {
   background: #f8fafc;
   color: #2563eb;
-}
-
-.top-banner-links {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.seller-channel-link {
-  color: #fcd34d;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  text-decoration: none;
-  font-weight: 700;
-  transition: all 0.2s;
-}
-
-.seller-channel-link:hover {
-  color: #fbbf24;
-  text-decoration: underline;
-}
-
-.divider-bar {
-  color: #475569;
 }
 
 .seller-menu-item {

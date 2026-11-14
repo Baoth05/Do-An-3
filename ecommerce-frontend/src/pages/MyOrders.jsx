@@ -12,6 +12,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { marketplaceService } from '../services/marketplaceService';
+import { authService } from '../services/authService';
 import { CartContext } from '../context/CartContext';
 import { 
   FiPackage, FiTruck, FiClock, FiCheckCircle, FiXCircle, 
@@ -43,7 +44,9 @@ const MyOrders = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const data = await marketplaceService.getUserOrders(101);
+      const currentCustomer = authService.getCurrentCustomer();
+      const customerId = currentCustomer?.id || 101;
+      const data = await marketplaceService.getUserOrders(customerId);
       setOrders(data);
     } catch (e) {
       console.error('Lỗi tải danh sách đơn hàng:', e);

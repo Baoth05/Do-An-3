@@ -32,12 +32,71 @@ const Checkout = () => {
     : Object.values(shopVouchers).reduce((s, v) => s + (v?.discount || (typeof v === 'number' ? v : 0)), 0);
 
   const loggedCustomer = authService.getCurrentCustomer();
+
+  // Danh sách các địa chỉ cũ đã giao trước đó
+  const [savedAddresses, setSavedAddresses] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`customer_addresses_${loggedCustomer?.taiKhoan}`);
+      if (saved) return JSON.parse(saved);
+      if (loggedCustomer?.diaChi && loggedCustomer.diaChi.trim()) {
+        return [{
+          id: 'addr-default',
+          hoTen: loggedCustomer.hoTen || loggedCustomer.taiKhoan,
+          soDienThoai: loggedCustomer.soDienThoai || '0901234567',
+          diaChi: loggedCustomer.diaChi.trim(),
+          isDefault: true,
+        }];
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Chế độ: 'PREVIOUS' (Chọn địa chỉ cũ đã giao) hoặc 'NEW' (Nhập địa chỉ mới lúc đặt hàng)
+  const [addressMode, setAddressMode] = useState(() => {
+    const saved = localStorage.getItem(`customer_addresses_${loggedCustomer?.taiKhoan}`);
+    const list = saved ? JSON.parse(saved) : [];
+    return (list.length > 0 || loggedCustomer?.diaChi) ? 'PREVIOUS' : 'NEW';
+  });
+
+  const [saveNewAddressToBook, setSaveNewAddressToBook] = useState(true);
+  const initialAddr = savedAddresses.find((a) => a.isDefault) || savedAddresses[0];
+
   const [customerInfo, setCustomerInfo] = useState({
-    hoTen: loggedCustomer?.hoTen || 'Trần Minh Quân',
-    soDienThoai: loggedCustomer?.soDienThoai || '0901234567',
-    diaChiGiaoHang: loggedCustomer?.diaChi || 'Đại học Kỹ Thuật - Công Nghệ Cần Thơ, 256 Nguyễn Văn Cừ, Cần Thơ',
+    hoTen: initialAddr?.hoTen || loggedCustomer?.hoTen || '',
+    soDienThoai: initialAddr?.soDienThoai || loggedCustomer?.soDienThoai || '',
+    diaChiGiaoHang: initialAddr?.diaChi || loggedCustomer?.diaChi || '',
     ghiChu: '',
   });
+
+  const saveOrderAddressToHistory = () => {
+    if (!loggedCustomer?.taiKhoan || !customerInfo.diaChiGiaoHang?.trim()) return;
+    try {
+      const addrText = customerInfo.diaChiGiaoHang.trim();
+      const existing = JSON.parse(localStorage.getItem(`customer_addresses_${loggedCustomer.taiKhoan}`) || '[]');
+      const alreadyExists = existing.some((a) => a.diaChi.trim().toLowerCase() === addrText.toLowerCase());
+      if (!alreadyExists && saveNewAddressToBook) {
+        const newAddr = {
+          id: 'addr-' + Date.now(),
+          hoTen: customerInfo.hoTen.trim() || loggedCustomer.hoTen,
+          soDienThoai: customerInfo.soDienThoai.trim() || loggedCustomer.soDienThoai,
+          diaChi: addrText,
+          isDefault: existing.length === 0,
+          ngayTao: new Date().toLocaleDateString('vi-VN'),
+        };
+        const updatedList = [newAddr, ...existing];
+        localStorage.setItem(`customer_addresses_${loggedCustomer.taiKhoan}`, JSON.stringify(updatedList));
+      }
+      if (loggedCustomer) {
+        const updatedCustomer = { ...loggedCustomer, diaChi: addrText };
+        localStorage.setItem('customer_user', JSON.stringify(updatedCustomer));
+        window.dispatchEvent(new Event('customer-user-updated'));
+      }
+    } catch (e) {
+      console.warn('Lỗi lưu địa chỉ giao hàng:', e);
+    }
+  };
 
   const [paymentMethod, setPaymentMethod] = useState('MOMO'); // MOMO, CRYPTO, COD
   const [shippingProvider, setShippingProvider] = useState('GHTK'); // GHTK, GHN, VTPOST
@@ -123,6 +182,7 @@ const Checkout = () => {
       }
 
       // 5. COD: Hoàn tất đơn hàng trực tiếp
+      saveOrderAddressToHistory();
       clearCart();
       navigate('/order-success', { state: { orderData: orderRes, paymentMethod: 'COD' } });
     } catch (err) {
@@ -133,6 +193,7 @@ const Checkout = () => {
   };
 
   const handleConfirmMoMoPaid = () => {
+    saveOrderAddressToHistory();
     clearCart();
     navigate('/order-success', { 
       state: { 
@@ -159,6 +220,7 @@ const Checkout = () => {
         chainId: 56,
       });
 
+      saveOrderAddressToHistory();
       clearCart();
       navigate('/order-success', { 
         state: { 
@@ -196,37 +258,167 @@ const Checkout = () => {
             <div className="checkout-card">
               <div className="card-header-line">
                 <FiMapPin className="card-icon" />
-                <h3>Thông Tin Giao Hàng</h3>
-              </div>
-              <div className="form-grid-2">
-                <div className="form-group">
-                  <label>Họ và tên người nhận *</label>
-                  <input
-                    type="text"
-                    required
-                    value={customerInfo.hoTen}
-                    onChange={(e) => setCustomerInfo({ ...customerInfo, hoTen: e.target.value })}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Số điện thoại nhận hàng *</label>
-                  <input
-                    type="tel"
-                    required
-                    value={customerInfo.soDienThoai}
-                    onChange={(e) => setCustomerInfo({ ...customerInfo, soDienThoai: e.target.value })}
-                  />
+                <div>
+                  <h3>Thông Tin Giao Hàng & Nhận Hàng</h3>
+                  <p className="checkout-card-sub" style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>
+                    Chọn nhanh từ <strong>địa chỉ cũ đã giao trước đó</strong> hoặc <strong>nhập địa chỉ mới</strong> cho đơn hàng này.
+                  </p>
                 </div>
               </div>
-              <div className="form-group">
-                <label>Địa chỉ nhận hàng chi tiết *</label>
-                <input
-                  type="text"
-                  required
-                  value={customerInfo.diaChiGiaoHang}
-                  onChange={(e) => setCustomerInfo({ ...customerInfo, diaChiGiaoHang: e.target.value })}
-                />
-              </div>
+
+              {/* Thanh Chuyển Đổi: Chọn Địa Chỉ Cũ VS Nhập Địa Chỉ Mới */}
+              {savedAddresses.length > 0 && (
+                <div className="checkout-address-mode-pills" style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                  <button
+                    type="button"
+                    className={`mode-pill ${addressMode === 'PREVIOUS' ? 'active' : ''}`}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      border: '1.5px solid ' + (addressMode === 'PREVIOUS' ? '#2563eb' : '#cbd5e1'),
+                      background: addressMode === 'PREVIOUS' ? '#eff6ff' : '#ffffff',
+                      color: addressMode === 'PREVIOUS' ? '#2563eb' : '#475569',
+                      fontWeight: '700',
+                      fontSize: '13px',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => {
+                      setAddressMode('PREVIOUS');
+                      if (initialAddr) {
+                        setCustomerInfo((prev) => ({
+                          ...prev,
+                          hoTen: initialAddr.hoTen || prev.hoTen,
+                          soDienThoai: initialAddr.soDienThoai || prev.soDienThoai,
+                          diaChiGiaoHang: initialAddr.diaChi || prev.diaChiGiaoHang
+                        }));
+                      }
+                    }}
+                  >
+                    🕒 Chọn Địa Chỉ Cũ Đã Giao ({savedAddresses.length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`mode-pill ${addressMode === 'NEW' ? 'active' : ''}`}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      border: '1.5px solid ' + (addressMode === 'NEW' ? '#2563eb' : '#cbd5e1'),
+                      background: addressMode === 'NEW' ? '#eff6ff' : '#ffffff',
+                      color: addressMode === 'NEW' ? '#2563eb' : '#475569',
+                      fontWeight: '700',
+                      fontSize: '13px',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => {
+                      setAddressMode('NEW');
+                      setCustomerInfo((prev) => ({ ...prev, diaChiGiaoHang: '' }));
+                    }}
+                  >
+                    ➕ Đặt Hàng Với Địa Chỉ Mới
+                  </button>
+                </div>
+              )}
+
+              {/* Chế độ 1: Chọn Địa Chỉ Cũ Đã Giao */}
+              {addressMode === 'PREVIOUS' && savedAddresses.length > 0 ? (
+                <div className="checkout-saved-addresses-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px', marginBottom: '16px' }}>
+                  {savedAddresses.map((addr) => {
+                    const isSelected = customerInfo.diaChiGiaoHang.trim() === addr.diaChi.trim();
+                    return (
+                      <div
+                        key={addr.id}
+                        className={`checkout-addr-card ${isSelected ? 'active-selected' : ''}`}
+                        style={{
+                          border: '1.5px solid ' + (isSelected ? '#2563eb' : '#e2e8f0'),
+                          background: isSelected ? '#f8faff' : '#ffffff',
+                          borderRadius: '10px',
+                          padding: '12px 16px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '6px',
+                          transition: 'all 0.2s'
+                        }}
+                        onClick={() => {
+                          setCustomerInfo((prev) => ({
+                            ...prev,
+                            hoTen: addr.hoTen || prev.hoTen,
+                            soDienThoai: addr.soDienThoai || prev.soDienThoai,
+                            diaChiGiaoHang: addr.diaChi
+                          }));
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px' }}>
+                          <input
+                            type="radio"
+                            name="checkoutSelectedAddr"
+                            checked={isSelected}
+                            onChange={() => {}}
+                          />
+                          <strong style={{ color: '#0f172a' }}>{addr.hoTen || customerInfo.hoTen}</strong>
+                          <span style={{ color: '#64748b' }}>({addr.soDienThoai || customerInfo.soDienThoai})</span>
+                          {addr.isDefault && (
+                            <span style={{ marginLeft: 'auto', background: '#dcfce7', color: '#15803d', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '12px' }}>
+                              Mặc Định
+                            </span>
+                          )}
+                          {isSelected && !addr.isDefault && (
+                            <span style={{ marginLeft: 'auto', background: '#dbeafe', color: '#1e40af', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '12px' }}>
+                              Đang Chọn
+                            </span>
+                          )}
+                        </div>
+                        <p style={{ margin: 0, fontSize: '13px', color: '#334155', paddingLeft: '22px' }}>{addr.diaChi}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Chế độ 2: Nhập Địa Chỉ Mới Lúc Tạo Đơn Hàng */
+                <div className="checkout-new-address-form">
+                  <div className="form-grid-2">
+                    <div className="form-group">
+                      <label>Họ và tên người nhận *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ví dụ: Trương Hoàng Bảo"
+                        value={customerInfo.hoTen}
+                        onChange={(e) => setCustomerInfo({ ...customerInfo, hoTen: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Số điện thoại nhận hàng *</label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="Ví dụ: 0971694448"
+                        value={customerInfo.soDienThoai}
+                        onChange={(e) => setCustomerInfo({ ...customerInfo, soDienThoai: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Địa chỉ nhận hàng chi tiết mới *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ví dụ: Số 256 Nguyễn Văn Cừ, Phường An Hòa, Quận Ninh Kiều, TP. Cần Thơ"
+                      value={customerInfo.diaChiGiaoHang}
+                      onChange={(e) => setCustomerInfo({ ...customerInfo, diaChiGiaoHang: e.target.value })}
+                    />
+                  </div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#334155', cursor: 'pointer', marginBottom: '12px' }}>
+                    <input
+                      type="checkbox"
+                      checked={saveNewAddressToBook}
+                      onChange={(e) => setSaveNewAddressToBook(e.target.checked)}
+                    />
+                    <span>Lưu địa chỉ này vào sổ địa chỉ để sử dụng cho các lần mua sắm sau</span>
+                  </label>
+                </div>
+              )}
+
               <div className="form-group">
                 <label>Ghi chú cho các shop (tùy chọn)</label>
                 <input

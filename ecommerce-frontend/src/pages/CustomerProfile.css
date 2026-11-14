@@ -1079,3 +1079,863 @@
   background: #e2e8f0;
   color: #0f172a;
 }
+
+
+/* ==============================================================================
+   SELLER ONBOARDING & STORE MANAGEMENT TAB (DUAL ROLE B2B2C)
+   ============================================================================== */
+.profile-seller-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 10px 0;
+}
+
+.seller-upgrade-tab {
+  background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%) !important;
+  color: #1e40af !important;
+  font-weight: 700 !important;
+  border: 1px solid #c7d2fe !important;
+}
+
+.seller-upgrade-tab:hover {
+  background: linear-gradient(135deg, #dbeafe 0%, #c7d2fe 100%) !important;
+  color: #1e3a8a !important;
+}
+
+.seller-upgrade-tab.active {
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%) !important;
+  color: #ffffff !important;
+  border-color: #3730a3 !important;
+}
+
+.user-vip-pill.seller-pill {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+
+.seller-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pane-header-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.badge-seller-active {
+  background: #dcfce7;
+  color: #15803d;
+  font-weight: 800;
+  font-size: 11.5px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #bbf7d0;
+}
+
+/* My Store Summary Card */
+.my-store-summary-card {
+  display: flex;
+  gap: 24px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 24px;
+  align-items: center;
+}
+
+.store-avatar-wrap {
+  width: 110px;
+  height: 110px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid #cbd5e1;
+  background: #ffffff;
+}
+
+.store-avatar-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.store-summary-details {
+  flex: 1;
+}
+
+.store-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.store-type-badge {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.store-code-badge {
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-family: monospace;
+}
+
+.store-id-badge {
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.store-display-name {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+}
+
+.store-intro {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0 0 14px 0;
+  line-height: 1.5;
+}
+
+.store-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  font-size: 12.5px;
+  color: #475569;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meta-item svg {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+/* Banner Chuyển Vào Kênh Người Bán */
+.enter-seller-channel-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+  color: #ffffff;
+  padding: 24px;
+  border-radius: 14px;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
+}
+
+.enter-seller-channel-banner h4 {
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0 0 6px 0;
+  color: #ffffff;
+}
+
+.enter-seller-channel-banner p {
+  font-size: 13px;
+  color: #dbeafe;
+  margin: 0;
+  line-height: 1.5;
+  max-width: 580px;
+}
+
+.btn-enter-seller-portal {
+  background: #fbbf24;
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 13.5px;
+  padding: 14px 24px;
+  border-radius: 10px;
+  text-decoration: none;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-enter-seller-portal:hover {
+  background: #f59e0b;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.5);
+}
+
+/* Shortcuts Grid */
+.seller-quick-actions-section {
+  margin-top: 8px;
+}
+
+.seller-quick-actions-section h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 14px 0;
+}
+
+.seller-shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.seller-shortcut-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.seller-shortcut-card:hover {
+  border-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+}
+
+.sc-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.icon-contract { background: #ede9fe; color: #6d28d9; }
+.icon-product { background: #dbeafe; color: #1d4ed8; }
+.icon-order { background: #fef3c7; color: #b45309; }
+.icon-voucher { background: #fce7f3; color: #be185d; }
+.icon-settings { background: #f1f5f9; color: #475569; }
+.icon-viewshop { background: #dcfce7; color: #15803d; }
+
+.sc-info strong {
+  display: block;
+  font-size: 13px;
+  color: #0f172a;
+  margin-bottom: 2px;
+}
+
+.sc-info p {
+  margin: 0;
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.dual-role-notice-card {
+  display: flex;
+  gap: 12px;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 10px;
+}
+
+.dual-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.dual-role-notice-card strong {
+  display: block;
+  font-size: 13.5px;
+  color: #92400e;
+  margin-bottom: 4px;
+}
+
+.dual-role-notice-card p {
+  margin: 0;
+  font-size: 12.5px;
+  color: #78350f;
+  line-height: 1.5;
+}
+
+/* ==============================================================================
+   ONBOARDING FORM WHEN NOT YET A SELLER
+   ============================================================================== */
+.store-onboarding-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.onboarding-steps-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.step-card {
+  display: flex;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+  align-items: flex-start;
+}
+
+.step-num {
+  width: 28px;
+  height: 28px;
+  background: #2563eb;
+  color: #ffffff;
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-text strong {
+  display: block;
+  font-size: 13px;
+  color: #0f172a;
+  margin-bottom: 3px;
+}
+
+.step-text p {
+  margin: 0;
+  font-size: 11.5px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.store-register-form {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group-field label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.form-group-field input,
+.form-group-field textarea {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  color: #0f172a;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.form-group-field input:focus,
+.form-group-field textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.field-hint {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.store-terms-agreement {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 4px;
+}
+
+.checkbox-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.checkbox-wrap input[type="checkbox"] {
+  margin-top: 3px;
+  cursor: pointer;
+}
+
+.checkbox-wrap span {
+  font-size: 12.5px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.btn-submit-register-store {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 14.5px;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+  transition: all 0.2s ease;
+  margin-top: 8px;
+}
+
+.btn-submit-register-store:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(16, 185, 129, 0.45);
+}
+
+.btn-submit-register-store:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .my-store-summary-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  .store-meta-grid {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+  .enter-seller-channel-banner {
+    flex-direction: column;
+    text-align: center;
+  }
+  .seller-shortcuts-grid {
+    grid-template-columns: 1fr;
+  }
+  .onboarding-steps-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ==================== ADDRESS MANAGEMENT & PREVIOUS ADDRESSES ==================== */
+.profile-address-box-wrapper {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 8px 0 16px 0;
+}
+
+.address-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.addr-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.addr-title-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pin-icon {
+  color: #2563eb;
+}
+
+.addr-desc-hint {
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+.btn-add-new-addr {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-add-new-addr:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.saved-address-list {
+  margin-bottom: 16px;
+}
+
+.addr-list-caption {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 10px;
+}
+
+.addr-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.addr-select-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.addr-select-card:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+}
+
+.addr-select-card.active-selected {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.addr-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.addr-card-user {
+  font-size: 13.5px;
+  color: #0f172a;
+}
+
+.addr-card-tel {
+  font-size: 12.5px;
+  color: #64748b;
+  margin-left: 4px;
+}
+
+.addr-status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.addr-status-badge.selected {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.addr-status-badge.default {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.addr-card-detail {
+  font-size: 13px;
+  color: #334155;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.addr-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.btn-choose-addr {
+  background: transparent;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-choose-addr.chosen {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.btn-remove-addr {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.2s;
+}
+
+.btn-remove-addr:hover {
+  color: #ef4444;
+}
+
+.no-saved-addr-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.no-saved-addr-notice strong {
+  display: block;
+  font-size: 13px;
+  color: #334155;
+}
+
+.no-saved-addr-notice p {
+  font-size: 12px;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+.active-addr-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.active-addr-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.active-addr-input-container textarea {
+  width: 100%;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.active-addr-input-container textarea:focus {
+  border-color: #2563eb;
+  background: #ffffff;
+}
+
+.addr-sub-tip {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Modal Add Address */
+.profile-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.profile-modal-card {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: modalScaleIn 0.2s ease-out;
+}
+
+@keyframes modalScaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-header-row h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-close-modal {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.modal-form-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.modal-field input,
+.modal-field textarea {
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  outline: none;
+}
+
+.modal-field input:focus,
+.modal-field textarea:focus {
+  border-color: #2563eb;
+}
+
+.modal-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+}
+
+.modal-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 14px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-modal-cancel {
+  background: #f1f5f9;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+}
+
+.btn-modal-save {
+  background: #2563eb;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}

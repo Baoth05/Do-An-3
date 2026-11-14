@@ -93,6 +93,7 @@ const CustomerRegister = () => {
       ];
       localStorage.setItem(`customer_vouchers_${formData.taiKhoan.trim()}`, JSON.stringify(welcomeVouchers));
       localStorage.setItem('user_saved_vouchers', JSON.stringify(welcomeVouchers));
+      window.dispatchEvent(new Event('customer-user-updated'));
 
       setSuccessNotice('🎉 Đăng ký tài khoản thành công! Đã tặng 3 Voucher chào mừng vào ví!');
       setTimeout(() => {
@@ -152,11 +153,11 @@ const CustomerRegister = () => {
             </div>
           </div>
 
-          <div className="register-seller-teaser">
-            <span>Bạn muốn mở gian hàng kinh doanh trên sàn?</span>
-            <Link to="/seller/register" className="btn-teaser-link">
-              Đăng Ký Mở Gian Hàng & Kho Riêng →
-            </Link>
+          <div className="register-seller-teaser" style={{ background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0', marginTop: '16px' }}>
+            <span style={{ fontWeight: '700', color: '#1e293b', fontSize: '13px' }}>🏪 Bạn muốn mở gian hàng kinh doanh trên sàn?</span>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#64748b', lineHeight: '1.4' }}>
+              Chỉ cần đăng ký tài khoản thành viên tại đây. Sau khi đăng nhập, bạn có thể kích hoạt mở gian hàng & kho riêng ngay trong <strong>Trang Cá Nhân</strong>!
+            </p>
           </div>
         </div>
 

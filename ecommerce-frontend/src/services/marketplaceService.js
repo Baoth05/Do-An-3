@@ -13,6 +13,16 @@
  */
 import api from './api';
 
+// Helper lấy thông tin khách hàng hiện tại từ localStorage
+const getCurrentCustomerUser = () => {
+  try {
+    const raw = localStorage.getItem('customer_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 // Quản lý hợp đồng cung ứng của shop trên local storage
 const getLocalContracts = (storeId) => {
   try {
@@ -299,7 +309,7 @@ export const marketplaceService = {
     }
 
     // 2. Đọc từ customer_vouchers_{taiKhoan} nếu có
-    const customer = authService.getCurrentCustomer();
+    const customer = getCurrentCustomerUser();
     if (customer?.taiKhoan) {
       try {
         const custRaw = JSON.parse(localStorage.getItem(`customer_vouchers_${customer.taiKhoan}`) || '[]');
@@ -352,7 +362,7 @@ export const marketplaceService = {
       const nextList = [vObj, ...currentList.filter((v) => v.maVoucher !== vObj.maVoucher)];
       localStorage.setItem('user_saved_vouchers', JSON.stringify(nextList));
 
-      const customer = authService.getCurrentCustomer();
+      const customer = getCurrentCustomerUser();
       if (customer?.taiKhoan) {
         localStorage.setItem(`customer_vouchers_${customer.taiKhoan}`, JSON.stringify(nextList));
       }
@@ -370,7 +380,7 @@ export const marketplaceService = {
       const nextList = currentList.filter((v) => v.maVoucher !== normalized);
       localStorage.setItem('user_saved_vouchers', JSON.stringify(nextList));
 
-      const customer = authService.getCurrentCustomer();
+      const customer = getCurrentCustomerUser();
       if (customer?.taiKhoan) {
         localStorage.setItem(`customer_vouchers_${customer.taiKhoan}`, JSON.stringify(nextList));
       }

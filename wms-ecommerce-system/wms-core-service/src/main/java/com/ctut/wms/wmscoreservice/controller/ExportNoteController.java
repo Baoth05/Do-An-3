@@ -51,4 +51,13 @@ public class ExportNoteController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    // API Duyệt phiếu xuất kho (Sẽ trừ tồn kho và đổi trạng thái thành HOÀN THÀNH)
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<?> approveExportNote(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(exportNoteService.approveExportNote(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
