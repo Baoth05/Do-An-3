@@ -85,7 +85,7 @@ const CustomerProfile = () => {
           {
             id: 'addr-default',
             hoTen: customer.hoTen || customer.taiKhoan,
-            soDienThoai: customer.soDienThoai || '0901234567',
+            soDienThoai: customer.soDienThoai || '',
             diaChi: customer.diaChi.trim(),
             isDefault: true,
             ngayTao: 'Địa chỉ ban đầu'

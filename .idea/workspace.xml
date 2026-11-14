@@ -5,23 +5,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="05157197-5de5-4476-bd13-0b5f7d424e90" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/admin-frontend/.env" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/admin-frontend/src/pages/UserManagementDashboard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/src/pages/UserManagementDashboard.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/admin-frontend/src/services/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/src/services/api.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/admin-frontend/src/services/userService.js" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/src/services/userService.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/admin-frontend/vite.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/admin-frontend/vite.config.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ecommerce-frontend/src/services/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/ecommerce-frontend/src/services/api.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wms-frontend/.env" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wms-frontend/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/App.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wms-frontend/src/components/Layout/WmsLayout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/components/Layout/WmsLayout.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteCreate.css" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteCreate.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteCreate.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteCreate.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteDetail.css" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteDetail.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteDetail.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteDetail.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteForm.css" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteList.css" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteList.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteList.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ExportNoteList.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/Warehouse/WarehouseForm.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/Warehouse/WarehouseManagement.css" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/Warehouse/WarehouseManagement.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/Warehouse/WarehouseManagement.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/Warehouse/WarehouseManagement.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wms-frontend/src/utils/constants.js" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/utils/constants.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -178,7 +179,7 @@
       <recent name="D:\Projects\Do-an\Do_An\Do-An-3\wms-ecommerce-system\identity-service\src\main\java\com\ctut\wms\identityservice\service" />
     </key>
   </component>
-  <component name="RunManager" selected="Spring Boot.DiscoveryServerApplication">
+  <component name="RunManager" selected="Spring Boot.ApiGatewayApplication">
     <configuration name="ApiGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="api-gateway" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.ctut.wms.apigateway.ApiGatewayApplication" />
@@ -258,6 +259,7 @@
       <workItem from="1793706993364" duration="3976000" />
       <workItem from="1793956253953" duration="4771000" />
       <workItem from="1793964699846" duration="4716000" />
+      <workItem from="1794317030381" duration="1466000" />
     </task>
     <servers />
   </component>

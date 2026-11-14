@@ -9,7 +9,7 @@ import {
 import './SellerContracts.css';
 
 const SellerContracts = () => {
-  const { storeId, currentStore } = useOutletContext();
+  const { storeId, currentStore, currentSeller } = useOutletContext();
   const location = useLocation();
 
   const [contracts, setContracts] = useState([]);
@@ -30,12 +30,21 @@ const SellerContracts = () => {
 
   // Thông tin ký số hợp đồng
   const [signerInfo, setSignerInfo] = useState({
-    signerName: 'Trần Minh Quân',
+    signerName: currentSeller?.hoTen || currentSeller?.taiKhoan || '',
     signerRole: 'Chủ Cửa Hàng / Đại Diện Pháp Luật',
     signaturePin: '123456',
     agreedTerms: true,
   });
   const [isSubmittingContract, setIsSubmittingContract] = useState(false);
+
+  useEffect(() => {
+    if (currentSeller && (!signerInfo.signerName || signerInfo.signerName === 'Trần Minh Quân')) {
+      setSignerInfo((prev) => ({
+        ...prev,
+        signerName: currentSeller.hoTen || currentSeller.taiKhoan || '',
+      }));
+    }
+  }, [currentSeller]);
 
   // Modal xem chi tiết hợp đồng đã ký
   const [viewingContract, setViewingContract] = useState(null);

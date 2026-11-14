@@ -42,9 +42,9 @@ export const authService = {
         id: response.id || Math.abs(taiKhoan.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) || 101,
         taiKhoan: response.taiKhoan || taiKhoan,
         email: response.email || `${taiKhoan}@ctutgear.vn`,
-        hoTen: response.hoTen || (taiKhoan === 'baomap05' ? 'Bảo Mập' : taiKhoan),
-        soDienThoai: response.soDienThoai || '0901234567',
-        diaChi: response.diaChi || 'Cần Thơ, Việt Nam',
+        hoTen: response.hoTen || taiKhoan,
+        soDienThoai: response.soDienThoai || '',
+        diaChi: response.diaChi || '',
         vaiTro: isSeller ? 'STORE_OWNER' : rawRole,
         isSeller,
       };
@@ -64,45 +64,6 @@ export const authService = {
 
       window.dispatchEvent(new Event('customer-user-updated'));
       return customerData;
-
-      // Đảm bảo ví voucher của khách hàng luôn có sẵn các mã chào mừng
-      const vKey = `customer_vouchers_${customerData.taiKhoan}`;
-      const existingVouchers = localStorage.getItem(vKey);
-      if (!existingVouchers || JSON.parse(existingVouchers).length === 0) {
-        const defaultWelcome = [
-          {
-            id: 'welcome-1',
-            maVoucher: 'CTUT50K',
-            phanTramGiam: 10,
-            giamToiDa: 50000,
-            donHangToiThieu: 150000,
-            soLuongConLai: 500,
-            moTa: '🎁 Quà Chào Mừng - Giảm 10% tối đa 50.000đ toàn sàn'
-          },
-          {
-            id: 'welcome-2',
-            maVoucher: 'FREESHIP',
-            phanTramGiam: 100,
-            giamToiDa: 30000,
-            donHangToiThieu: 200000,
-            soLuongConLai: 1000,
-            moTa: '🚚 Miễn phí vận chuyển toàn quốc 30.000đ cho đơn từ 200.000đ'
-          },
-          {
-            id: 'welcome-3',
-            maVoucher: 'CTUTNEW50',
-            phanTramGiam: 15,
-            giamToiDa: 50000,
-            donHangToiThieu: 150000,
-            soLuongConLai: 500,
-            moTa: '🎉 Ưu đãi đơn hàng đầu tiên - Giảm ngay 15% tối đa 50.000đ'
-          }
-        ];
-        localStorage.setItem(vKey, JSON.stringify(defaultWelcome));
-        localStorage.setItem('user_saved_vouchers', JSON.stringify(defaultWelcome));
-      }
-
-      return customerData;
     } catch (err) {
       if (err.message && err.message.includes('Từ chối') || err.message?.includes('Thủ kho')) {
         throw err;
@@ -121,9 +82,9 @@ export const authService = {
         id: Math.abs(taiKhoan.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) || 101,
         taiKhoan,
         email: `${taiKhoan}@ctutgear.vn`,
-        hoTen: taiKhoan === 'baomap05' ? 'Bảo Mập' : taiKhoan,
-        soDienThoai: '0901234567',
-        diaChi: 'Cần Thơ, Việt Nam',
+        hoTen: taiKhoan,
+        soDienThoai: '',
+        diaChi: '',
         vaiTro: isSeller ? 'STORE_OWNER' : 'CUSTOMER',
         isSeller,
       };
@@ -320,7 +281,7 @@ export const authService = {
         id: Math.abs(taiKhoan.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) || 201,
         taiKhoan,
         email: `${taiKhoan}@seller.ctutgear.vn`,
-        hoTen: taiKhoan === 'baomap05' ? 'Bảo Mập' : taiKhoan,
+        hoTen: taiKhoan,
         vaiTro: 'STORE_OWNER',
         isSeller: true,
       };
