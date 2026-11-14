@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="05157197-5de5-4476-bd13-0b5f7d424e90" name="Changes" comment="">
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
       <change afterPath="$PROJECT_DIR$/admin-frontend/src/pages/SupplyContractManagement.css" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/admin-frontend/src/pages/SupplyContractManagement.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
@@ -21,6 +22,12 @@
       <change beforePath="$PROJECT_DIR$/ecommerce-frontend/src/pages/ShopPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/ecommerce-frontend/src/pages/ShopPage.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ecommerce-frontend/src/services/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/ecommerce-frontend/src/services/api.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ecommerce-frontend/src/services/marketplaceService.js" beforeDir="false" afterPath="$PROJECT_DIR$/ecommerce-frontend/src/services/marketplaceService.js" afterDir="false" />
+=======
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ActualExportNote.css" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ActualExportNote.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ActualExportNote.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ActualExportNote.jsx" afterDir="false" />
+>>>>>>> Stashed changes
 =======
       <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
