@@ -190,7 +190,7 @@ const SellerOrders = () => {
               <div className="order-recipient-info">
                 <div className="recipient-col">
                   <span className="label-s">Khách nhận:</span>
-                  <strong>{ord.hoTen || 'Khách Hàng'} ({ord.soDienThoai || '0901234567'})</strong>
+                  <strong>{ord.hoTen || 'Khách Hàng'} {ord.soDienThoai ? `(${ord.soDienThoai})` : ''}</strong>
                   <p className="address-text">📍 {ord.diaChiGiaoHang || 'Địa chỉ nhận hàng'}</p>
                 </div>
                 <div className="shipping-col">

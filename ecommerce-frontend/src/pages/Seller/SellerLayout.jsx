@@ -120,8 +120,8 @@ const SellerLayout = () => {
           const autoStoreData = {
             maKho: `STORE-${currentSeller.taiKhoan.toUpperCase().substring(0, 10)}`,
             tenKho: currentSeller.hoTen ? `Gian Hàng ${currentSeller.hoTen}` : `Gian Hàng ${currentSeller.taiKhoan}`,
-            diaChi: currentSeller.diaChi || 'Cần Thơ, Việt Nam',
-            soDienThoai: currentSeller.soDienThoai || '0901234567',
+            diaChi: currentSeller.diaChi || '',
+            soDienThoai: currentSeller.soDienThoai || '',
             email: currentSeller.email || `${currentSeller.taiKhoan}@seller.ctutgear.vn`,
             sucChuaToiDa: 1000,
             loaiHinh: 'KHO_CUA_HANG',
@@ -233,7 +233,7 @@ const SellerLayout = () => {
               </div>
               <div className="store-status-indicator">
                 <span className="dot-green"></span>
-                <small>{currentStore?.diaChi || 'Cần Thơ, Việt Nam'}</small>
+                <small>{currentStore?.diaChi || 'Chưa cập nhật địa chỉ'}</small>
               </div>
             </div>
           )}

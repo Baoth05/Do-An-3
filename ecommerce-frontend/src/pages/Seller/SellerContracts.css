@@ -474,3 +474,288 @@
   font-weight: 700;
 }
 
+/* ==================== 5-STEP PIPELINE STYLES ==================== */
+.contract-quick-role-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  color: #ffffff;
+  padding: 14px 20px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.15);
+}
+
+.role-bar-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.role-bar-title .pill-tag {
+  background: #2563eb;
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.role-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-toggle-btn {
+  background: #334155;
+  color: #e2e8f0;
+  border: 1px solid #475569;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.role-toggle-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #3b82f6;
+  font-weight: 700;
+}
+
+/* Badges */
+.badge-status-pending-admin {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.badge-status-pending-sign {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.badge-status-pending-warehouse {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border: 1px solid #ddd6fe;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.badge-status-warehouse-transfer {
+  background: #eef2ff;
+  color: #4338ca;
+  border: 1px solid #c7d2fe;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.badge-status-shipping {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.badge-status-completed {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.badge-status-rejected {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Stepper Bar on cards */
+.pipeline-stepper-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.stepper-node {
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.stepper-node.done {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.stepper-node.current {
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.stepper-arrow {
+  color: #cbd5e1;
+  font-size: 10px;
+}
+
+/* Action buttons on table */
+.contract-actions-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.btn-contract-action-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-contract-action-primary:hover {
+  background: #1d4ed8;
+}
+
+.btn-contract-action-success {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #059669;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-contract-action-success:hover {
+  background: #047857;
+}
+
+.btn-contract-action-amber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #d97706;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-contract-action-amber:hover {
+  background: #b45309;
+}
+
+.btn-contract-action-reject {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 10px;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+.btn-contract-action-reject:hover {
+  background: #fca5a5;
+  color: #991b1b;
+}
+
+/* Stock indicator */
+.stock-available-tag {
+  display: inline-block;
+  font-size: 11px;
+  color: #059669;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+.stock-out-tag {
+  display: inline-block;
+  font-size: 11px;
+  color: #dc2626;
+  font-weight: 700;
+  margin-left: 6px;
+}
+

@@ -107,7 +107,7 @@ const ShopPage = () => {
               <h2>{store?.tenKho || `Gian Hàng Đối Tác #${storeId}`}</h2>
               <p className="shop-desc">{store?.moTaGianHang || 'Chào mừng bạn đến với gian hàng chính thức trên Sàn CTUT Gear.'}</p>
               <div className="shop-quick-stats">
-                <span><FiMapPin /> {store?.diaChi || 'Cần Thơ, Việt Nam'}</span>
+                <span><FiMapPin /> {store?.diaChi || 'Chưa cập nhật địa chỉ'}</span>
                 <span><FiStar className="star-icon" /> Đánh giá: 4.9/5.0</span>
                 <span><FiBox /> {products.length} Sản phẩm mở bán</span>
               </div>
