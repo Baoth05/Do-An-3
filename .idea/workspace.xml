@@ -5,6 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="05157197-5de5-4476-bd13-0b5f7d424e90" name="Changes" comment="">
+<<<<<<< Updated upstream
       <change afterPath="$PROJECT_DIR$/admin-frontend/src/pages/SupplyContractManagement.css" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/admin-frontend/src/pages/SupplyContractManagement.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
@@ -20,6 +21,12 @@
       <change beforePath="$PROJECT_DIR$/ecommerce-frontend/src/pages/ShopPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/ecommerce-frontend/src/pages/ShopPage.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ecommerce-frontend/src/services/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/ecommerce-frontend/src/services/api.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ecommerce-frontend/src/services/marketplaceService.js" beforeDir="false" afterPath="$PROJECT_DIR$/ecommerce-frontend/src/services/marketplaceService.js" afterDir="false" />
+=======
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ActualExportNote.css" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ActualExportNote.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ActualExportNote.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/wms-frontend/src/pages/ExportNote/ActualExportNote.jsx" afterDir="false" />
+>>>>>>> Stashed changes
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -256,6 +263,7 @@
       <workItem from="1793956253953" duration="4771000" />
       <workItem from="1793964699846" duration="4716000" />
       <workItem from="1794317030381" duration="1466000" />
+      <workItem from="1794647678333" duration="889000" />
     </task>
     <servers />
   </component>
