@@ -62,7 +62,21 @@ public class ExportNoteController {
     }
     //API xác nhận xuất kho thực tế (Trừ tồn kho)
     @PutMapping("/{id}/confirm")
-    public ResponseEntity<ExportNoteResponse> confirmActualExport(@PathVariable Long id) {
-        return ResponseEntity.ok(exportNoteService.confirmActualExport(id));
+    public ResponseEntity<?> confirmActualExport(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(exportNoteService.confirmActualExport(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // API hủy các phiếu xuất (chưa xuất thực tế) của một đơn hàng & trả lại tồn khả dụng (order-service gọi khi hủy đơn)
+    @PutMapping("/by-order/{donHangId}/cancel")
+    public ResponseEntity<?> cancelByOrder(@PathVariable String donHangId) {
+        try {
+            return ResponseEntity.ok(exportNoteService.cancelByOrder(donHangId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(409).body(e.getMessage());
+        }
     }
 }

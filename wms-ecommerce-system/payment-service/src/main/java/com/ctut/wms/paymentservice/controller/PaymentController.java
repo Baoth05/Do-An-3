@@ -34,14 +34,24 @@ public class PaymentController {
 
     // 1. Khởi tạo giao dịch & liên kết thanh toán MoMo (hỗ trợ cả Cổng MoMo và Quét mã QR nhận tiền)
     @PostMapping("/create")
-    public ResponseEntity<PaymentResponse> createPayment(@RequestBody PaymentRequest request) {
-        return ResponseEntity.ok(paymentService.createPayment(request));
+    public ResponseEntity<?> createPayment(@RequestBody PaymentRequest request) {
+        try {
+            return ResponseEntity.ok(paymentService.createPayment(request));
+        } catch (com.ctut.wms.paymentservice.security.ForbiddenException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // 2. Webhook nhận kết quả từ MoMo IPN tự động
     @PostMapping("/momo-ipn")
     public ResponseEntity<String> handleMomoIpn(@RequestBody MomoIpnRequest ipnRequest) {
-        return ResponseEntity.ok(paymentService.processIpn(ipnRequest));
+        try {
+            return ResponseEntity.ok(paymentService.processIpn(ipnRequest));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // 3. Kiểm tra trạng thái giao dịch theo mã đơn hàng
@@ -49,6 +59,8 @@ public class PaymentController {
     public ResponseEntity<?> getPaymentStatus(@PathVariable String donHangId) {
         try {
             return ResponseEntity.ok(paymentService.getPaymentStatus(donHangId));
+        } catch (com.ctut.wms.paymentservice.security.ForbiddenException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -63,24 +75,38 @@ public class PaymentController {
         return ResponseEntity.ok(paymentService.confirmManualPayment(donHangId, transId, ghiChu));
     }
 
-    // 5. Tiện ích Mock thanh toán thành công theo momoOrderId (phục vụ Demo / Test)
-    @PostMapping("/mock-success/{momoOrderId}")
-    public ResponseEntity<PaymentResponse> mockPaymentSuccess(@PathVariable String momoOrderId) {
-        return ResponseEntity.ok(paymentService.mockPaymentSuccess(momoOrderId));
-    }
-
-    // 6. Tiện ích Mock thanh toán thành công theo mã đơn hàng donHangId (phục vụ Demo / Test)
-    @PostMapping("/mock-success-order/{donHangId}")
-    public ResponseEntity<PaymentResponse> mockPaymentSuccessByDonHangId(@PathVariable String donHangId) {
-        return ResponseEntity.ok(paymentService.mockPaymentSuccessByDonHangId(donHangId));
-    }
-
     // 7. Web3 / Crypto: Gửi xác nhận giao dịch thanh toán Crypto trên Blockchain
     @PostMapping("/crypto/submit")
     public ResponseEntity<?> submitCryptoPayment(@RequestBody CryptoPaymentRequest request) {
         try {
             return ResponseEntity.ok(cryptoPaymentService.submitCryptoPayment(request));
-        } catch (IllegalArgumentException e) {
+        } catch (com.ctut.wms.paymentservice.security.ForbiddenException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // 7b. Web3 / Crypto: Admin xác nhận giao dịch sau khi đã đối soát trên Blockchain Explorer
+    @PostMapping("/crypto/{id}/confirm")
+    public ResponseEntity<?> confirmCryptoPayment(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(cryptoPaymentService.confirmTransaction(id));
+        } catch (com.ctut.wms.paymentservice.security.ForbiddenException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // 7c. Web3 / Crypto: Admin từ chối giao dịch (đơn hàng tự động được hủy & nhả tồn kho)
+    @PostMapping("/crypto/{id}/reject")
+    public ResponseEntity<?> rejectCryptoPayment(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(cryptoPaymentService.rejectTransaction(id));
+        } catch (com.ctut.wms.paymentservice.security.ForbiddenException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -94,6 +120,7 @@ public class PaymentController {
     // 9. Web3 / Crypto: Lấy tất cả giao dịch Crypto
     @GetMapping("/crypto")
     public ResponseEntity<List<GiaoDichCrypto>> getAllCryptoTransactions() {
+        com.ctut.wms.paymentservice.security.CurrentUser.requireAdmin();
         return ResponseEntity.ok(cryptoPaymentService.getAllTransactions());
     }
 }

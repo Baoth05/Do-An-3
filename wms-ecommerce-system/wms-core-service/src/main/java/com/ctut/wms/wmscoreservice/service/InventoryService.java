@@ -10,6 +10,7 @@ import com.ctut.wms.wmscoreservice.repository.InventoryRepository;
 import com.ctut.wms.wmscoreservice.repository.ProductRepository;
 import com.ctut.wms.wmscoreservice.repository.TheKhoRepository;
 import com.ctut.wms.wmscoreservice.repository.WarehouseRepository;
+import com.ctut.wms.wmscoreservice.security.StoreAccess;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +37,11 @@ public class InventoryService {
 
         Warehouse warehouse = warehouseRepository.findById(request.getKhoHangId())
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy kho hàng!"));
+        StoreAccess.requireCanManage(warehouse);
+
+        if (request.getSoLuong() == null || request.getSoLuong() <= 0) {
+            throw new RuntimeException("Lỗi: Số lượng nhập phải lớn hơn 0!");
+        }
 
         Inventory inventory = inventoryRepository.findBySanPhamAndKhoHang(product, warehouse)
                 .orElse(new Inventory());
@@ -87,9 +93,16 @@ public class InventoryService {
 
     // Hàm lấy danh sách sản phẩm đang mở bán trên sàn TMĐT tập trung
     public List<InventoryResponse> getMarketplaceProducts() {
-        return inventoryRepository.findByDangBanTrueAndSoLuongThucTeGreaterThan(0).stream()
+        return inventoryRepository.findByDangBanTrueAndSoLuongKhaDungGreaterThan(0).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    // Tra cứu 1 mặt hàng của 1 gian hàng (order-service dùng để lấy GIÁ BÁN THẬT khi đặt hàng)
+    public InventoryResponse getItem(Long sanPhamId, Long khoHangId) {
+        Inventory inv = inventoryRepository.findBySanPhamIdAndKhoHangId(sanPhamId, khoHangId)
+                .orElseThrow(() -> new RuntimeException("Lỗi: Gian hàng không bán sản phẩm ID = " + sanPhamId));
+        return mapToResponse(inv);
     }
 
     // Hàm cập nhật ngưỡng an toàn tối thiểu và tối đa
@@ -97,6 +110,7 @@ public class InventoryService {
     public InventoryResponse updateThresholds(Long id, Integer min, Integer max) {
         Inventory inv = inventoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy bản ghi tồn kho!"));
+        StoreAccess.requireCanManage(inv.getKhoHang());
         if (min != null) inv.setSoLuongToiThieu(min);
         if (max != null) inv.setSoLuongToiDa(max);
         return mapToResponse(inventoryRepository.save(inv));
@@ -107,6 +121,10 @@ public class InventoryService {
     public InventoryResponse publishToMarketplace(Long id, Boolean dangBan, BigDecimal giaBanHienTai, Integer soLuongCanhBao) {
         Inventory inv = inventoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy bản ghi tồn kho có ID = " + id));
+        StoreAccess.requireCanManage(inv.getKhoHang());
+        if (giaBanHienTai != null && giaBanHienTai.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Lỗi: Giá bán phải lớn hơn 0!");
+        }
         if (dangBan != null) {
             inv.setDangBan(dangBan);
         }

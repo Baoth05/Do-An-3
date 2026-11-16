@@ -23,6 +23,9 @@ public class OrderController {
     public ResponseEntity<?> placeOrder(@RequestBody OrderRequest request) {
         try {
             return ResponseEntity.ok(orderService.placeOrder(request));
+        } catch (org.springframework.dao.OptimisticLockingFailureException e) {
+            // Khóa lạc quan (@Version): voucher / tồn kho vừa bị giao dịch khác cập nhật trước
+            return ResponseEntity.status(409).body("Voucher hoặc sản phẩm vừa được người khác sử dụng hết lượt. Vui lòng kiểm tra lại giỏ hàng và thử lại!");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -33,6 +36,9 @@ public class OrderController {
     public ResponseEntity<?> checkoutMultiShop(@RequestBody MultiShopCheckoutRequest request) {
         try {
             return ResponseEntity.ok(orderService.checkoutMultiShop(request));
+        } catch (org.springframework.dao.OptimisticLockingFailureException e) {
+            // Khóa lạc quan (@Version): voucher / tồn kho vừa bị giao dịch khác cập nhật trước
+            return ResponseEntity.status(409).body("Voucher hoặc sản phẩm vừa được người khác sử dụng hết lượt. Vui lòng kiểm tra lại giỏ hàng và thử lại!");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -64,6 +70,12 @@ public class OrderController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    // API nội bộ: người dùng đã mua & nhận sản phẩm chưa (interaction-service dùng để xác thực đánh giá)
+    @GetMapping("/purchased")
+    public ResponseEntity<Boolean> hasPurchased(@RequestParam Long nguoiDungId, @RequestParam String maHangHoa) {
+        return ResponseEntity.ok(orderService.hasPurchased(nguoiDungId, maHangHoa));
     }
 
     // API lấy danh sách toàn bộ đơn hàng trong hệ thống (Dành cho Quản trị viên)

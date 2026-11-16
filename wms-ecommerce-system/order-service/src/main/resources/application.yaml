@@ -9,8 +9,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5432/order_db # Database riêng
-    username: postgres
-    password: 123456
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123456}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -38,4 +38,17 @@ eureka:
     prefer-ip-address: true
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
+# Khóa bí mật nội bộ (phải trùng với api-gateway). Đặt biến môi trường INTERNAL_SECRET khi triển khai thật.
+internal:
+  secret: ${INTERNAL_SECRET:ctut-internal-dev-secret-change-me}
+
+# Địa chỉ nội bộ các service phụ thuộc
+services:
+  wms-url: ${WMS_URL:http://wms-core-service}  # Tên service trên Eureka (gọi qua @LoadBalanced RestTemplate, có timeout)
+
+# Thanh toán online (MoMo/Crypto): quá thời hạn chưa thanh toán thì tự hủy đơn & nhả tồn kho
+order:
+  payment-timeout-minutes: ${ORDER_PAYMENT_TIMEOUT_MINUTES:30}
+  payment-timeout-check-ms: 300000

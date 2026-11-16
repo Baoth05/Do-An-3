@@ -16,6 +16,12 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    // 0. Từ chối truy cập (không phải chủ sở hữu / không đủ quyền)
+    @ExceptionHandler(com.ctut.wms.identityservice.security.ForbiddenException.class)
+    public ResponseEntity<String> handleForbidden(RuntimeException ex) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).body(ex.getMessage());
+    }
+
     // 1. Xử lý các lỗi Logic kinh doanh (Tài khoản tồn tại, Sai mật khẩu,...)
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {

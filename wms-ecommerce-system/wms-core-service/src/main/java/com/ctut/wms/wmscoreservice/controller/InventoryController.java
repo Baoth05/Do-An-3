@@ -46,6 +46,16 @@ public class InventoryController {
         return ResponseEntity.ok(inventoryService.getInventoryByWarehouse(storeId));
     }
 
+    // API tra cứu 1 mặt hàng cụ thể trong 1 gian hàng (giá bán, tồn khả dụng, trạng thái mở bán)
+    @GetMapping("/item")
+    public ResponseEntity<?> getItem(@RequestParam Long sanPhamId, @RequestParam Long khoHangId) {
+        try {
+            return ResponseEntity.ok(inventoryService.getItem(sanPhamId, khoHangId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
+    }
+
     // API lấy tồn kho của một Kho Bãi vật lý
     @GetMapping("/warehouse/{warehouseId}")
     public ResponseEntity<List<InventoryResponse>> getInventoryByWarehouse(@PathVariable Long warehouseId) {

@@ -7,8 +7,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5432/identity_db # Database riêng
-    username: postgres
-    password: 123456 # Đổi lại nếu máy cậu dùng pass khác
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123456}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -23,7 +23,18 @@ eureka:
     instance-id: ${spring.application.name}:${server.port}
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
 
 jwt:
-  secret: 5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
+  secret: ${JWT_SECRET:5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437}
+
+# Khóa bí mật nội bộ (phải trùng với api-gateway). Đặt biến môi trường INTERNAL_SECRET khi triển khai thật.
+internal:
+  secret: ${INTERNAL_SECRET:ctut-internal-dev-secret-change-me}
+
+# Tài khoản khởi tạo. Khi triển khai thật: đặt ADMIN_DEFAULT_PASSWORD và SEED_DEMO_USERS=false
+app:
+  seed:
+    admin-password: ${ADMIN_DEFAULT_PASSWORD:admin}
+    demo-password: ${DEMO_USER_PASSWORD:123456}
+    demo-users: ${SEED_DEMO_USERS:true}

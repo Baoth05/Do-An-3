@@ -44,6 +44,10 @@ public class StoreController {
     public ResponseEntity<?> createStore(@RequestBody Warehouse store) {
         try {
             store.setLoaiHinh("KHO_CUA_HANG");
+            // Chủ shop chỉ được tạo gian hàng cho chính mình
+            if (!com.ctut.wms.wmscoreservice.security.CurrentUser.isAdmin()) {
+                store.setQuanLyId(com.ctut.wms.wmscoreservice.security.CurrentUser.id());
+            }
             return ResponseEntity.ok(warehouseService.createWarehouse(store));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -54,6 +58,13 @@ public class StoreController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateStore(@PathVariable Long id, @RequestBody Warehouse store) {
         try {
+            com.ctut.wms.wmscoreservice.security.StoreAccess.requireCanManage(warehouseService.getWarehouseById(id));
+            // Không cho chủ shop tự chuyển quyền sở hữu / đổi loại hình / tự duyệt trạng thái gian hàng
+            if (!com.ctut.wms.wmscoreservice.security.CurrentUser.isAdmin()) {
+                store.setQuanLyId(null);
+                store.setLoaiHinh(null);
+                store.setTrangThai(null);
+            }
             return ResponseEntity.ok(warehouseService.updateWarehouse(id, store));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

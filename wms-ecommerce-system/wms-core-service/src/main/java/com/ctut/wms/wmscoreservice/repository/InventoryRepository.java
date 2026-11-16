@@ -21,8 +21,8 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     // Lấy tồn kho theo ID kho hàng
     List<Inventory> findByKhoHangId(Long khoHangId);
 
-    // Lấy các mặt hàng đang bật cờ đăng bán trên sàn và còn hàng
-    List<Inventory> findByDangBanTrueAndSoLuongThucTeGreaterThan(Integer minQty);
+    // Lấy các mặt hàng đang bật cờ đăng bán trên sàn và còn hàng KHẢ DỤNG (chưa bị giữ chỗ cho đơn khác)
+    List<Inventory> findByDangBanTrueAndSoLuongKhaDungGreaterThan(Integer minQty);
 
     // Tra cứu nhanh theo ID sản phẩm và ID kho
     Optional<Inventory> findBySanPhamIdAndKhoHangId(Long sanPhamId, Long khoHangId);

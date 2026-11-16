@@ -50,11 +50,20 @@ public class ImportNoteService {
         importNote.setNguoiTao(request.getNguoiTao() != null ? request.getNguoiTao() : "Thủ kho");
         importNote.setNgayNhap(LocalDateTime.now());
 
-        // Mặc định là CHO_DUYET khi mới tạo
-        String trangThai = (request.getTrangThai() != null && !request.getTrangThai().isEmpty())
-                ? request.getTrangThai()
-                : "CHO_DUYET";
-        importNote.setTrangThai(trangThai);
+        // Phiếu mới luôn ở trạng thái CHỜ DUYỆT (không cho tạo phiếu ở trạng thái đã nhập kho)
+        importNote.setTrangThai(NoteStatus.NHAP_CHO_DUYET);
+
+        if (request.getDanhSachHangHoa() == null || request.getDanhSachHangHoa().isEmpty()) {
+            throw new RuntimeException("Lỗi: Phiếu nhập phải có ít nhất 1 sản phẩm!");
+        }
+        for (ImportNoteDetailRequest d : request.getDanhSachHangHoa()) {
+            if (d.getSoLuong() == null || d.getSoLuong() <= 0) {
+                throw new RuntimeException("Lỗi: Số lượng nhập phải lớn hơn 0!");
+            }
+            if (d.getGiaNhap() == null || d.getGiaNhap().compareTo(BigDecimal.ZERO) < 0) {
+                throw new RuntimeException("Lỗi: Giá nhập không hợp lệ!");
+            }
+        }
 
         ImportNote savedImportNote = importNoteRepository.save(importNote);
         BigDecimal tongTien = BigDecimal.ZERO;
@@ -155,11 +164,17 @@ public class ImportNoteService {
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy phiếu nhập!"));
 
         String oldStatus = note.getTrangThai();
-        note.setTrangThai(status);
+        String newStatus = NoteStatus.normalizeImport(status);
+
+        // Máy trạng thái: CHO_DUYET -> DA_DUYET | TU_CHOI ; DA_DUYET -> DA_NHAP_KHO | TU_CHOI.
+        // DA_NHAP_KHO và TU_CHOI là trạng thái cuối => tồn kho chỉ được cộng ĐÚNG 1 LẦN.
+        if (!NoteStatus.canImportTransition(oldStatus, newStatus)) {
+            throw new RuntimeException("Lỗi: Không thể chuyển phiếu nhập từ [" + oldStatus + "] sang [" + status + "]!");
+        }
+        note.setTrangThai(newStatus);
         ImportNote updatedNote = importNoteRepository.save(note);
 
-        // Kiểm tra nếu trạng thái mới là DA_NHAP_KHO và trước đó chưa nhập kho
-        if ("DA_NHAP_KHO".equalsIgnoreCase(status) && !"DA_NHAP_KHO".equalsIgnoreCase(oldStatus)) {
+        if (NoteStatus.NHAP_DA_NHAP_KHO.equals(newStatus)) {
             List<ImportNoteDetail> details = importNoteDetailRepository.findByPhieuNhap(updatedNote);
             Warehouse warehouse = updatedNote.getKhoHang();
 

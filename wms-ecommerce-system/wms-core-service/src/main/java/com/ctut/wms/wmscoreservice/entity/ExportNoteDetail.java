@@ -32,4 +32,8 @@ public class ExportNoteDetail extends BaseEntity {
 
     @Column(name = "so_luong", nullable = false)
     private Integer soLuong;
+
+    // Đơn giá bán thực tế tại thời điểm xuất (giá trên đơn hàng / giá niêm yết của gian hàng)
+    @Column(name = "don_gia")
+    private Double donGia;
 }

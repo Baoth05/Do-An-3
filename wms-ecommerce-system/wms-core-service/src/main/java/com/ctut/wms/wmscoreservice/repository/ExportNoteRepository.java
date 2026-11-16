@@ -12,6 +12,9 @@ import com.ctut.wms.wmscoreservice.entity.ExportNote;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ExportNoteRepository extends JpaRepository<ExportNote, Long> {
+    List<ExportNote> findByDonHangId(String donHangId);
 }

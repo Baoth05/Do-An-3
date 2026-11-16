@@ -42,6 +42,12 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    // --- API KHÁCH HÀNG TỰ MỞ GIAN HÀNG (nâng vai trò lên STORE_OWNER, trả token mới) ---
+    @PutMapping("/upgrade-to-seller")
+    public ResponseEntity<AuthResponse> upgradeToSeller() {
+        return ResponseEntity.ok(authService.upgradeToSeller());
+    }
+
     // --- API XÓA TÀI KHOẢN ---
     @DeleteMapping("/delete/{taiKhoan}")
     public ResponseEntity<String> deleteUser(@PathVariable String taiKhoan) {
@@ -75,6 +81,12 @@ public class AuthController {
     public ResponseEntity<String> toggleUserStatus(@PathVariable Long id) {
         String result = authService.toggleUserStatus(id);
         return ResponseEntity.ok(result);
+    }
+
+    // --- API DUYỆT TÀI KHOẢN (Admin) ---
+    @PutMapping("/users/{id}/approve")
+    public ResponseEntity<String> approveUser(@PathVariable Long id) {
+        return ResponseEntity.ok(authService.approveUser(id));
     }
 
     // --- API ĐỔI MẬT KHẨU ---
