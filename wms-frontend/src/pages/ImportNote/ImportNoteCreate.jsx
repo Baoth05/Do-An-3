@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   FiArrowLeft, FiSave, FiPlus, FiTrash2, 
   FiFileText, FiTruck, FiCheckCircle 
@@ -9,6 +9,11 @@ import './ImportNoteCreate.css';
 
 const ImportNoteCreate = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const passedState = location.state?.requestImportItem;
+  
+  // Biến cờ (flag) để kiểm tra xem có phải điều hướng từ trang Tồn kho không
+  const isFromInventory = !!passedState;
 
   const [suppliers, setSuppliers] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
@@ -30,16 +35,10 @@ const ImportNoteCreate = () => {
   const [items, setItems] = useState([]);
 
   // --- HÀM HỖ TRỢ LỌC SẢN PHẨM ---
-  // Hàm này bao quát nhiều cấu trúc JSON khác nhau từ backend
   const filterProductsBySupplier = (allProducts, supplierId) => {
     if (!supplierId) return [];
     const targetId = String(supplierId);
     
-    // In ra phần tử đầu tiên để bạn dễ debug (Mở F12 -> tab Console để xem cấu trúc thực tế)
-    if (allProducts.length > 0) {
-        console.log("Cấu trúc 1 sản phẩm từ API là:", allProducts[0]);
-    }
-
     return allProducts.filter(p => {
       return (
         String(p.nhaCungCapId) === targetId ||
@@ -47,7 +46,6 @@ const ImportNoteCreate = () => {
         String(p.supplierId) === targetId ||
         (p.nhaCungCap && String(p.nhaCungCap.id) === targetId) ||
         (p.supplier && String(p.supplier.id) === targetId) ||
-        // Trường hợp backend chỉ trả về ID thẳng trong trường nhaCungCap chứ không phải object
         (typeof p.nhaCungCap !== 'object' && String(p.nhaCungCap) === targetId)
       );
     });
@@ -72,33 +70,60 @@ const ImportNoteCreate = () => {
         loadedProducts = prodRes.value;
       }
 
+      let initialSupplierId = '';
+      let initialWarehouseId = '';
+      let initialItems = [];
+      let initialFilteredProds = [];
+
+      // Xử lý dữ liệu truyền từ trang Tồn Kho
+      if (passedState && loadedProducts.length > 0) {
+        const targetProduct = loadedProducts.find(p => String(p.id) === String(passedState.sanPhamId));
+        
+        if (targetProduct) {
+          initialSupplierId = String(targetProduct.nhaCungCapId || targetProduct.nha_cung_cap_id || targetProduct.supplierId || (targetProduct.nhaCungCap?.id) || (typeof targetProduct.nhaCungCap !== 'object' ? targetProduct.nhaCungCap : ''));
+          initialWarehouseId = String(passedState.khoHangId);
+          initialFilteredProds = filterProductsBySupplier(loadedProducts, initialSupplierId);
+          
+          // Thêm tonThucTe và trangThai vào item
+          initialItems = [{ 
+            sanPhamId: targetProduct.id, 
+            soLuong: passedState.soLuong || 1, 
+            giaNhap: targetProduct.giaNhap || 0,
+            tonThucTe: passedState.tonThucTe || 0,
+            trangThai: passedState.trangThai || 'Không xác định'
+          }];
+        }
+      }
+
+      // Khởi tạo Nhà cung cấp
       if (suppRes.status === 'fulfilled' && Array.isArray(suppRes.value)) {
         setSuppliers(suppRes.value);
         if (suppRes.value.length > 0) {
-          const firstSuppId = String(suppRes.value[0].id);
-          setHeaderData(prev => ({ ...prev, nhaCungCapId: firstSuppId }));
+          const finalSuppId = initialSupplierId || String(suppRes.value[0].id);
+          setHeaderData(prev => ({ ...prev, nhaCungCapId: finalSuppId }));
           
-          const initialFiltered = filterProductsBySupplier(loadedProducts, firstSuppId);
-          setFilteredProducts(initialFiltered);
+          const finalFiltered = initialFilteredProds.length > 0 ? initialFilteredProds : filterProductsBySupplier(loadedProducts, finalSuppId);
+          setFilteredProducts(finalFiltered);
 
-          if (initialFiltered.length > 0) {
-            setItems([{ 
-              sanPhamId: initialFiltered[0].id, 
-              soLuong: 1, 
-              giaNhap: initialFiltered[0].giaNhap || 0 
-            }]);
+          if (initialItems.length > 0) {
+            setItems(initialItems);
+          } else if (finalFiltered.length > 0) {
+            // Nếu không từ tồn kho, không cần tonThucTe và trangThai
+            setItems([{ sanPhamId: finalFiltered[0].id, soLuong: 1, giaNhap: finalFiltered[0].giaNhap || 0 }]);
           }
         }
       }
 
+      // Khởi tạo Kho hàng
       if (whRes.status === 'fulfilled' && Array.isArray(whRes.value)) {
         setWarehouses(whRes.value);
         if (whRes.value.length > 0) {
-          setHeaderData(prev => ({ ...prev, khoHangId: whRes.value[0].id }));
+          const finalWhId = initialWarehouseId || String(whRes.value[0].id);
+          setHeaderData(prev => ({ ...prev, khoHangId: finalWhId }));
         }
       }
     } catch (e) {
-      console.warn('Lỗi nạp danh mục tạo phiếu nhập:', e.message);
+      console.warn('Lỗi nạp danh mục:', e.message);
     } finally {
       setIsLoading(false);
     }
@@ -113,11 +138,7 @@ const ImportNoteCreate = () => {
       setFilteredProducts(newFiltered);
 
       if (newFiltered.length > 0) {
-        setItems([{ 
-          sanPhamId: newFiltered[0].id, 
-          soLuong: 1, 
-          giaNhap: newFiltered[0].giaNhap || 0 
-        }]);
+        setItems([{ sanPhamId: newFiltered[0].id, soLuong: 1, giaNhap: newFiltered[0].giaNhap || 0 }]);
       } else {
         setItems([]);
       }
@@ -130,10 +151,13 @@ const ImportNoteCreate = () => {
       if (field === 'sanPhamId') {
         const selectedId = String(value);
         const selectedProduct = filteredProducts.find(p => String(p.id) === selectedId);
+        // Khi đổi sản phẩm, ta reset lại tonThucTe và trangThai nếu có
         updated[index] = { 
           ...updated[index], 
           sanPhamId: value,
-          giaNhap: selectedProduct ? (selectedProduct.giaNhap || 0) : 0
+          giaNhap: selectedProduct ? (selectedProduct.giaNhap || 0) : 0,
+          tonThucTe: undefined, 
+          trangThai: undefined
         };
       } else {
         updated[index] = { ...updated[index], [field]: Number(value) };
@@ -148,6 +172,7 @@ const ImportNoteCreate = () => {
         return;
     }
     const defaultProdId = filteredProducts[0].id;
+    // Sản phẩm thêm mới sẽ không có thông tin tồn/trạng thái từ Inventory
     setItems(prev => [...prev, { sanPhamId: defaultProdId, soLuong: 1, giaNhap: filteredProducts[0].giaNhap || 0 }]);
   };
 
@@ -193,6 +218,14 @@ const ImportNoteCreate = () => {
     }
   };
 
+  // Helper render badge trạng thái
+  const renderStatusBadge = (status) => {
+    if (!status) return null;
+    if (status === 'Hết Hàng') return <span className="ref-badge badge-danger">{status}</span>;
+    if (status === 'Cạn Kho') return <span className="ref-badge badge-warning">{status}</span>;
+    return <span className="ref-badge badge-info">{status}</span>;
+  };
+
   if (isLoading) {
     return (
       <div className="import-form-container" style={{ padding: '40px', textAlign: 'center' }}>
@@ -209,14 +242,13 @@ const ImportNoteCreate = () => {
             <FiArrowLeft size={18} />
           </button>
           <div>
-            <h2>Tạo Yêu Cầu Nhập Kho</h2> {/* Sửa tiêu đề */}
-            <p>Lập danh sách hàng hóa cần nhập để gửi Thủ kho trưởng phê duyệt</p> {/* Sửa mô tả */}
+            <h2>Tạo Yêu Cầu Nhập Kho</h2>
+            <p>Lập danh sách hàng hóa cần nhập để gửi Thủ kho trưởng phê duyệt</p>
           </div>
         </div>
         <div className="form-header-actions">
           <button type="button" className="btn-cancel" onClick={() => navigate('/import-notes')}>Hủy Bỏ</button>
           <button type="button" className="btn-submit" onClick={handleSubmit} disabled={isSubmitting}>
-            {/* Sửa text nút bấm */}
             <FiSave size={16} /> {isSubmitting ? 'Đang gửi...' : 'Gửi Yêu Cầu Nhập'}
           </button>
         </div>
@@ -267,15 +299,20 @@ const ImportNoteCreate = () => {
           <div className="form-card-title">
             <FiTruck size={18} /><span>Danh Sách Mặt Hàng Kiểm Đếm & Nhập Kho</span>
           </div>
-          <div className="items-table-wrapper">
+          <div className="items-table-wrapper" style={{ overflowX: 'auto' }}>
             <table className="items-table">
               <thead>
                 <tr>
                   <th style={{ width: '50px' }}>STT</th>
                   <th>Hàng Hóa / Sản Phẩm (Mã SKU)</th>
-                  <th style={{ width: '150px' }}>Số Lượng Nhập</th>
-                  <th style={{ width: '180px' }}>Đơn Giá Nhập (VNĐ)</th>
-                  <th style={{ width: '180px' }}>Thành Tiền (VNĐ)</th>
+                  
+                  {/* Chỉ render 2 cột này nếu điều hướng từ InventoryStock */}
+                  {isFromInventory && <th style={{ width: '100px', textAlign: 'center' }}>Tồn Thực Tế</th>}
+                  {isFromInventory && <th style={{ width: '120px', textAlign: 'center' }}>Trạng Thái</th>}
+                  
+                  <th style={{ width: '130px' }}>Số Lượng Nhập</th>
+                  <th style={{ width: '150px' }}>Đơn Giá (VNĐ)</th>
+                  <th style={{ width: '150px' }}>Thành Tiền (VNĐ)</th>
                   <th style={{ width: '60px', textAlign: 'center' }}>Xóa</th>
                 </tr>
               </thead>
@@ -295,6 +332,19 @@ const ImportNoteCreate = () => {
                           {filteredProducts.length === 0 && <option value="">Không có sản phẩm nào cho NCC này</option>}
                         </select>
                       </td>
+                      
+                      {/* Dữ liệu tham chiếu */}
+                      {isFromInventory && (
+                        <td style={{ textAlign: 'center', fontWeight: 'bold', color: '#475569' }}>
+                          {item.tonThucTe !== undefined ? item.tonThucTe : '—'}
+                        </td>
+                      )}
+                      {isFromInventory && (
+                        <td style={{ textAlign: 'center' }}>
+                          {item.trangThai ? renderStatusBadge(item.trangThai) : '—'}
+                        </td>
+                      )}
+
                       <td>
                         <input type="number" min="1" value={item.soLuong} onChange={(e) => handleItemChange(idx, 'soLuong', e.target.value)} />
                       </td>
@@ -332,7 +382,6 @@ const ImportNoteCreate = () => {
         <div className="form-footer">
           <button type="button" className="btn-cancel" onClick={() => navigate('/import-notes')}>Hủy Bỏ</button>
           <button type="submit" className="btn-submit" disabled={isSubmitting}>
-            {/* Sửa text nút bấm dưới cùng */}
             <FiCheckCircle size={18} /> {isSubmitting ? 'Đang xử lý...' : 'Xác Nhận Gửi Yêu Cầu Phê Duyệt'}
           </button>
         </div>

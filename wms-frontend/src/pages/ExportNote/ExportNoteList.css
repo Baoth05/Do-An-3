@@ -251,3 +251,18 @@
   color: #64748b;
   padding: 4px;
 }
+/* Thêm màu cho các thẻ thống kê mới */
+.stat-card.purple .stat-icon { background-color: #faf5ff; color: #a855f7; }
+.stat-card.yellow .stat-icon { background-color: #fef9c3; color: #eab308; }
+.stat-card.red .stat-icon { background-color: #fef2f2; color: #ef4444; }
+
+/* Thêm màu cho nhãn trạng thái (Status Pill) trong bảng */
+.status-pill-custom.warning {
+  background-color: #fef9c3;
+  color: #ca8a04;
+}
+
+.status-pill-custom.processing {
+  background-color: #dbeafe;
+  color: #2563eb;
+}

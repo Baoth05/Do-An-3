@@ -1,21 +1,19 @@
 /**
  * ==============================================================================
  * Module: WmsDashboard.jsx
- * Mô tả: Màn hình Thống Kê Xuất / Nhập & Trung Tâm Điều Hành Vận Hành Kho Bãi.
- * Chức năng: 
- *   - Báo cáo tổng hợp số lượng SKU, tồn kho thực tế, giá trị nhập kho và xuất kho.
- *   - Phân tích cân đối luân chuyển dòng hàng (Inflow vs Outflow).
- *   - Bộ lọc và bảng chứng từ giao dịch xuất / nhập thời gian thực.
- *   - Điều hướng nhanh đến chi tiết phiếu nhập / xuất.
+ * Mô tả: Màn hình Thống Kê WMS - Nâng cấp UI & Tích hợp Biểu đồ.
  * ==============================================================================
  */
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FiBox, FiArrowDownLeft, FiArrowUpRight, FiLayers, 
-  FiRefreshCw, FiPlus, FiEye, FiSearch, FiTruck, FiUsers, 
-  FiActivity, FiCheckCircle, FiClock, FiFileText, FiTrendingUp
+  FiRefreshCw, FiEye, FiSearch, FiTruck, FiUsers, 
+  FiActivity, FiPieChart 
 } from 'react-icons/fi';
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+} from 'recharts';
 import { wmsCoreService } from '../../services/wmsCoreService';
 import './WmsDashboard.css';
 
@@ -32,10 +30,10 @@ const WmsDashboard = () => {
   });
 
   const [recentActivities, setRecentActivities] = useState([]);
-  const [activeTab, setActiveTab] = useState('ALL'); // 'ALL' | 'IMPORT' | 'EXPORT'
+  const [chartData, setChartData] = useState([]);
+  const [activeTab, setActiveTab] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isBackendConnected, setIsBackendConnected] = useState(false);
 
   const fetchDashboardData = async () => {
     try {
@@ -55,8 +53,6 @@ const WmsDashboard = () => {
       const exports = exportRes.status === 'fulfilled' && Array.isArray(exportRes.value) ? exportRes.value : [];
       const whs = whRes.status === 'fulfilled' && Array.isArray(whRes.value) ? whRes.value : [];
 
-      setIsBackendConnected(true);
-
       const totalQty = invs.reduce((sum, item) => sum + (Number(item.soLuongThucTe) || 0), 0);
       const totalImportVal = imports.reduce((sum, item) => sum + (Number(item.tongTienNhap) || 0), 0);
 
@@ -69,7 +65,7 @@ const WmsDashboard = () => {
         warehousesCount: whs.length,
       });
 
-      // Tạo nhật ký biến động kết hợp từ các phiếu nhập và xuất gần nhất
+      // 1. Chuẩn bị dữ liệu cho Bảng giao dịch
       const activities = [];
       imports.forEach(n => {
         activities.push({
@@ -77,13 +73,13 @@ const WmsDashboard = () => {
           rawId: n.id,
           type: 'IMPORT',
           code: n.maPhieuNhap || `PN-${n.id}`,
-          partner: n.tenNhaCungCap || n.nhaCungCap?.tenNhaCungCap || 'Nhà Cung Cấp',
-          warehouse: n.tenKhoHang || n.khoHang?.tenKho || 'Kho Hàng',
-          value: n.tongTienNhap ? Number(n.tongTienNhap) : null,
+          partner: n.tenNhaCungCap || 'Nhà Cung Cấp',
+          warehouse: n.tenKhoHang || 'Kho Hàng',
+          value: n.tongTienNhap ? Number(n.tongTienNhap) : 0,
           orderRef: null,
           rawDate: n.ngayNhap ? new Date(n.ngayNhap) : new Date(0),
-          time: n.ngayNhap ? new Date(n.ngayNhap).toLocaleString('vi-VN') : 'Gần đây',
-          status: n.trangThai || 'ĐÃ NHẬP KHO',
+          time: n.ngayNhap ? new Date(n.ngayNhap).toLocaleDateString('vi-VN') : 'Gần đây',
+          status: n.trangThai || 'HOÀN THÀNH',
         });
       });
 
@@ -93,23 +89,34 @@ const WmsDashboard = () => {
           rawId: n.id,
           type: 'EXPORT',
           code: n.maPhieuXuat || `PX-${n.id}`,
-          partner: n.tenDonViVanChuyen || n.donViVanChuyen?.tenDonVi || 'Giao Hàng Nhanh',
-          warehouse: n.tenKhoHang || n.khoHang?.tenKho || 'Kho Hàng',
-          value: null,
-          orderRef: n.donHangId ? `Đơn hàng #${n.donHangId}` : 'Xuất bán lẻ sàn TMĐT',
+          partner: n.tenDonViVanChuyen || 'Giao Hàng',
+          warehouse: n.tenKhoHang || 'Kho Hàng',
+          value: 0,
+          orderRef: n.donHangId ? `Đơn #${n.donHangId}` : 'Khách lẻ',
           rawDate: n.ngayXuat ? new Date(n.ngayXuat) : new Date(0),
-          time: n.ngayXuat ? new Date(n.ngayXuat).toLocaleString('vi-VN') : 'Gần đây',
+          time: n.ngayXuat ? new Date(n.ngayXuat).toLocaleDateString('vi-VN') : 'Gần đây',
           status: n.trangThai || 'HOÀN THÀNH',
         });
       });
-
-      // Sắp xếp giảm dần theo thời gian (chứng từ mới nhất lên đầu)
       activities.sort((a, b) => b.rawDate - a.rawDate);
-
       setRecentActivities(activities);
+
+      // 2. Phân tích dữ liệu Biểu đồ theo Ngày (Gộp Nhập/Xuất)
+      const dateMap = {};
+      activities.forEach(act => {
+        const dateKey = act.time;
+        if (!dateMap[dateKey]) {
+          dateMap[dateKey] = { date: dateKey, import: 0, export: 0 };
+        }
+        if (act.type === 'IMPORT') dateMap[dateKey].import += 1;
+        if (act.type === 'EXPORT') dateMap[dateKey].export += 1;
+      });
+      
+      const sortedChartData = Object.values(dateMap).slice(0, 7).reverse();
+      setChartData(sortedChartData);
+
     } catch (e) {
-      console.warn('Lỗi lấy dữ liệu Dashboard từ Backend:', e.message);
-      setIsBackendConnected(false);
+      console.warn('Lỗi lấy dữ liệu Dashboard:', e.message);
     } finally {
       setIsLoading(false);
     }
@@ -119,299 +126,194 @@ const WmsDashboard = () => {
     fetchDashboardData();
   }, []);
 
-  const formatCurrency = (amount) => {
-    if (!amount) return '0 ₫';
-    return Number(amount).toLocaleString('vi-VN') + ' ₫';
-  };
+  const formatCurrency = (amount) => Number(amount || 0).toLocaleString('vi-VN') + ' ₫';
 
-  // Tính toán tỷ lệ luân chuyển
   const totalNotes = stats.importNotesCount + stats.exportNotesCount;
   const importPercent = totalNotes > 0 ? Math.round((stats.importNotesCount / totalNotes) * 100) : 50;
   const exportPercent = totalNotes > 0 ? 100 - importPercent : 50;
 
-  // Lọc hoạt động theo Tab và Từ khóa
   const filteredActivities = useMemo(() => {
     return recentActivities.filter(act => {
       const matchTab = activeTab === 'ALL' || act.type === activeTab;
       const search = searchTerm.toLowerCase();
-      const matchSearch = 
-        act.code.toLowerCase().includes(search) ||
-        act.partner.toLowerCase().includes(search) ||
-        act.warehouse.toLowerCase().includes(search) ||
-        (act.orderRef && act.orderRef.toLowerCase().includes(search));
+      const matchSearch = act.code.toLowerCase().includes(search) || act.partner.toLowerCase().includes(search);
       return matchTab && matchSearch;
     });
   }, [recentActivities, activeTab, searchTerm]);
 
+  const getStatusPill = (status, type) => {
+    const s = status.toUpperCase();
+    if (s.includes('HỦY') || s.includes('TỪ CHỐI')) return <span className="status-pill danger">{status}</span>;
+    if (s.includes('CHỜ')) return <span className="status-pill warning">{status}</span>;
+    if (type === 'IMPORT') return <span className="status-pill success">{status}</span>;
+    return <span className="status-pill info">{status}</span>;
+  };
+
   return (
     <div className="wms-dashboard">
-      {/* 1. Header Trang Thống Kê & Phím Tắt Nghiệp Vụ */}
+      {/* 1. Header */}
       <div className="dashboard-header-bar">
         <div>
-          <h1 className="dashboard-title">Thống Kê Xuất / Nhập Kho Bãi</h1>
-          <p className="dashboard-subtitle">
-            Giám sát thời gian thực lưu chuyển hàng hóa, giá trị nhập xuất và dữ liệu luân chuyển toàn chuỗi
-          </p>
+          <h1 className="dashboard-title">Bảng Điều Khiển WMS</h1>
+          <p className="dashboard-subtitle">Giám sát tổng quan vật tư, tồn kho và luân chuyển hàng hóa</p>
         </div>
         <div className="dashboard-actions">
-          <button 
-            className="btn-secondary" 
-            onClick={fetchDashboardData} 
-            disabled={isLoading}
-            title="Đồng bộ lại số liệu"
-          >
-            <FiRefreshCw className={isLoading ? 'spin-icon' : ''} size={14} /> 
-            <span>{isBackendConnected ? 'Backend Live' : 'Đồng bộ'}</span>
-          </button>
-          <button 
-            className="btn-shortcut btn-inflow"
-            onClick={() => navigate('/import-notes/create')}
-          >
-            <FiPlus size={15} /> 
-            <span>Lập Phiếu Nhập</span>
-          </button>
-          <button 
-            className="btn-shortcut btn-outflow"
-            onClick={() => navigate('/export-notes/create')}
-          >
-            <FiPlus size={15} /> 
-            <span>Lập Phiếu Xuất</span>
+          {/* Đã xóa nút Nhập/Xuất, chỉ giữ lại nút Đồng bộ */}
+          <button className="btn-shortcut" onClick={fetchDashboardData} style={{ background: '#f1f5f9', color: '#334155' }}>
+            <FiRefreshCw className={isLoading ? 'spin-icon' : ''} /> Đồng bộ
           </button>
         </div>
       </div>
 
-      {/* 2. Grid 4 Thẻ KPI Chỉ Số Chính */}
+      {/* 2. KPI Cards */}
       <div className="dashboard-stats-grid">
-        {/* Card 1: Master SKU */}
-        <div className="kpi-metric-card blue">
+        <div className="kpi-metric-card">
           <div className="metric-header">
-            <span className="metric-label">Hàng Hóa (Master SKU)</span>
-            <div className="metric-icon-box blue">
-              <FiLayers size={20} />
-            </div>
+            <span className="metric-label">Mã Vật Tư (SKU)</span>
+            <div className="metric-icon-box blue"><FiLayers size={22} /></div>
           </div>
           <div className="metric-value">{stats.productsCount}</div>
-          <div className="metric-footer">
-            <span className="footer-highlight">{stats.warehousesCount}</span> kho lưu trữ vật lý
-          </div>
+          <div className="metric-footer">Quản lý trên <strong>{stats.warehousesCount}</strong> kho</div>
         </div>
 
-        {/* Card 2: Tồn Kho Kệ */}
-        <div className="kpi-metric-card orange">
+        <div className="kpi-metric-card">
           <div className="metric-header">
-            <span className="metric-label">Tổng Tồn Kho Kệ</span>
-            <div className="metric-icon-box orange">
-              <FiBox size={20} />
-            </div>
+            <span className="metric-label">Tồn Kho Khả Dụng</span>
+            <div className="metric-icon-box orange"><FiBox size={22} /></div>
           </div>
           <div className="metric-value">{stats.totalStockCount.toLocaleString('vi-VN')}</div>
-          <div className="metric-footer">
-            <span className="footer-highlight">Sản phẩm</span> sẵn sàng xuất giao
-          </div>
+          <div className="metric-footer">Sản phẩm sẵn sàng giao dịch</div>
         </div>
 
-        {/* Card 3: Phiếu Nhập Kho */}
-        <div className="kpi-metric-card green">
+        <div className="kpi-metric-card">
           <div className="metric-header">
-            <span className="metric-label">Tổng Nhập Kho (Inflow)</span>
-            <div className="metric-icon-box green">
-              <FiArrowDownLeft size={20} />
-            </div>
+            <span className="metric-label">Chứng Từ Nhập Kho</span>
+            <div className="metric-icon-box green"><FiArrowDownLeft size={22} /></div>
           </div>
           <div className="metric-value">{stats.importNotesCount}</div>
-          <div className="metric-footer">
-            Tổng giá trị: <strong style={{ color: '#047857' }}>{formatCurrency(stats.totalImportValue)}</strong>
-          </div>
+          <div className="metric-footer">Giá trị: <strong>{formatCurrency(stats.totalImportValue)}</strong></div>
         </div>
 
-        {/* Card 4: Phiếu Xuất Kho */}
-        <div className="kpi-metric-card purple">
+        <div className="kpi-metric-card">
           <div className="metric-header">
-            <span className="metric-label">Tổng Xuất Kho (Outflow)</span>
-            <div className="metric-icon-box purple">
-              <FiArrowUpRight size={20} />
-            </div>
+            <span className="metric-label">Yêu Cầu Xuất Kho</span>
+            <div className="metric-icon-box purple"><FiArrowUpRight size={22} /></div>
           </div>
           <div className="metric-value">{stats.exportNotesCount}</div>
-          <div className="metric-footer">
-            Đã bàn giao các đối tác vận chuyển
-          </div>
+          <div className="metric-footer">Chứng từ vận hành bàn giao</div>
         </div>
       </div>
 
-      {/* 3. Phân Tích Cân Đối Dòng Hàng Xuất - Nhập */}
-      <div className="analytics-banner">
-        <div className="banner-left">
-          <div className="banner-icon-circle">
-            <FiTrendingUp size={22} />
-          </div>
-          <div className="banner-text">
-            <h3>Cân Đối Lưu Chuyển Xuất / Nhập</h3>
-            <p>Tỷ lệ tương quan giữa nhập hàng bổ sung và xuất hàng bàn giao cho sàn TMĐT</p>
+      {/* 3. Charts & Analytics */}
+      <div className="dashboard-reports-layout">
+        <div className="chart-card">
+          <h3 className="card-title"><FiActivity /> Biến Động Nhập / Xuất Kho (7 Ngày)</h3>
+          <div style={{ width: '100%', height: 250 }}>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer>
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorImport" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorExport" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="date" tick={{fontSize: 12, fill: '#64748b'}} axisLine={false} tickLine={false} />
+                  <YAxis tick={{fontSize: 12, fill: '#64748b'}} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
+                  <Area type="monotone" name="Nhập Kho" dataKey="import" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorImport)" />
+                  <Area type="monotone" name="Xuất Kho" dataKey="export" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorExport)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>Chưa có dữ liệu giao dịch</div>
+            )}
           </div>
         </div>
 
-        <div className="banner-flow-bar-wrap">
+        <div className="analytics-banner">
+          <h3 className="card-title"><FiPieChart /> Tỷ Trọng Giao Dịch</h3>
           <div className="flow-legend">
-            <span className="legend-item in">
-              <span className="dot dot-in"></span> Nhập kho: <strong>{stats.importNotesCount} phiếu ({importPercent}%)</strong>
-            </span>
-            <span className="legend-item out">
-              <span className="dot dot-out"></span> Xuất kho: <strong>{stats.exportNotesCount} phiếu ({exportPercent}%)</strong>
-            </span>
+            <div className="legend-item">
+              <span style={{ color: '#10b981', fontWeight: 600 }}>● Nhập Kho</span>
+              <strong>{stats.importNotesCount} ({importPercent}%)</strong>
+            </div>
+            <div className="legend-item">
+              <span style={{ color: '#3b82f6', fontWeight: 600 }}>● Xuất Kho</span>
+              <strong>{stats.exportNotesCount} ({exportPercent}%)</strong>
+            </div>
           </div>
           <div className="flow-progress-bar">
             <div className="progress-fill in" style={{ width: `${importPercent}%` }}></div>
             <div className="progress-fill out" style={{ width: `${exportPercent}%` }}></div>
           </div>
+          <p style={{ fontSize: 13, color: '#64748b', marginTop: '16px', lineHeight: 1.5 }}>
+            Tỷ lệ so sánh khối lượng nghiệp vụ kho giữa quy trình bổ sung hàng hóa và quy trình thực thi xuất bán đơn hàng.
+          </p>
         </div>
       </div>
 
-      {/* 4. Danh Sách Chứng Từ Giao Dịch Xuất / Nhập Gần Đây */}
+      {/* 4. Data Table */}
       <div className="dashboard-table-card">
-        {/* Toolbar & Filter Tabs */}
         <div className="dashboard-table-toolbar">
           <div className="tab-pills-group">
-            <button 
-              className={`tab-pill-btn ${activeTab === 'ALL' ? 'active' : ''}`}
-              onClick={() => setActiveTab('ALL')}
-            >
-              Tất Cả Chứng Từ ({recentActivities.length})
-            </button>
-            <button 
-              className={`tab-pill-btn tab-in ${activeTab === 'IMPORT' ? 'active' : ''}`}
-              onClick={() => setActiveTab('IMPORT')}
-            >
-              <FiArrowDownLeft size={14} /> Phiếu Nhập ({stats.importNotesCount})
-            </button>
-            <button 
-              className={`tab-pill-btn tab-out ${activeTab === 'EXPORT' ? 'active' : ''}`}
-              onClick={() => setActiveTab('EXPORT')}
-            >
-              <FiArrowUpRight size={14} /> Phiếu Xuất ({stats.exportNotesCount})
-            </button>
+            <button className={`tab-pill-btn ${activeTab === 'ALL' ? 'active' : ''}`} onClick={() => setActiveTab('ALL')}>Tất Cả ({recentActivities.length})</button>
+            <button className={`tab-pill-btn tab-in ${activeTab === 'IMPORT' ? 'active' : ''}`} onClick={() => setActiveTab('IMPORT')}>Phiếu Nhập</button>
+            <button className={`tab-pill-btn tab-out ${activeTab === 'EXPORT' ? 'active' : ''}`} onClick={() => setActiveTab('EXPORT')}>Phiếu Xuất</button>
           </div>
-
           <div className="table-search-wrap">
-            <FiSearch className="search-icon" size={15} />
-            <input 
-              type="text" 
-              placeholder="Tìm mã chứng từ, đối tác, kho..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+            <FiSearch className="search-icon" />
+            <input type="text" placeholder="Tìm mã chứng từ, đối tác..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
         </div>
 
-        {/* Bảng Dữ Liệu Chứng Từ */}
-        <div className="table-responsive" style={{ border: 'none', borderRadius: 0, boxShadow: 'none' }}>
+        <div style={{ overflowX: 'auto' }}>
           <table className="wms-data-table">
             <thead>
               <tr>
-                <th style={{ width: '130px' }}>Nghiệp Vụ</th>
-                <th style={{ width: '150px' }}>Mã Chứng Từ</th>
-                <th>Đối Tác / Đơn Vị Giao Nhận</th>
-                <th>Kho Lưu Trữ</th>
-                <th style={{ textAlign: 'right' }}>Giá Trị / Đơn Hàng</th>
-                <th>Thời Gian Lập</th>
-                <th style={{ textAlign: 'center', width: '140px' }}>Trạng Thái</th>
-                <th style={{ textAlign: 'right', width: '90px' }}>Xem</th>
+                <th>Nghiệp Vụ</th>
+                <th>Mã Chứng Từ</th>
+                <th>Đối Tác / Giao Nhận</th>
+                <th>Thời Gian</th>
+                <th style={{ textAlign: 'center' }}>Trạng Thái</th>
+                <th style={{ textAlign: 'center' }}>Xem</th>
               </tr>
             </thead>
             <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan="8" className="empty-table-cell">
-                    <FiRefreshCw className="spin-icon" size={24} style={{ color: '#dc2626' }} />
-                    <p>Đang tải dữ liệu chứng từ vận hành...</p>
+              {filteredActivities.slice(0, 10).map((act) => (
+                <tr key={act.id}>
+                  <td>
+                    <span style={{ color: act.type === 'IMPORT' ? '#10b981' : '#3b82f6', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {act.type === 'IMPORT' ? <FiArrowDownLeft /> : <FiArrowUpRight />}
+                      {act.type === 'IMPORT' ? 'Nhập Kho' : 'Xuất Kho'}
+                    </span>
+                  </td>
+                  <td><strong>{act.code}</strong></td>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {act.type === 'IMPORT' ? <FiUsers color="#64748b"/> : <FiTruck color="#64748b" />}
+                      {act.partner}
+                    </div>
+                  </td>
+                  <td style={{ color: '#64748b' }}>{act.time}</td>
+                  <td style={{ textAlign: 'center' }}>{getStatusPill(act.status, act.type)}</td>
+                  <td style={{ textAlign: 'center' }}>
+                    <button 
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
+                      onClick={() => navigate(act.type === 'IMPORT' ? `/import-notes/${act.rawId}` : `/export-notes/${act.rawId}`)}
+                    >
+                      <FiEye size={18} />
+                    </button>
                   </td>
                 </tr>
-              ) : filteredActivities.length === 0 ? (
-                <tr>
-                  <td colSpan="8" className="empty-table-cell">
-                    <FiFileText size={40} style={{ opacity: 0.3, marginBottom: '8px' }} />
-                    <p>Không có chứng từ giao dịch nào phù hợp với bộ lọc.</p>
-                  </td>
-                </tr>
-              ) : (
-                filteredActivities.map((act) => (
-                  <tr key={act.id}>
-                    <td>
-                      <span className={`flow-badge ${act.type === 'IMPORT' ? 'badge-in' : 'badge-out'}`}>
-                        {act.type === 'IMPORT' ? (
-                          <>
-                            <FiArrowDownLeft size={13} />
-                            <span>Nhập Kho</span>
-                          </>
-                        ) : (
-                          <>
-                            <FiArrowUpRight size={13} />
-                            <span>Xuất Kho</span>
-                          </>
-                        )}
-                      </span>
-                    </td>
-                    <td>
-                      <span className="sku-badge">{act.code}</span>
-                    </td>
-                    <td>
-                      <div className="partner-cell">
-                        {act.type === 'IMPORT' ? (
-                          <FiUsers size={14} className="partner-icon in" />
-                        ) : (
-                          <FiTruck size={14} className="partner-icon out" />
-                        )}
-                        <strong>{act.partner}</strong>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="wh-text">{act.warehouse}</span>
-                    </td>
-                    <td style={{ textAlign: 'right' }}>
-                      {act.type === 'IMPORT' ? (
-                        <span className="price-text text-green">
-                          {act.value ? formatCurrency(act.value) : '---'}
-                        </span>
-                      ) : (
-                        <span className="order-ref-badge">
-                          {act.orderRef}
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      <span className="time-text">{act.time}</span>
-                    </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <span className={`status-badge ${act.type === 'IMPORT' ? 'badge-success' : 'badge-info'}`}>
-                        <FiCheckCircle size={12} />
-                        <span>{act.status}</span>
-                      </span>
-                    </td>
-                    <td style={{ textAlign: 'right' }}>
-                      <button 
-                        className="btn-icon" 
-                        title={`Xem chi tiết ${act.code}`}
-                        onClick={() => {
-                          if (act.type === 'IMPORT') {
-                            navigate(`/import-notes/${act.rawId}`);
-                          } else {
-                            navigate(`/export-notes/${act.rawId}`);
-                          }
-                        }}
-                      >
-                        <FiEye size={15} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
+              ))}
             </tbody>
           </table>
-        </div>
-
-        {/* Footer bảng */}
-        <div className="dashboard-table-footer">
-          <span>Hiển thị <strong>{filteredActivities.length}</strong> / <strong>{recentActivities.length}</strong> chứng từ gần nhất</span>
         </div>
       </div>
     </div>

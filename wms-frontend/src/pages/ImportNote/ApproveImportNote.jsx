@@ -1,7 +1,7 @@
 // src/pages/ImportNote/ApproveImportNote.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiRefreshCw, FiEye, FiUser, FiTruck, FiCalendar, FiDollarSign } from 'react-icons/fi';
+import { FiRefreshCw, FiEye, FiUser, FiTruck, FiCalendar, FiDollarSign, FiBox } from 'react-icons/fi';
 import { wmsCoreService } from '../../services/wmsCoreService';
 import './ApproveImportNote.css';
 
@@ -10,7 +10,6 @@ const ApproveImportNote = () => {
   const [pendingNotes, setPendingNotes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   
-  // State quản lý Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
 
@@ -37,7 +36,6 @@ const ApproveImportNote = () => {
     fetchPendingNotes();
   }, []);
 
-  // Hàm mở modal khi nhấn "Kiểm tra"
   const openInspectModal = (note) => {
     setSelectedNote(note);
     setIsModalOpen(true);
@@ -48,27 +46,25 @@ const ApproveImportNote = () => {
     setSelectedNote(null);
   };
 
-  // Cập nhật hàm Duyệt: nhận id trực tiếp và đóng modal sau khi xong
   const handleApprove = async (id, code) => {
     if (window.confirm(`Xác nhận PHÊ DUYỆT yêu cầu ${code}?`)) {
       try {
         await wmsCoreService.updateImportNoteStatus(id, 'DA_DUYET');
         alert('Đã phê duyệt yêu cầu nhập kho thành công!');
-        closeModal(); // Đóng cửa sổ
-        fetchPendingNotes(); // Tải lại danh sách
+        closeModal();
+        fetchPendingNotes();
       } catch (err) {
         alert('Lỗi phê duyệt: ' + err.message);
       }
     }
   };
 
-  // Cập nhật hàm Từ chối
   const handleReject = async (id, code) => {
     if (window.confirm(`Xác nhận TỪ CHỐI yêu cầu ${code}?`)) {
       try {
         await wmsCoreService.updateImportNoteStatus(id, 'TU_CHOI');
         alert('Đã từ chối yêu cầu nhập kho.');
-        closeModal(); // Đóng cửa sổ
+        closeModal();
         fetchPendingNotes();
       } catch (err) {
         alert('Lỗi khi từ chối: ' + err.message);
@@ -76,12 +72,27 @@ const ApproveImportNote = () => {
     }
   };
 
+  // Cập nhật hàm renderStatusBadge: xử lý an toàn hơn
+  const renderStatusBadge = (tonThucTe) => {
+      // Nếu không có dữ liệu thật, chúng ta coi như là 0 để gợi ý an toàn
+      const stock = tonThucTe != null ? Number(tonThucTe) : 0; 
+
+      if (stock <= 0) {
+        return <span className="ref-badge badge-danger">Hết Hàng</span>;
+      }
+      if (stock > 0 && stock <= 10) { 
+         return <span className="ref-badge badge-warning">Cạn Kho</span>;
+      }
+      
+      return <span className="ref-badge badge-success">Đủ Hàng</span>;
+  };
+
   return (
     <div className="import-container">
       <div className="import-header">
         <div>
           <h2>Duyệt Đề Xuất Mua Hàng</h2>
-          <p>Sắp đang có {pendingNotes.length} đề xuất cần xem xét</p>
+          <p>Đang có {pendingNotes.length} đề xuất cần xem xét</p>
         </div>
         <button className="btn-secondary" onClick={fetchPendingNotes} disabled={isLoading}>
           <FiRefreshCw className={isLoading ? 'spin-icon' : ''} /> Làm mới
@@ -120,14 +131,13 @@ const ApproveImportNote = () => {
                         {Number(note.tongTienNhap || 0).toLocaleString('vi-VN')} đ
                       </td>
                       <td style={{ textAlign: 'center' }}>
-                         <span style={{ backgroundColor: '#fef3c7', color: '#d97706', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 500}}>
+                         <span className="ref-badge badge-warning">
                            Chờ Duyệt
                          </span>
                       </td>
                       <td style={{ textAlign: 'center' }}>
-                        {/* Đổi thành 1 nút Kiểm tra & Ký */}
                         <button className="btn-inspect" onClick={() => openInspectModal(note)}>
-                          <FiEye /> Kiểm tra & Ký
+                          <FiEye /> Kiểm tra chi tiết
                         </button>
                       </td>
                     </tr>
@@ -144,56 +154,100 @@ const ApproveImportNote = () => {
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h3>Phê Duyệt Phiếu: {selectedNote.maPhieuNhap || `PN-${selectedNote.id}`}</h3>
+              <div>
+                <span className="modal-subtitle">Chi tiết phiếu đề xuất</span>
+                <h3>{selectedNote.maPhieuNhap || `PN-${selectedNote.id}`}</h3>
+              </div>
               <button className="btn-close" onClick={closeModal}>&times;</button>
             </div>
             
             <div className="modal-body">
               <div className="info-grid">
                 <div className="info-item">
-                  <FiUser /> <strong>Nhân viên:</strong> {selectedNote.nguoiTao || '---'}
+                  <div className="info-icon"><FiUser /></div>
+                  <div>
+                    <span className="info-label">Người lập phiếu</span>
+                    <strong>{selectedNote.nguoiTao || 'Chưa cập nhật'}</strong>
+                  </div>
                 </div>
                 <div className="info-item">
-                  <FiTruck /> <strong>Nhà cung cấp:</strong> {selectedNote.tenNhaCungCap || '---'}
+                  <div className="info-icon"><FiTruck /></div>
+                  <div>
+                    <span className="info-label">Nhà cung cấp</span>
+                    <strong>{selectedNote.tenNhaCungCap || 'Chưa cập nhật'}</strong>
+                  </div>
                 </div>
                 <div className="info-item">
-                  <FiCalendar /> <strong>Ngày lập:</strong> {selectedNote.ngayNhap ? new Date(selectedNote.ngayNhap).toLocaleString('vi-VN') : '---'}
+                  <div className="info-icon"><FiCalendar /></div>
+                  <div>
+                    <span className="info-label">Ngày lập</span>
+                    <strong>{selectedNote.ngayNhap ? new Date(selectedNote.ngayNhap).toLocaleString('vi-VN') : '---'}</strong>
+                  </div>
                 </div>
               </div>
 
               <div className="total-budget-box">
-                <FiDollarSign size={20}/> 
-                <span>Tổng ngân sách đề xuất: {Number(selectedNote.tongTienNhap || 0).toLocaleString('vi-VN')} VNĐ</span>
+                <div className="budget-icon"><FiDollarSign /></div>
+                <div className="budget-text">
+                  <span>Tổng ngân sách đề xuất</span>
+                  <h2>{Number(selectedNote.tongTienNhap || 0).toLocaleString('vi-VN')} VNĐ</h2>
+                </div>
               </div>
 
-              <table className="modal-product-table">
-                <thead>
-                  <tr>
-                    <th>Sản Phẩm</th>
-                    <th style={{textAlign: 'right'}}>Giá Nhập</th>
-                    <th style={{textAlign: 'center'}}>Số Lượng</th>
-                    <th style={{textAlign: 'right'}}>Thành Tiền</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedNote.danhSachHangHoa && selectedNote.danhSachHangHoa.length > 0 ? (
-                    selectedNote.danhSachHangHoa.map((item, index) => (
-                      <tr key={index}>
-                        <td>{item.tenSanPham}</td>
-                        <td style={{textAlign: 'right'}}>{Number(item.giaNhap || 0).toLocaleString('vi-VN')}</td>
-                        <td style={{textAlign: 'center'}}>{item.soLuong}</td>
-                        <td style={{textAlign: 'right', fontWeight: 600}}>
-                          {Number((item.giaNhap || 0) * (item.soLuong || 0)).toLocaleString('vi-VN')}
+              <div className="modal-table-wrapper">
+                <table className="modal-product-table">
+                  <thead>
+                    <tr>
+                      <th>Sản Phẩm</th>
+                      <th style={{textAlign: 'center'}}>Tồn Hiện Tại</th>
+                      <th style={{textAlign: 'center'}}>Đánh Giá</th>
+                      <th style={{textAlign: 'right'}}>Đơn Giá Nhập</th>
+                      <th style={{textAlign: 'center'}}>SL Cần Mua</th>
+                      <th style={{textAlign: 'right'}}>Thành Tiền</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedNote.danhSachHangHoa && selectedNote.danhSachHangHoa.length > 0 ? (
+                      selectedNote.danhSachHangHoa.map((item, index) => {
+                          // Bắt nhiều trường hợp tên biến từ Backend trả về
+                          const tonThucTe = item.tonKho ?? item.soLuongTon ?? item.soLuongThucTe ?? item.tonThucTe ?? 0;
+
+                          return (
+                            <tr key={index}>
+                              <td>
+                                <div className="product-name-cell">
+                                  <FiBox className="product-icon" />
+                                  <span>{item.tenSanPham || 'Sản phẩm không tên'}</span>
+                                </div>
+                              </td>
+                              <td style={{textAlign: 'center'}}>
+                                <span className="stock-number">{tonThucTe}</span>
+                              </td>
+                              <td style={{textAlign: 'center'}}>
+                                {renderStatusBadge(tonThucTe)}
+                              </td>
+                              <td style={{textAlign: 'right', color: '#64748b'}}>
+                                {Number(item.giaNhap || 0).toLocaleString('vi-VN')}
+                              </td>
+                              <td style={{textAlign: 'center'}}>
+                                <span className="qty-number">{item.soLuong}</span>
+                              </td>
+                              <td style={{textAlign: 'right', fontWeight: 600, color: '#0f172a'}}>
+                                {Number((item.giaNhap || 0) * (item.soLuong || 0)).toLocaleString('vi-VN')} đ
+                              </td>
+                            </tr>
+                          );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan="6" style={{textAlign: 'center', padding: '30px', color: '#94a3b8'}}>
+                          Chưa có sản phẩm nào trong đề xuất này.
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="4" style={{textAlign: 'center'}}>Không có chi tiết sản phẩm</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <div className="modal-footer">
@@ -201,13 +255,13 @@ const ApproveImportNote = () => {
                 className="btn-modal-reject" 
                 onClick={() => handleReject(selectedNote.id, selectedNote.maPhieuNhap)}
               >
-                BÁC BỎ
+                BÁC BỎ ĐỀ XUẤT
               </button>
               <button 
                 className="btn-modal-approve" 
                 onClick={() => handleApprove(selectedNote.id, selectedNote.maPhieuNhap)}
               >
-                PHÊ DUYỆT CHI
+                PHÊ DUYỆT CHI TIỀN
               </button>
             </div>
           </div>

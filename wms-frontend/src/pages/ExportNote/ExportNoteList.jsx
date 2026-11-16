@@ -8,7 +8,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FiSearch, FiPlus, FiEye, FiTruck, FiRefreshCw, 
-  FiFileText, FiShoppingBag, FiCheckCircle, FiClock 
+  FiFileText, FiShoppingBag, FiCheckCircle, FiClock,
+  FiXCircle 
 } from 'react-icons/fi';
 import { wmsCoreService } from '../../services/wmsCoreService';
 import './ExportNoteList.css';
@@ -56,10 +57,26 @@ const ExportNoteList = () => {
            ship.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
-  // Tính toán số lượng thống kê
+  // ----------------------------------------------------
+  // TÍNH TOÁN SỐ LƯỢNG THỐNG KÊ (MỚI)
+  // ----------------------------------------------------
   const totalNotes = notes.length;
-  const completedNotes = notes.filter(n => (n.trangThai || '').toUpperCase() === 'HOÀN THÀNH').length;
-  const pendingNotes = totalNotes - completedNotes;
+  
+  const completedNotes = notes.filter(n => 
+    (n.trangThai || '').toUpperCase() === 'HOÀN THÀNH'
+  ).length;
+
+  const rejectedNotes = notes.filter(n => 
+    (n.trangThai || '').toUpperCase() === 'TỪ CHỐI'
+  ).length;
+
+  const pendingApprovalNotes = notes.filter(n => {
+    const status = (n.trangThai || 'CHỜ DUYỆT').toUpperCase();
+    return status.includes('CHỜ DUYỆT');
+  }).length;
+
+  // Phiếu chờ xử lý / đang giao là phần còn lại sau khi trừ đi các phiếu trên
+  const processingNotes = totalNotes - completedNotes - rejectedNotes - pendingApprovalNotes;
 
   return (
     <div className="export-container">
@@ -83,14 +100,30 @@ const ExportNoteList = () => {
         </div>
       </div>
 
-      {/* Thẻ Thống Kê Nâng Cấp UI */}
+      {/* Thẻ Thống Kê Nâng Cấp UI - Bổ sung 5 ô */}
       <div className="export-stats-grid">
-        <div className="stat-card blue">
+        <div className="stat-card purple">
           <div className="stat-info">
-            <span className="stat-title">TỔNG YÊU CẦU XUẤT</span>
+            <span className="stat-title">TỔNG YÊU CẦU</span>
             <div className="stat-number">{totalNotes}</div>
           </div>
           <div className="stat-icon"><FiFileText size={22} /></div>
+        </div>
+
+        <div className="stat-card yellow">
+          <div className="stat-info">
+            <span className="stat-title">ĐANG CHỜ DUYỆT</span>
+            <div className="stat-number">{pendingApprovalNotes}</div>
+          </div>
+          <div className="stat-icon"><FiClock size={22} /></div>
+        </div>
+
+        <div className="stat-card blue">
+          <div className="stat-info">
+            <span className="stat-title">CHỜ XỬ LÝ / ĐANG GIAO</span>
+            <div className="stat-number">{processingNotes}</div>
+          </div>
+          <div className="stat-icon"><FiTruck size={22} /></div>
         </div>
 
         <div className="stat-card green">
@@ -101,12 +134,12 @@ const ExportNoteList = () => {
           <div className="stat-icon"><FiCheckCircle size={22} /></div>
         </div>
 
-        <div className="stat-card orange">
+        <div className="stat-card red">
           <div className="stat-info">
-            <span className="stat-title">CHỜ XỬ LÝ / ĐANG GIAO</span>
-            <div className="stat-number">{pendingNotes}</div>
+            <span className="stat-title">TỪ CHỐI</span>
+            <div className="stat-number">{rejectedNotes}</div>
           </div>
-          <div className="stat-icon"><FiClock size={22} /></div>
+          <div className="stat-icon"><FiXCircle size={22} /></div>
         </div>
       </div>
 
@@ -162,15 +195,16 @@ const ExportNoteList = () => {
                 const shipName = note.tenDonViVanChuyen || note.dvvc || 'Sếp Hưng Shipper';
                 const dateStr = note.ngayXuat ? new Date(note.ngayXuat).toLocaleDateString('vi-VN') : '---';
                 
-                const statusStr = note.trangThai || 'CHỜ DUYỆT'; // SỬA Ở ĐÂY: Mặc định là CHỜ DUYỆT nếu backend trả thiếu
-                let statusClass = 'pending'; // Đổi class mặc định thành pending
+                const statusStr = note.trangThai || 'CHỜ DUYỆT'; 
+                let statusClass = 'processing'; // Mặc định là xử lý (xanh biển)
                 
-                if (statusStr.toUpperCase().includes('HỦY')) {
-                  statusClass = 'cancelled';
+                // Đồng bộ màu của trạng thái bảng với màu thống kê
+                if (statusStr.toUpperCase().includes('HỦY') || statusStr.toUpperCase().includes('TỪ CHỐI')) {
+                  statusClass = 'cancelled'; // Đỏ
                 } else if (statusStr.toUpperCase().includes('HOÀN THÀNH')) {
-                  statusClass = 'success'; // Chỉ khi backend thực sự trả về HOÀN THÀNH mới có màu xanh
-                } else if (statusStr.toUpperCase().includes('CHỜ') || statusStr.toUpperCase().includes('ĐANG')) {
-                  statusClass = 'pending';
+                  statusClass = 'success'; // Xanh lá
+                } else if (statusStr.toUpperCase().includes('CHỜ DUYỆT')) {
+                  statusClass = 'warning'; // Vàng
                 }
 
                 return (

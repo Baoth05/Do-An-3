@@ -2,14 +2,14 @@
  * ==============================================================================
  * Module: ExportNoteCreate.jsx
  * Phân hệ: Lập Yêu Cầu Xuất Kho (Create Export Request)
- * Mô tả: Sửa triệt để lỗi trùng Key trong React và khắc phục cảnh báo Console.
+ * Cập nhật: Tự động lấy và hiển thị Địa chỉ nhận hàng khi chọn Shop.
  * ==============================================================================
  */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FiArrowLeft, FiSave, FiPlus, FiTrash2, 
-  FiFileText, FiPackage, FiShoppingBag, FiTruck, FiCalendar, FiUser
+  FiFileText, FiPackage, FiShoppingBag, FiTruck, FiCalendar, FiUser, FiMapPin
 } from 'react-icons/fi';
 import { wmsCoreService } from '../../services/wmsCoreService';
 import { orderService } from '../../services/orderService';
@@ -26,11 +26,14 @@ const ExportNoteCreate = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // BỔ SUNG: tenShop và diaChiNhan vào state
   const [headerData, setHeaderData] = useState({
     maPhieu: 'YCX-' + Math.floor(1000 + Math.random() * 9000), 
     donHangId: '',
     khoHangId: '',       
-    cuaHangNhanId: '',   
+    cuaHangNhanId: '',
+    tenShop: '', 
+    diaChiNhan: '',
     donViVanChuyenId: '',
     nguoiTao: 'Nhân viên kinh doanh',
     ngayXuat: new Date().toISOString().split('T')[0],
@@ -69,10 +72,14 @@ const ExportNoteCreate = () => {
         setStores(onlyStores);
 
         if (rawList.length > 0) {
+          // BỔ SUNG: Gán mặc định Tên Shop và Địa chỉ của phần tử đầu tiên
+          const defaultStore = onlyStores[0] || rawList[0];
           setHeaderData(prev => ({ 
             ...prev, 
             khoHangId: rawList[0]?.id,
-            cuaHangNhanId: onlyStores[0]?.id || rawList[0]?.id
+            cuaHangNhanId: defaultStore?.id,
+            tenShop: defaultStore?.tenKho || '',
+            diaChiNhan: defaultStore?.diaChi || 'Chưa cập nhật địa chỉ trên hệ thống'
           }));
         }
       }
@@ -83,7 +90,7 @@ const ExportNoteCreate = () => {
         if (shipRes.value.length > 0) setHeaderData(prev => ({ ...prev, donViVanChuyenId: shipRes.value[0].id }));
       }
 
-      // 3. Đơn hàng tham chiếu (Có phòng ngừa lỗi 403 Forbidden)
+      // 3. Đơn hàng tham chiếu
       if (orderRes.status === 'fulfilled' && Array.isArray(orderRes.value)) {
         setOrders(orderRes.value);
         if (orderRes.value.length > 0) {
@@ -91,10 +98,10 @@ const ExportNoteCreate = () => {
         }
       }
 
-      // 4. Đồng bộ 100% dữ liệu Tồn Kho
+      // 4. Tồn Kho
       if (invRes.status === 'fulfilled' && Array.isArray(invRes.value)) {
         const availableProducts = invRes.value.map((inv, index) => ({
-          uniqueKey: `${inv.sanPhamId || inv.id}-${index}`, // Key duy nhất tránh trùng lặp React DOM
+          uniqueKey: `${inv.sanPhamId || inv.id}-${index}`,
           sanPhamId: inv.sanPhamId || inv.sanPham?.id || inv.id,
           sku: inv.sku || inv.sanPham?.sku || `SP${inv.id}`,
           tenHangHoa: inv.tenSanPham || inv.sanPham?.tenSanPham || 'Sản phẩm ' + inv.id,
@@ -115,9 +122,21 @@ const ExportNoteCreate = () => {
     }
   };
 
+  // CẬP NHẬT: Xử lý riêng khi thay đổi Cửa Hàng Nhận
   const handleHeaderChange = (e) => {
     const { name, value } = e.target;
-    setHeaderData(prev => ({ ...prev, [name]: value }));
+    
+    if (name === 'cuaHangNhanId') {
+      const selectedStore = stores.find(s => String(s.id) === String(value));
+      setHeaderData(prev => ({
+        ...prev,
+        [name]: value,
+        tenShop: selectedStore ? selectedStore.tenKho : '',
+        diaChiNhan: selectedStore ? (selectedStore.diaChi || 'Chưa cập nhật địa chỉ trên hệ thống') : ''
+      }));
+    } else {
+      setHeaderData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleItemChange = (index, field, value) => {
@@ -146,20 +165,21 @@ const ExportNoteCreate = () => {
       return alert('Vui lòng chọn đầy đủ Kho xuất và Đơn vị vận chuyển!');
     }
 
+    // BỔ SUNG: Truyền thêm tenShop và diaChiNhan vào payload
     const payload = {
       khoHangId: Number(headerData.khoHangId),
       cuaHangNhanId: headerData.cuaHangNhanId ? Number(headerData.cuaHangNhanId) : null,
       donViVanChuyenId: Number(headerData.donViVanChuyenId),
       donHangId: headerData.donHangId ? headerData.donHangId.trim() : null,
+      tenShop: headerData.tenShop,
+      diaChiNhan: headerData.diaChiNhan,
       nguoiTao: headerData.nguoiTao,
-      trangThai: 'CHỜ DUYỆT', // SỬA Ở ĐÂY: Chuyển từ 'CHỜ XỬ LÝ' sang 'CHỜ DUYỆT'
+      trangThai: 'CHỜ DUYỆT', 
       danhSachHangHoa: items.map(it => ({
         sanPhamId: Number(it.sanPhamId),
         soLuong: Number(it.soLuong),
       })),
     };
-
-    // ... phần code bên dưới giữ nguyên
 
     try {
       setIsSubmitting(true);
@@ -282,6 +302,14 @@ const ExportNoteCreate = () => {
                 <FiCalendar style={{ color: '#64748b' }} /> Ngày Yêu Cầu
               </label>
               <input type="date" name="ngayXuat" value={headerData.ngayXuat} onChange={handleHeaderChange} />
+            </div>
+
+            {/* BỔ SUNG: Hiển thị địa chỉ tự động, chiếm hết chiều ngang bằng gridColumn */}
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <FiMapPin style={{ color: '#2563eb' }} /> Địa Chỉ Nhận Hàng (Tự động lấy theo Shop)
+              </label>
+              <input type="text" name="diaChiNhan" value={headerData.diaChiNhan} readOnly className="input-disabled" />
             </div>
           </div>
         </div>

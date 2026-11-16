@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { 
   FiCheckSquare, FiTruck, FiBox, FiClock, 
-  FiMapPin, FiUser, FiHome, FiList, FiFileText
+  FiMapPin, FiUser, FiHome, FiList, FiFileText,
+  FiShoppingBag
 } from 'react-icons/fi';
 import { wmsCoreService } from '../../services/wmsCoreService';
 import './ActualExportNote.css';
@@ -19,8 +20,19 @@ const ActualExportNote = () => {
       setIsLoading(true);
       const res = await wmsCoreService.getExportNotes();
       
-      // Lọc các phiếu cần xuất thực tế (Ví dụ: Trạng thái CHỜ DUYỆT hoặc CHỜ XUẤT)
-      setPendingNotes((res || []).filter(n => n.trangThai !== 'HOÀN THÀNH'));
+      // Lọc để CHỈ hiển thị các đơn ĐÃ DUYỆT và chưa hoàn thành/từ chối
+      const readyToExport = (res || []).filter(n => {
+        const status = (n.trangThai || '').toUpperCase();
+        // Cập nhật bộ lọc: Thêm điều kiện loại bỏ trạng thái "TỪ CHỐI"
+        return (
+          status !== 'HOÀN THÀNH' && 
+          status !== 'TỪ CHỐI' && // Đã thêm dòng này
+          !status.includes('CHỜ DUYỆT') && 
+          !status.includes('PENDING')
+        );
+      });
+      
+      setPendingNotes(readyToExport);
     } catch (error) {
       console.warn('Lỗi lấy dữ liệu xuất thực tế:', error);
     } finally {
@@ -31,8 +43,9 @@ const ActualExportNote = () => {
   const handleConfirmExport = async (id) => {
     if (window.confirm('Xác nhận hàng hóa đã được kiểm đếm, đưa lên xe và rời khỏi kho?')) {
       try {
-        // Gọi API xác nhận xuất thực tế ở đây
-        // await wmsCoreService.confirmActualExport(id);
+        // MỞ KHÓA DÒNG NÀY: Gọi API xác nhận xuất thực tế (trừ tồn kho)
+        await wmsCoreService.confirmActualExport(id);
+        
         alert('Đã xác nhận xuất kho thành công!');
         fetchPendingExports(); 
       } catch (err) {
@@ -99,10 +112,23 @@ const ActualExportNote = () => {
                   <FiHome size={16} />
                   <div>
                     <span className="info-label">Xuất từ kho:</span> 
-                    {/* Tùy chỉnh theo JSON của bạn, VD: note.khoHang?.tenKho */}
                     {note.tenKhoHang || 'Kho trung tâm'} 
                   </div>
                 </div>
+                
+                {/* CẬP NHẬT: Xử lý thông báo lỗi của Tên Shop */}
+                <div className="info-item">
+                  <FiShoppingBag size={16} />
+                  <div>
+                    <span className="info-label">Tên Shop:</span> 
+                    {(() => {
+                      const shop = note.tenShop || note.shopName || note.cuaHang?.tenKho || note.cuaHangNhan?.tenKho;
+                      if (!shop || shop === 'chưa cập nhật') return 'Chưa có thông tin';
+                      return shop;
+                    })()}
+                  </div>
+                </div>
+
                 <div className="info-item">
                   <FiTruck size={16} />
                   <div>
@@ -110,11 +136,19 @@ const ActualExportNote = () => {
                     {note.tenDonViVanChuyen || 'Chưa cập nhật'}
                   </div>
                 </div>
+
+                {/* CẬP NHẬT: Xử lý thông báo lỗi của Địa chỉ nhận hàng */}
                 <div className="info-item">
                   <FiMapPin size={16} />
                   <div>
-                    <span className="info-label">Nơi nhận (Dự kiến):</span> 
-                    {note.diaChiNhan || 'Theo địa chỉ đơn hàng'}
+                    <span className="info-label">Nơi nhận:</span> 
+                    {(() => {
+                      const address = note.diaChiNhan || note.diaChiGiaoHang || note.diaChi || note.cuaHang?.diaChi || note.cuaHangNhan?.diaChi;
+                      if (!address || address.includes('Địa chỉ lấy từ hệ thống')) {
+                        return 'Chưa có thông tin địa chỉ';
+                      }
+                      return address;
+                    })()}
                   </div>
                 </div>
               </div>
@@ -133,7 +167,6 @@ const ActualExportNote = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {/* Kiểm tra xem API có trả về danhSachHangHoa không */}
                   {note.danhSachHangHoa && note.danhSachHangHoa.length > 0 ? (
                     note.danhSachHangHoa.map((item, index) => (
                       <tr key={index}>

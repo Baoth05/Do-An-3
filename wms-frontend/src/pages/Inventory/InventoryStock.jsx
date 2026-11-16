@@ -10,6 +10,7 @@
  * ==============================================================================
  */
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom'; // <-- Thêm dòng này
 import { 
   FiSearch, FiRefreshCw, FiPlus, FiBox, FiCheckCircle, 
   FiMapPin, FiLayers, FiAlertTriangle, FiList, FiX, FiCheck, FiArrowDownRight, FiArrowUpRight
@@ -20,6 +21,7 @@ import Modal from '../../components/Common/Modal';
 import './InventoryStock.css';
 
 const InventoryStock = () => {
+  const navigate = useNavigate();
   const [inventoryList, setInventoryList] = useState([]);
   const [products, setProducts] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
@@ -198,6 +200,29 @@ const InventoryStock = () => {
     } catch (err) {
       alert('Lỗi khi cập nhật tồn kho: ' + (err.response?.data || err.message));
     }
+  };
+  // Hàm xử lý khi nhấn nút "+" để yêu cầu nhập hàng
+  const handleRequestImport = (item) => {
+    // Tính toán số lượng cần nhập (Ví dụ: Định mức tối đa - Tồn thực tế). Nếu không có, mặc định là 10.
+    const suggestQty = item.soLuongToiDa ? (item.soLuongToiDa - item.soLuongThucTe) : 10;
+    const qtyToImport = suggestQty > 0 ? suggestQty : 10;
+    
+    // Xác định trạng thái hiển thị
+    const isOutOfStock = item.soLuongThucTe <= 0;
+    const displayStatus = isOutOfStock ? 'Hết Hàng' : 'Cạn Kho';
+
+    // Chuyển sang trang tạo phiếu nhập và mang theo dữ liệu
+    navigate('/import-notes/create', {
+      state: {
+        requestImportItem: {
+          sanPhamId: item.sanPhamId,
+          khoHangId: item.khoHangId,
+          soLuong: qtyToImport,
+          tonThucTe: item.soLuongThucTe, // <-- Thêm số lượng tồn thực tế
+          trangThai: displayStatus      // <-- Thêm trạng thái
+        }
+      }
+    });
   };
 
   return (
@@ -404,13 +429,16 @@ const InventoryStock = () => {
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <div className="action-btns">
-                        <button 
-                          className="btn-icon" 
-                          title="Cộng thêm số lượng vào kho này"
-                          onClick={() => handleOpenAdjust(item)}
-                        >
-                          <FiPlus size={15} />
-                        </button>
+                        {/* Chỉ hiển thị nút yêu cầu nhập khi Hết hàng hoặc Dưới ngưỡng */}
+                        {(isOutOfStock || isUnderMin) && (
+                          <button 
+                            className="btn-icon" 
+                            title="Yêu cầu nhập hàng"
+                            onClick={() => handleRequestImport(item)}
+                          >
+                            <FiPlus size={15} />
+                          </button>
+                        )}
                         <button 
                           className="btn-icon" 
                           title="Xem lịch sử thẻ kho"

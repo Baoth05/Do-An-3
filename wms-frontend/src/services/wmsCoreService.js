@@ -61,6 +61,11 @@ export const wmsCoreService = {
   createExportNote: (data) => api.post('/wms/export-notes', data),
   updateExportNoteStatus: (id, status) =>
     api.put(`/wms/export-notes/${id}/status?status=${encodeURIComponent(status)}`),
+    
+  // THÊM MỚI: API phê duyệt phiếu xuất kho
+  approveExportNote: (id) => api.put(`/wms/export-notes/${id}/approve`),
+  // THÊM DÒNG NÀY VÀO:
+  confirmActualExport: (id) => api.put(`/wms/export-notes/${id}/confirm`),
 
   // === NHÀ CUNG CẤP (NHA_CUNG_CAP) ===
   getSuppliers: () => api.get('/wms/suppliers'),
