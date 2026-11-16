@@ -33,12 +33,19 @@ const SellerLogin = () => {
   }, []);
 
   // Chuyển đổi liền mạch từ phiên Khách Hàng sang Kênh Người Bán (1 chạm)
-  const handleQuickSwitchFromCustomer = () => {
+  const handleQuickSwitchFromCustomer = async () => {
     if (!activeCustomer) return;
+    const role = (activeCustomer.vaiTro || '').toUpperCase();
+    const isAlreadySeller = role === 'STORE_OWNER' || role === 'SELLER' || role === 'ADMIN';
+    if (!isAlreadySeller && !window.confirm(
+      'Tài khoản của bạn sẽ được nâng cấp thành Chủ Cửa Hàng và hệ thống sẽ mở 1 gian hàng mới cho bạn. Tiếp tục?'
+    )) {
+      return;
+    }
     setLoading(true);
     setErrorMsg('');
     try {
-      authService.syncSellerFromCustomer(activeCustomer);
+      await authService.syncSellerFromCustomer(activeCustomer);
       window.dispatchEvent(new Event('seller-user-updated'));
       navigate('/seller');
     } catch (err) {

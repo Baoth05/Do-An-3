@@ -18,10 +18,6 @@ export const paymentService = {
     return api.post(url);
   },
 
-  // Mock thanh toán thành công (phục vụ Demo / Test)
-  mockSuccess: (momoOrderId) => api.post(`/payments/mock-success/${momoOrderId}`),
-  mockSuccessOrder: (donHangId) => api.post(`/payments/mock-success-order/${donHangId}`),
-
   // Web3 / Crypto: Gửi TxHash xác nhận thanh toán On-chain
   submitCryptoPayment: (data) => api.post('/payments/crypto/submit', data),
   getCryptoBySession: (sessionId) => api.get(`/payments/crypto/session/${sessionId}`),

@@ -50,15 +50,8 @@ const CustomerManagement = ({ onRefreshStats }) => {
   const handleApproveCustomer = async (user) => {
     if (window.confirm(`Xác nhận duyệt tài khoản khách hàng "${user.taiKhoan}"?`)) {
       try {
-        // Lưu ý: Đảm bảo bạn đã có hàm approveUser trong userService. 
-        // Nếu dùng tên khác, hãy cập nhật lại ở đây.
-        if(userService.approveUser) {
-           await userService.approveUser(user.id);
-        } else {
-           // Giả lập thành công nếu chưa có API thật
-           console.log(`Đã gọi API duyệt cho user ID: ${user.id}`);
-        }
-        
+        await userService.approveUser(user.id);
+
         alert(`Đã duyệt tài khoản "${user.taiKhoan}" thành công!`);
         fetchCustomers(); // Tải lại danh sách
         if (onRefreshStats) onRefreshStats();

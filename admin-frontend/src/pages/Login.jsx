@@ -59,20 +59,6 @@ const Login = () => {
       console.error("Lỗi đăng nhập:", error);
       const backendMsg = error?.response?.data?.message || error?.response?.data;
 
-      // Fallback an toàn cho admin khi backend chưa bật hoặc ngoại tuyến
-      if (!error.response && username.trim() === 'admin' && (password.trim() === 'admin' || password.trim() === '123456')) {
-        const offlineData = {
-          name: 'Quản Trị Viên Hệ Thống (Admin)',
-          role: 'ADMIN',
-          status: 'TRỰC TUYẾN',
-          avatar: 'A'
-        };
-        login(offlineData, 'ADMIN_DEV_TOKEN_' + Date.now());
-        setInfoNotice('Đăng nhập thành công chế độ quản trị nội bộ!');
-        setTimeout(() => navigate('/'), 600);
-        return;
-      }
-
       setErrorMessage(typeof backendMsg === 'string' ? backendMsg : 'Tài khoản hoặc mật khẩu không chính xác hoặc không thể kết nối tới máy chủ!');
     } finally {
       setIsLoading(false);

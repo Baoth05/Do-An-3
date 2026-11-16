@@ -679,7 +679,7 @@ const CustomerProfile = () => {
       } else if (q.includes('bảo hành')) {
         reply = `Dạ chính sách của shop là 1 ĐỔI 1 trực tiếp tại Kho Tổng trong 30 ngày đầu tiên nếu phát sinh lỗi phần cứng, và bảo hành hãng từ 12 đến 36 tháng bạn nhé!`;
       } else if (q.includes('voucher') || q.includes('giảm giá')) {
-        reply = `Dạ shop gửi bạn mã ưu đãi [SHOP${currentStoreId || '10'}OFF] giảm ngay 10% tại shop nha! Bạn có thể lưu mã ngay tại mục Kho Voucher của shop ạ.`;
+        reply = `Dạ các mã ưu đãi đang còn hiệu lực của shop được hiển thị ở mục "Voucher của Shop" trên trang gian hàng. Bạn bấm Lưu để thêm vào ví và áp dụng khi thanh toán nhé!`;
       }
 
       const storeReplyMsg = {
@@ -996,8 +996,8 @@ const CustomerProfile = () => {
           {activeTab === 'wallet' && (
             <div className="tab-pane wallet-pane">
               <div className="pane-header">
-                <h3>Ví Điện Tử Ảo CTUT Pay</h3>
-                <p>Thanh toán siêu tốc 1 chạm không tiền mặt, hoàn tiền 2% trên mọi đơn mua</p>
+                <h3>Ví Điện Tử Ảo CTUT Pay <small style={{ fontSize: 12, color: '#b45309', background: '#fef3c7', padding: '2px 8px', borderRadius: 999, marginLeft: 8 }}>Bản mô phỏng</small></h3>
+                <p>Tính năng minh họa giao diện: số dư chỉ lưu trên trình duyệt này và chưa dùng để thanh toán đơn hàng (hướng phát triển tiếp theo).</p>
               </div>
 
               <div className="wallet-card-hero">

@@ -186,8 +186,8 @@ export const userService = {
   // 9. BỔ SUNG: Duyệt tài khoản người dùng
   approveUser: async (id) => {
     try {
-      // Gọi endpoint toggle-status để chuyển trangThai từ false -> true (hoặc endpoint approve riêng nếu Backend có)
-      const response = await api.put(`/auth/users/${id}/toggle-status`);
+      // Endpoint duyệt riêng: chỉ chuyển sang "đã duyệt & hoạt động", không bao giờ khóa nhầm tài khoản
+      const response = await api.put(`/auth/users/${id}/approve`);
       return response.data;
     } catch (error) {
       console.error('Lỗi khi duyệt tài khoản:', error);

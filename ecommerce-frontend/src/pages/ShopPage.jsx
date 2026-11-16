@@ -58,8 +58,12 @@ const ShopPage = () => {
     navigator.clipboard?.writeText(voucher.maVoucher);
     setCopiedVoucher(voucher.maVoucher);
 
-    const payload = { ...voucher, storeName: store?.tenKho || `Gian Hàng #${storeId}` };
-    await marketplaceService.saveUserVoucher(payload);
+    try {
+      await marketplaceService.saveUserVoucher(voucher);
+    } catch (err) {
+      alert(err.message);
+      return;
+    }
     const updated = await marketplaceService.getUserSavedVouchers();
     setSavedCodes(updated.map((v) => v.maVoucher));
     setAddedNotice(`Đã lưu mã giảm giá "${voucher.maVoucher}" vào ví ưu đãi!`);

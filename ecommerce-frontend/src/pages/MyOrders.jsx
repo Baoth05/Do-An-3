@@ -45,8 +45,7 @@ const MyOrders = () => {
     setLoading(true);
     try {
       const currentCustomer = authService.getCurrentCustomer();
-      const customerId = currentCustomer?.id || 101;
-      const data = await marketplaceService.getUserOrders(customerId);
+      const data = await marketplaceService.getUserOrders(currentCustomer?.id);
       setOrders(data);
     } catch (e) {
       console.error('Lỗi tải danh sách đơn hàng:', e);

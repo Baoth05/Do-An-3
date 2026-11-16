@@ -380,11 +380,12 @@ const SellerContracts = () => {
         </div>
       )}
 
-      {/* Thanh Demo Chuyển Quyền: Chủ Shop / Admin Duyệt / Kho Tổng Lên Đơn */}
+      {/* Thanh chuyển góc nhìn thao tác: CHỈ hiển thị cho Admin (backend kiểm tra quyền thật ở từng bước) */}
+      {currentSeller?.vaiTro === 'ADMIN' && (
       <div className="contract-quick-role-bar">
         <div className="role-bar-title">
-          <span className="pill-tag">QUY TRÌNH 5 BƯỚC</span>
-          <span>Mô Phỏng Phân Quyền Thao Tác:</span>
+          <span className="pill-tag">QUY TRÌNH 6 BƯỚC</span>
+          <span>Góc nhìn thao tác của Admin:</span>
         </div>
         <div className="role-bar-actions">
           <button
@@ -410,6 +411,7 @@ const SellerContracts = () => {
           </button>
         </div>
       </div>
+      )}
 
       {/* Header trang */}
       <div className="seller-page-header-flex">
