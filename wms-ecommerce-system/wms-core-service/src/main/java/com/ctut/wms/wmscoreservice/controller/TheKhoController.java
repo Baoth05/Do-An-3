@@ -10,7 +10,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping({"/stock-cards", "/wms/stock-cards"})
-@CrossOrigin("*")
 @RequiredArgsConstructor
 public class TheKhoController {
 

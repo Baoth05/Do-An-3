@@ -33,14 +33,15 @@ const StrategicReport = () => {
   };
 
   const topProducts = reportData?.topProducts || [];
+  // Không hiển thị số liệu giả: khi chưa có dữ liệu thì để 0
   const statusDist = reportData?.statusDistribution || {
-    total: 120,
-    successCount: 90,
-    successPct: 75,
-    pendingCount: 22,
-    pendingPct: 18,
-    cancelCount: 8,
-    cancelPct: 7
+    total: 0,
+    successCount: 0,
+    successPct: 0,
+    pendingCount: 0,
+    pendingPct: 0,
+    cancelCount: 0,
+    cancelPct: 0
   };
 
   return (
@@ -81,13 +82,13 @@ const StrategicReport = () => {
             <FiDollarSign size={16} color="#d63031"/>
           </div>
           <div className="report-stat-value red">
-            {reportData?.totalRevenueFormatted || formatCurrency(reportData?.totalRevenue || 50000000)}
+            {reportData?.totalRevenueFormatted ?? formatCurrency(reportData?.totalRevenue)}
           </div>
           <div className="report-stat-trend trend-up">
-            <FiTrendingUp size={14}/> {reportData?.revenueGrowth || '+15.4%'} <span style={{color: '#636e72', fontWeight: 500}}>so với kỳ trước</span>
+            <FiTrendingUp size={14}/> {reportData?.revenueGrowth ?? 'Chưa đủ dữ liệu'} <span style={{color: '#636e72', fontWeight: 500}}>so với kỳ trước</span>
           </div>
           <div className="report-stat-footer">
-            <FiCreditCard size={14}/> Doanh thu tích lũy từ {reportData?.totalOrders || 120} phiếu xuất bán
+            <FiCreditCard size={14}/> Doanh thu tích lũy từ {reportData?.totalOrders ?? 0} phiếu xuất
           </div>
         </div>
 
@@ -97,10 +98,10 @@ const StrategicReport = () => {
             <FiShoppingBag size={16} color="#d63031"/>
           </div>
           <div className="report-stat-value dark">
-            {reportData?.totalOrders || 120} <span style={{fontSize: '18px'}}>đơn</span>
+            {reportData?.totalOrders ?? 0} <span style={{fontSize: '18px'}}>đơn</span>
           </div>
           <div className="report-stat-trend trend-up">
-            <FiTrendingUp size={14}/> {reportData?.orderGrowth || '+8.2%'} <span style={{color: '#636e72', fontWeight: 500}}>tăng trưởng lưu chuyển</span>
+            <FiTrendingUp size={14}/> {reportData?.orderGrowth ?? 'Chưa đủ dữ liệu'} <span style={{color: '#636e72', fontWeight: 500}}>tăng trưởng lưu chuyển</span>
           </div>
           <div className="report-stat-footer">
             <FiCheckCircle size={14}/> {statusDist.successPct}% tỷ lệ xuất kho thành công
@@ -113,7 +114,7 @@ const StrategicReport = () => {
             <FiUserPlus size={16} color="#0984e3"/>
           </div>
           <div className="report-stat-value dark">
-            {reportData?.newCustomers || 45} <span style={{fontSize: '18px'}}>đối tác</span>
+            {reportData?.newCustomers ?? 0} <span style={{fontSize: '18px'}}>đối tác</span>
           </div>
           <div className="report-stat-trend">
             <span className="trend-badge"><FiUserPlus size={12}/> +12</span> <span style={{color: '#636e72', fontWeight: 500}}>kết nối mới tháng này</span>
@@ -162,7 +163,7 @@ const StrategicReport = () => {
 
           <div className="top-products-footer">
             <span style={{fontSize: '13px', color: '#636e72'}}>
-              Tổng giá trị: <strong style={{color: '#2d3436'}}>{reportData?.totalRevenueFormatted || '50.000.000 đ'}</strong>
+              Tổng giá trị: <strong style={{color: '#2d3436'}}>{reportData?.totalRevenueFormatted ?? '0 đ'}</strong>
             </span>
             <span style={{fontSize: '13px', color: '#d63031', fontWeight: 600, cursor: 'pointer'}}>Chi tiết kho hàng</span>
           </div>
@@ -216,7 +217,7 @@ const StrategicReport = () => {
           <div className="strategy-icon"><FiTarget size={20} /></div>
           <div className="strategy-text">
             <h4>Đánh giá chiến lược từ hệ thống WMS Core</h4>
-            <p>{reportData?.strategicAdvice || 'Doanh số dòng sản phẩm chủ lực đóng góp hơn 60% tổng doanh thu. Đề xuất tăng cường tồn kho an toàn cho các mặt hàng bán chạy trong tháng tới.'}</p>
+            <p>{reportData?.strategicAdvice || 'Chưa có dữ liệu để đưa ra khuyến nghị.'}</p>
           </div>
         </div>
         <button className="btn-outline-red">Lập kế hoạch kho</button>

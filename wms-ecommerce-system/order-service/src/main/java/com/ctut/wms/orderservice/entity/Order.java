@@ -41,6 +41,10 @@ public class Order extends BaseEntity {
     @Column(name = "nguoi_dung_id", nullable = false)
     private Long nguoiDungId; // Logical FK Khách hàng mua (từ identity_service)
 
+    // Mã voucher toàn sàn đã áp cho cả phiên checkout (để hoàn lượt khi toàn bộ phiên bị hủy)
+    @Column(name = "ma_voucher_toan_san", length = 50)
+    private String maVoucherToanSan;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voucher_id")
     @ToString.Exclude
@@ -49,6 +53,10 @@ public class Order extends BaseEntity {
     // Đơn vị vận chuyển do Chủ cửa hàng điều phối
     @Column(name = "don_vi_van_chuyen", length = 100)
     private String donViVanChuyen;
+
+    // Mã vận đơn sinh ra khi bàn giao cho đơn vị vận chuyển
+    @Column(name = "ma_van_don", length = 40)
+    private String maVanDon;
 
     @Column(name = "dia_chi_giao_hang")
     private String diaChiGiaoHang;

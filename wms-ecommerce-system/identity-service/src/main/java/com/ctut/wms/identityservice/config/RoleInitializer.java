@@ -14,6 +14,7 @@ import com.ctut.wms.identityservice.repository.RoleRepository;
 import com.ctut.wms.identityservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,17 @@ public class RoleInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    // Mật khẩu tài khoản khởi tạo đọc từ cấu hình (đặt biến môi trường khi triển khai thật)
+    @Value("${app.seed.admin-password:admin}")
+    private String adminPassword;
+
+    @Value("${app.seed.demo-password:123456}")
+    private String demoPassword;
+
+    // Tắt (false) để không tạo các tài khoản demo khi triển khai thật
+    @Value("${app.seed.demo-users:true}")
+    private boolean seedDemoUsers;
+
     @Override
     public void run(String... args) {
         // 1. Khởi tạo các vai trò chuẩn theo kiến trúc B2B2C Sàn Tập Trung & Kho 2 Tầng
@@ -41,16 +53,19 @@ public class RoleInitializer implements CommandLineRunner {
         initRoleIfNotExists("NVKHO", "Nhân viên kho");
 
         // 2. Tự động kiểm tra và khởi tạo tài khoản ban đầu nếu DB chưa có
-        initUserIfNotExists("admin", "admin", "ADMIN", "Quản Trị Viên Hệ Thống", "admin@ctutgear.vn");
-        initUserIfNotExists("thukho", "123456", "WAREHOUSE_MANAGER", "Thủ Kho Tổng Trung Tâm", "thukho@ctutgear.vn");
-        initUserIfNotExists("nvkho", "123456", "WAREHOUSE_STAFF", "Nhân Viên Kho Vận", "nvkho@ctutgear.vn");
-        initUserIfNotExists("baomap05", "123456", "CUSTOMER", "Trương Hoàng Bảo", "baomap05@ctutgear.vn");
-        initUserIfNotExists("hungbakkka", "123456", "CUSTOMER", "Hùng Bakkka", "hungbakkka@ctutgear.vn");
-        initUserIfNotExists("seller_minhquan", "123456", "STORE_OWNER", "Trần Minh Quân (Chủ Shop)", "seller_minhquan@ctutgear.vn");
-        initUserIfNotExists("shop_apple", "123456", "STORE_OWNER", "Apple Authorized Store", "shop_apple@ctutgear.vn");
-        initUserIfNotExists("khachhang", "123456", "CUSTOMER", "Khách Hàng Mẫu", "khachhang@ctutgear.vn");
+        initUserIfNotExists("admin", adminPassword, "ADMIN", "Quản Trị Viên Hệ Thống", "admin@ctutgear.vn");
+        if (seedDemoUsers) {
+            initUserIfNotExists("thukho", demoPassword, "WAREHOUSE_MANAGER", "Thủ Kho Tổng Trung Tâm", "thukho@ctutgear.vn");
+            initUserIfNotExists("nvkho", demoPassword, "WAREHOUSE_STAFF", "Nhân Viên Kho Vận", "nvkho@ctutgear.vn");
+            initUserIfNotExists("baomap05", demoPassword, "CUSTOMER", "Trương Hoàng Bảo", "baomap05@ctutgear.vn");
+            initUserIfNotExists("hungbakkka", demoPassword, "CUSTOMER", "Hùng Bakkka", "hungbakkka@ctutgear.vn");
+            initUserIfNotExists("seller_minhquan", demoPassword, "STORE_OWNER", "Trần Minh Quân (Chủ Shop)", "seller_minhquan@ctutgear.vn");
+            initUserIfNotExists("shop_apple", demoPassword, "STORE_OWNER", "Apple Authorized Store", "shop_apple@ctutgear.vn");
+            initUserIfNotExists("khachhang", demoPassword, "CUSTOMER", "Khách Hàng Mẫu", "khachhang@ctutgear.vn");
+        }
 
-        // 3. Tự động kích hoạt toàn bộ tài khoản trong database để không bị kẹt phê duyệt
+        // 3. Tự động duyệt các tài khoản đang kẹt phê duyệt.
+        //    KHÔNG mở khóa tài khoản đã bị Admin khóa (chỉ gán mặc định khi trangThai còn null).
         try {
             userRepository.findAll().forEach(u -> {
                 boolean changed = false;
@@ -58,7 +73,7 @@ public class RoleInitializer implements CommandLineRunner {
                     u.setIsApproved(true);
                     changed = true;
                 }
-                if (!Boolean.TRUE.equals(u.getTrangThai())) {
+                if (u.getTrangThai() == null) {
                     u.setTrangThai(true);
                     changed = true;
                 }

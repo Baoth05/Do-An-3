@@ -5,7 +5,8 @@ import axios from 'axios';
 const api = axios.create({
 
   // ĐÃ SỬA: Xóa chữ '/api' ở cuối để khớp với cấu hình API Gateway
-  baseURL: 'http://10.10.27.73:8080', // Thay bằng địa chỉ IP của máy chạy Backend
+  // Địa chỉ API Gateway cấu hình trong file .env (VITE_API_GATEWAY_URL)
+  baseURL: import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080',
 
 
 

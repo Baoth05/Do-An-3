@@ -45,7 +45,9 @@ public class SecurityConfig {
 
                 ).permitAll()
 
-                .anyRequest().authenticated()
+                // Xác thực JWT & phân quyền RBAC được thực hiện tại API Gateway; request không đi qua Gateway
+                // bị chặn bởi InternalAuthFilter. Kiểm tra quyền sở hữu dữ liệu nằm trong AuthService.
+                .anyRequest().permitAll()
         );
 
         return http.build();

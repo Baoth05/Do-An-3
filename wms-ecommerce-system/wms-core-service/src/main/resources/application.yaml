@@ -8,8 +8,8 @@ spring:
   # Cấu hình Database
   datasource:
     url: jdbc:postgresql://localhost:5432/wms_core_db
-    username: postgres
-    password: 123456
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123456}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -36,4 +36,13 @@ eureka:
     instance-id: ${spring.application.name}:${server.port}
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
+# Khóa bí mật nội bộ (phải trùng với api-gateway). Đặt biến môi trường INTERNAL_SECRET khi triển khai thật.
+internal:
+  secret: ${INTERNAL_SECRET:ctut-internal-dev-secret-change-me}
+
+# Hợp đồng cung ứng: mã PIN ký số (bản demo). Đặt biến môi trường CONTRACT_SIGN_PIN khi triển khai thật.
+app:
+  contract:
+    sign-pin: ${CONTRACT_SIGN_PIN:123456}

@@ -23,61 +23,16 @@ const getCurrentCustomerUser = () => {
   }
 };
 
-// Quản lý hợp đồng cung ứng của shop và toàn sàn trên local storage
-const getGlobalContracts = () => {
-  try {
-    const raw = localStorage.getItem('global_supply_contracts');
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+// Hợp đồng cung ứng được lưu trên backend (wms-core-service: /supply-contracts)
+const notifyContractsUpdated = (contract) => {
+  window.dispatchEvent(new CustomEvent('supply-contracts-updated', { detail: contract }));
+  return contract;
 };
 
-const saveGlobalContract = (contract) => {
-  try {
-    const list = getGlobalContracts();
-    const existingIdx = list.findIndex(
-      (c) => String(c.id) === String(contract.id) || c.maHopDong === contract.maHopDong
-    );
-    let updated;
-    if (existingIdx >= 0) {
-      updated = [...list];
-      updated[existingIdx] = contract;
-    } else {
-      updated = [contract, ...list];
-    }
-    localStorage.setItem('global_supply_contracts', JSON.stringify(updated));
-
-    // Đồng bộ vào danh sách của riêng từng shop
-    if (contract.storeId) {
-      const shopContracts = updated.filter((c) => String(c.storeId) === String(contract.storeId));
-      localStorage.setItem(`seller_contracts_${contract.storeId}`, JSON.stringify(shopContracts));
-    }
-
-    window.dispatchEvent(new CustomEvent('supply-contracts-updated', { detail: contract }));
-    return updated;
-  } catch (e) {
-    console.warn('Could not save contract', e);
-    return [contract];
-  }
-};
-
-const getLocalContracts = (storeId) => {
-  try {
-    const globalList = getGlobalContracts();
-    if (globalList.length > 0) {
-      const filtered = globalList.filter((c) => String(c.storeId) === String(storeId));
-      if (filtered.length > 0) return filtered;
-    }
-    const raw = localStorage.getItem(`seller_contracts_${storeId}`);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-};
-
-const saveLocalContract = (storeId, contract) => {
-  return saveGlobalContract({ ...contract, storeId: Number(storeId) });
+const readApiError = (err, fallback) => {
+  const data = err?.response?.data;
+  if (typeof data === 'string' && data) return data;
+  return data?.message || err?.message || fallback;
 };
 
 export const marketplaceService = {
@@ -87,32 +42,11 @@ export const marketplaceService = {
   getMarketplaceProducts: async () => {
     try {
       const res = await api.get('/inventory/marketplace');
-      if (Array.isArray(res) && res.length > 0) return res;
+      return Array.isArray(res) ? res : [];
     } catch (err) {
       console.warn('Lỗi gọi /inventory/marketplace:', err?.message);
+      return [];
     }
-
-    // Thu thập các sản phẩm do chủ shop nhập từ Kho Tổng và Đã Đăng Bán
-    const localPublished = [];
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('seller_inventory_')) {
-          const raw = localStorage.getItem(key);
-          if (raw) {
-            const list = JSON.parse(raw);
-            if (Array.isArray(list)) {
-              list.filter((it) => it.dangBan !== false && ((it.soLuongThucTe || 0) > 0 || (it.soLuongKhaDung || 0) > 0))
-                .forEach((it) => localPublished.push(it));
-            }
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('Lỗi đọc local seller inventory:', e);
-    }
-
-    return localPublished;
   },
 
   // Lấy chi tiết 1 sản phẩm theo ID
@@ -219,116 +153,57 @@ export const marketplaceService = {
     }
   },
 
-  // Đồng bộ Quản lý Voucher Đã Lưu Của Người Dùng (User Saved Vouchers)
+  // Ví voucher đã lưu: trình duyệt chỉ lưu MÃ; thông tin & hiệu lực luôn lấy từ backend (/vouchers/check)
   getUserSavedVouchers: async () => {
-    const map = new Map();
-
-    // 1. Đọc từ user_saved_vouchers
+    const customer = getCurrentCustomerUser();
+    const key = customer?.taiKhoan ? `customer_vouchers_${customer.taiKhoan}` : 'user_saved_vouchers';
+    let codes = [];
     try {
-      const raw = JSON.parse(localStorage.getItem('user_saved_vouchers') || '[]');
-      for (const item of raw) {
-        if (typeof item === 'string') {
-          try {
-            const vObj = await marketplaceService.checkVoucher(item);
-            if (vObj && vObj.maVoucher) map.set(vObj.maVoucher, vObj);
-          } catch {
-            map.set(item, {
-              maVoucher: item,
-              phanTramGiam: 10,
-              giamToiDa: 50000,
-              donHangToiThieu: 150000,
-              moTa: 'Mã ưu đãi đã lưu'
-            });
-          }
-        } else if (item && item.maVoucher) {
-          map.set(item.maVoucher, item);
-        }
-      }
+      const raw = JSON.parse(localStorage.getItem(key) || '[]');
+      codes = raw.map((item) => (typeof item === 'string' ? item : item?.maVoucher))
+        .filter(Boolean)
+        .map((c) => c.trim().toUpperCase());
     } catch (e) {
       console.warn(e);
     }
+    codes = [...new Set(codes)];
 
-    // 2. Đọc từ customer_vouchers_{taiKhoan} nếu có
-    const customer = getCurrentCustomerUser();
-    if (customer?.taiKhoan) {
-      try {
-        const custRaw = JSON.parse(localStorage.getItem(`customer_vouchers_${customer.taiKhoan}`) || '[]');
-        for (const item of custRaw) {
-          if (item && item.maVoucher && !map.has(item.maVoucher)) {
-            map.set(item.maVoucher, item);
-          }
-        }
-      } catch (e) {
-        console.warn(e);
-      }
+    // Xác minh từng mã: mã hết hạn / hết lượt / không tồn tại sẽ bị loại khỏi ví
+    const results = await Promise.allSettled(codes.map((c) => marketplaceService.checkVoucher(c)));
+    const valid = results.filter((r) => r.status === 'fulfilled' && r.value?.maVoucher).map((r) => r.value);
+    if (valid.length !== codes.length) {
+      localStorage.setItem(key, JSON.stringify(valid.map((v) => v.maVoucher)));
     }
-
-    // Nếu chưa có voucher nào, nạp sẵn mã chào mừng
-    if (map.size === 0) {
-      const defaultSaved = {
-        id: 1,
-        maVoucher: 'CTUT50K',
-        phanTramGiam: 10,
-        giamToiDa: 50000,
-        donHangToiThieu: 150000,
-        soLuongConLai: 500,
-        moTa: 'Giảm 10% tối đa 50.000đ cho đơn hàng đa shop từ 150.000đ'
-      };
-      map.set('CTUT50K', defaultSaved);
-    }
-
-    return Array.from(map.values());
+    return valid;
   },
 
+  // Lưu mã vào ví: chỉ lưu được mã đang còn hiệu lực trên hệ thống
   saveUserVoucher: async (voucher) => {
-    let vObj = voucher;
-    if (typeof voucher === 'string') {
-      try {
-        vObj = await marketplaceService.checkVoucher(voucher);
-      } catch {
-        vObj = {
-          maVoucher: voucher.trim().toUpperCase(),
-          phanTramGiam: 10,
-          giamToiDa: 50000,
-          donHangToiThieu: 150000,
-          moTa: 'Ưu đãi đã lưu vào ví'
-        };
-      }
-    }
-
-    // Lưu vào user_saved_vouchers dưới dạng Object
+    const code = (typeof voucher === 'string' ? voucher : voucher?.maVoucher || '').trim().toUpperCase();
+    const vObj = await marketplaceService.checkVoucher(code); // ném lỗi nếu mã không hợp lệ
+    const customer = getCurrentCustomerUser();
+    const key = customer?.taiKhoan ? `customer_vouchers_${customer.taiKhoan}` : 'user_saved_vouchers';
+    let codes = [];
     try {
-      const currentList = await marketplaceService.getUserSavedVouchers();
-      const nextList = [vObj, ...currentList.filter((v) => v.maVoucher !== vObj.maVoucher)];
-      localStorage.setItem('user_saved_vouchers', JSON.stringify(nextList));
-
-      const customer = getCurrentCustomerUser();
-      if (customer?.taiKhoan) {
-        localStorage.setItem(`customer_vouchers_${customer.taiKhoan}`, JSON.stringify(nextList));
-      }
-      return vObj;
-    } catch (e) {
-      console.warn('Lỗi lưu voucher:', e);
-      return vObj;
-    }
+      codes = JSON.parse(localStorage.getItem(key) || '[]').map((i) => (typeof i === 'string' ? i : i?.maVoucher));
+    } catch { /* ví trống */ }
+    localStorage.setItem(key, JSON.stringify([vObj.maVoucher, ...codes.filter((c) => c && c !== vObj.maVoucher)]));
+    return vObj;
   },
 
   removeUserSavedVoucher: async (code) => {
     const normalized = code.trim().toUpperCase();
+    const customer = getCurrentCustomerUser();
+    const key = customer?.taiKhoan ? `customer_vouchers_${customer.taiKhoan}` : 'user_saved_vouchers';
     try {
-      const currentList = await marketplaceService.getUserSavedVouchers();
-      const nextList = currentList.filter((v) => v.maVoucher !== normalized);
-      localStorage.setItem('user_saved_vouchers', JSON.stringify(nextList));
-
-      const customer = getCurrentCustomerUser();
-      if (customer?.taiKhoan) {
-        localStorage.setItem(`customer_vouchers_${customer.taiKhoan}`, JSON.stringify(nextList));
-      }
-      return nextList;
+      const codes = JSON.parse(localStorage.getItem(key) || '[]')
+        .map((i) => (typeof i === 'string' ? i : i?.maVoucher))
+        .filter((c) => c && c !== normalized);
+      localStorage.setItem(key, JSON.stringify(codes));
     } catch (e) {
       console.warn(e);
-      return [];
     }
+    return marketplaceService.getUserSavedVouchers();
   },
 
   isVoucherSaved: (savedList, code) => {
@@ -341,21 +216,14 @@ export const marketplaceService = {
     return await api.post('/orders/checkout-multishop', payload);
   },
 
-  // Lấy lịch sử đơn hàng của User
-  getUserOrders: async (userId = 101) => {
+  // Lấy lịch sử đơn hàng của User (chỉ từ backend)
+  getUserOrders: async (userId) => {
+    if (!userId) throw new Error('Vui lòng đăng nhập để xem đơn hàng!');
     try {
       const res = await api.get(`/orders/user/${userId}`);
-      if (Array.isArray(res) && res.length > 0) return res;
+      return Array.isArray(res) ? res : [];
     } catch (err) {
-      console.warn(`Lỗi gọi /orders/user/${userId}:`, err?.message);
-    }
-
-    // Fallback lịch sử đơn hàng đã lưu trong localStorage
-    try {
-      const localOrders = JSON.parse(localStorage.getItem(`user_orders_${userId}`) || '[]');
-      return localOrders;
-    } catch {
-      return [];
+      throw new Error(readApiError(err, 'Không tải được danh sách đơn hàng!'), { cause: err });
     }
   },
 
@@ -411,8 +279,7 @@ export const marketplaceService = {
     try {
       return await api.put(`/auth/users/${userId}`, profileData);
     } catch (err) {
-      console.warn('Backend update profile fallback:', err?.message);
-      return { success: true };
+      throw new Error(readApiError(err, 'Cập nhật thông tin thất bại!'), { cause: err });
     }
   },
 
@@ -427,49 +294,21 @@ export const marketplaceService = {
   createStore: async (storeData) => {
     // storeData: { maKho, tenKho, diaChi, soDienThoai, email, sucChuaToiDa, moTaGianHang, anhDaiDienShop, loaiHinh: 'KHO_CUA_HANG', quanLyId }
     try {
-      const res = await api.post('/stores', storeData);
-      return res;
+      return await api.post('/stores', storeData);
     } catch (err) {
-      console.warn('Backend create store fallback:', err?.message);
-      return {
-        id: Date.now(),
-        ...storeData,
-        ngayTao: new Date().toISOString()
-      };
+      throw new Error(readApiError(err, 'Tạo gian hàng thất bại!'), { cause: err });
     }
   },
 
   // Lấy toàn bộ hàng tồn kho của Shop (bao gồm cả hàng đang bán và hàng chưa đăng bán)
   getSellerInventory: async (storeId) => {
-    let apiData = [];
     try {
       const res = await api.get(`/inventory/store/${storeId}`);
-      if (Array.isArray(res)) apiData = res;
+      return Array.isArray(res) ? res : [];
     } catch (err) {
       console.warn(`Lỗi gọi /inventory/store/${storeId}:`, err?.message);
+      return [];
     }
-
-    // Luôn hợp nhất cùng kho hàng lưu trữ cục bộ để đảm bảo sản phẩm đã nhập không bao giờ bị mất
-    const localKey = `seller_inventory_${storeId}`;
-    let localData = [];
-    try {
-      const raw = localStorage.getItem(localKey);
-      if (raw) localData = JSON.parse(raw);
-    } catch (e) {
-      console.warn('Lỗi đọc kho local shop:', e);
-    }
-
-    if (apiData.length > 0) {
-      const map = new Map();
-      apiData.forEach((i) => map.set(Number(i.sanPhamId || i.id), i));
-      localData.forEach((i) => {
-        const key = Number(i.sanPhamId || i.id);
-        if (!map.has(key)) map.set(key, i);
-      });
-      return Array.from(map.values());
-    }
-
-    return localData;
   },
 
   // Lấy Master Catalog danh mục sản phẩm chuẩn hệ thống từ DB
@@ -515,9 +354,8 @@ export const marketplaceService = {
     // importItem: { sanPhamId, khoHangId, soLuong }
     try {
       return await api.post('/inventory/add', importItem);
-    } catch (e) {
-      console.warn('Backend import fallback:', e?.message);
-      return { success: true, ...importItem };
+    } catch (err) {
+      throw new Error(readApiError(err, 'Nhập hàng thất bại!'), { cause: err });
     }
   },
 
@@ -610,283 +448,123 @@ export const marketplaceService = {
     return [];
   },
 
+  // ==================== HỢP ĐỒNG CUNG ỨNG KHO TỔNG -> CỬA HÀNG (BACKEND) ====================
+
   // Lấy danh sách hợp đồng cung ứng của Shop
   getStoreContracts: async (storeId) => {
-    return getLocalContracts(storeId);
-  },
-
-  // Lấy toàn bộ hợp đồng cung ứng toàn hệ thống (Dành cho Admin duyệt và Kho tổng)
-  getAllSupplyContracts: async () => {
-    return getGlobalContracts();
-  },
-
-  // Bước 1: Shop gửi yêu cầu ký hợp đồng nhập hàng (Trạng thái khởi tạo: CHO_ADMIN_DUYET)
-  createSupplyContractRequest: async (contractData) => {
-    const newContract = {
-      ...contractData,
-      id: contractData.id || Date.now(),
-      maHopDong: contractData.maHopDong || `HDCU-${new Date().getFullYear()}/${Date.now().toString().slice(-6)}`,
-      ngayTao: new Date().toISOString(),
-      trangThai: 'CHO_ADMIN_DUYET', // Bắt buộc chờ Admin duyệt yêu cầu trước khi được ký!
-      adminDuyetVong1: { daDuyet: false, nguoiDuyet: null, ngayDuyet: null, ghiChu: '' },
-      chuKyShop: { daKy: false, nguoiKy: null, chucVu: null, maChuKySo: null, ngayKy: null },
-      adminDuyetVong2: { daDuyet: false, nguoiDuyet: null, ngayDuyet: null, ghiChu: '' },
-      thongTinXuatKho: { daLenDon: false, maPhieuXuat: null, nguoiXuat: null, ngayXuat: null, donViVanChuyen: 'CTUT Express Logistics' },
-    };
-    saveGlobalContract(newContract);
-    return newContract;
-  },
-
-  // Bước 2: Admin duyệt yêu cầu nhập hàng (Vòng 1) -> Cho phép Shop ký số
-  adminApproveContractRequest: async (contractId, adminInfo = {}) => {
-    const list = getGlobalContracts();
-    const target = list.find((c) => String(c.id) === String(contractId) || c.maHopDong === contractId);
-    if (!target) throw new Error('Không tìm thấy hợp đồng yêu cầu!');
-
-    const updated = {
-      ...target,
-      trangThai: 'CHO_SHOP_KY',
-      adminDuyetVong1: {
-        daDuyet: true,
-        nguoiDuyet: adminInfo.name || 'Quản Trị Viên (Admin)',
-        ngayDuyet: new Date().toISOString(),
-        ghiChu: adminInfo.note || 'Yêu cầu hợp lệ, đã phê duyệt cho phép ký hợp đồng điện tử.',
-      },
-    };
-    saveGlobalContract(updated);
-    return updated;
-  },
-
-  // Bước 3: Shop thực hiện ký số điện tử sau khi Admin đã duyệt yêu cầu
-  shopSignContract: async (contractId, signInfo) => {
-    const list = getGlobalContracts();
-    const target = list.find((c) => String(c.id) === String(contractId) || c.maHopDong === contractId);
-    if (!target) throw new Error('Không tìm thấy hợp đồng!');
-    if (target.trangThai !== 'CHO_SHOP_KY') {
-      throw new Error('Hợp đồng chưa được Admin duyệt yêu cầu hoặc đã ở trạng thái khác!');
-    }
-
-    const updated = {
-      ...target,
-      trangThai: 'DA_KY_CHO_DUYET_KHO',
-      chuKyShop: {
-        daKy: true,
-        nguoiKy: signInfo.signerName,
-        chucVu: signInfo.signerRole || 'Đại diện Pháp luật / Chủ Cửa Hàng',
-        maChuKySo: `DS-SHA256-${Date.now().toString(36).toUpperCase()}`,
-        ngayKy: new Date().toISOString(),
-      },
-    };
-    saveGlobalContract(updated);
-    return updated;
-  },
-
-  // Bước 4: Admin duyệt hợp đồng đã ký lần 2 -> Chuyển sang Kho Tổng lên đơn
-  adminApproveAndTransferToWarehouse: async (contractId, adminInfo = {}) => {
-    const list = getGlobalContracts();
-    const target = list.find((c) => String(c.id) === String(contractId) || c.maHopDong === contractId);
-    if (!target) throw new Error('Không tìm thấy hợp đồng!');
-    if (target.trangThai !== 'DA_KY_CHO_DUYET_KHO') {
-      throw new Error('Chỉ duyệt chuyển kho khi hợp đồng đã có chữ ký số của shop!');
-    }
-
-    const updated = {
-      ...target,
-      trangThai: 'CHUYEN_QUA_KHO',
-      adminDuyetVong2: {
-        daDuyet: true,
-        nguoiDuyet: adminInfo.name || 'Quản Trị Viên (Admin)',
-        ngayDuyet: new Date().toISOString(),
-        ghiChu: adminInfo.note || 'Hợp đồng đầy đủ pháp lý, chuyển lệnh xuất kho sang Kho Tổng.',
-      },
-    };
-    saveGlobalContract(updated);
-    return updated;
-  },
-
-  // Bước 5: Kho Tổng tiếp nhận -> Lên đơn xuất kho và bàn giao bưu tá
-  warehouseDispatchContractOrder: async (contractId, warehouseStaffInfo = {}) => {
-    const list = getGlobalContracts();
-    const target = list.find((c) => String(c.id) === String(contractId) || c.maHopDong === contractId);
-    if (!target) throw new Error('Không tìm thấy hợp đồng!');
-
-    const exportNoteCode = `PXK-CTUT-${Date.now().toString().slice(-6)}`;
-
-    // Thử tạo phiếu xuất kho thật trên WMS backend qua API /export-notes
     try {
-      await api.post('/export-notes', {
-        donHangId: target.maHopDong,
-        khoHangId: target.khoTongId || 1,
-        nguoiTao: warehouseStaffInfo.name || 'Thủ Kho Trưởng',
-        danhSachHangHoa: (target.danhSachHang || []).map((i) => ({
+      const res = await api.get('/supply-contracts', { params: { storeId } });
+      return Array.isArray(res) ? res : [];
+    } catch (err) {
+      throw new Error(readApiError(err, 'Không tải được danh sách hợp đồng!'), { cause: err });
+    }
+  },
+
+  // Lấy toàn bộ hợp đồng cung ứng toàn hệ thống (Admin / Kho tổng)
+  getAllSupplyContracts: async () => {
+    try {
+      const res = await api.get('/supply-contracts');
+      return Array.isArray(res) ? res : [];
+    } catch (err) {
+      throw new Error(readApiError(err, 'Không tải được danh sách hợp đồng!'), { cause: err });
+    }
+  },
+
+  // Bước 1: Shop gửi yêu cầu (server tự sinh mã hợp đồng và tính giá sỉ)
+  createSupplyContractRequest: async (contractData) => {
+    try {
+      const res = await api.post('/supply-contracts', {
+        storeId: contractData.storeId,
+        khoTongId: contractData.khoTongId,
+        nguoiYeuCau: contractData.nguoiYeuCau,
+        chucVuYeuCau: contractData.chucVuYeuCau,
+        danhSachHang: (contractData.danhSachHang || []).map((i) => ({
           sanPhamId: i.sanPhamId,
           soLuong: i.soLuong,
-          donGia: i.donGiaSi,
         })),
       });
-    } catch (e) {
-      console.warn('API /export-notes fallback:', e?.message);
+      return notifyContractsUpdated(res);
+    } catch (err) {
+      throw new Error(readApiError(err, 'Gửi yêu cầu hợp đồng thất bại!'), { cause: err });
     }
-
-    const updated = {
-      ...target,
-      trangThai: 'DANG_GIAO_HANG',
-      thongTinXuatKho: {
-        daLenDon: true,
-        maPhieuXuat: exportNoteCode,
-        nguoiXuat: warehouseStaffInfo.name || 'Thủ Kho Trưởng',
-        ngayXuat: new Date().toISOString(),
-        donViVanChuyen: warehouseStaffInfo.shippingProvider || 'CTUT Express Logistics',
-      },
-    };
-    saveGlobalContract(updated);
-    return updated;
   },
 
-  // Bước 6: Hoàn thành giao hàng & Nhập kho hàng vào kho riêng của Cửa Hàng
-  completeContractDelivery: async (contractId) => {
-    const list = getGlobalContracts();
-    const target = list.find((c) => String(c.id) === String(contractId) || c.maHopDong === contractId);
-    if (!target) throw new Error('Không tìm thấy hợp đồng!');
-
-    const storeId = Number(target.storeId);
-
-    // 1. Thử gọi API backend nhập kho (nếu backend đang online)
-    if (Array.isArray(target.danhSachHang)) {
-      for (const item of target.danhSachHang) {
-        try {
-          await marketplaceService.importStockToStore({
-            sanPhamId: item.sanPhamId,
-            khoHangId: storeId,
-            soLuong: item.soLuong,
-          });
-        } catch (e) {
-          console.warn(`Lỗi nhập hàng món #${item.sanPhamId} vào backend:`, e?.message);
-        }
-      }
-    }
-
-    // 2. Luôn đồng bộ và cộng dồn số lượng vào kho riêng của Shop (localStorage) để hàng KHÔNG BỊ MẤT
+  // Bước 2: Admin duyệt yêu cầu (Vòng 1)
+  adminApproveContractRequest: async (contractId, adminInfo = {}) => {
     try {
-      const localKey = `seller_inventory_${storeId}`;
-      let currentShopInv = [];
-      try {
-        const raw = localStorage.getItem(localKey);
-        if (raw) currentShopInv = JSON.parse(raw);
-      } catch (errParse) {
-        console.warn(errParse);
-      }
-
-      const invMap = new Map();
-      currentShopInv.forEach((it) => invMap.set(Number(it.sanPhamId || it.id), it));
-
-      (target.danhSachHang || []).forEach((item) => {
-        const pId = Number(item.sanPhamId);
-        if (invMap.has(pId)) {
-          const existing = invMap.get(pId);
-          existing.soLuongThucTe = (Number(existing.soLuongThucTe) || 0) + Number(item.soLuong);
-          existing.soLuongKhaDung = (Number(existing.soLuongKhaDung) || 0) + Number(item.soLuong);
-        } else {
-          invMap.set(pId, {
-            id: Date.now() + Math.floor(Math.random() * 1000),
-            sanPhamId: pId,
-            khoHangId: storeId,
-            sku: item.sku,
-            tenSanPham: item.tenHangHoa,
-            donViTinh: item.donViTinh || 'Cái',
-            giaBan: item.donGiaSi ? Math.round(item.donGiaSi * 1.15) : 1200000,
-            giaBanHienTai: item.donGiaSi ? Math.round(item.donGiaSi * 1.15) : 1200000,
-            soLuongThucTe: Number(item.soLuong),
-            soLuongKhaDung: Number(item.soLuong),
-            soLuongToiThieu: 5,
-            soLuongToiDa: 1000,
-            dangBan: true, // Mặc định tự động mở bán khi hàng về kho shop
-            soLuongDaBan: 0,
-            hinhAnh: item.hinhAnh || '',
-            danhMuc: item.danhMuc || 'Thiết bị công nghệ',
-            ngayNhapKho: new Date().toISOString(),
-          });
-        }
-      });
-
-      const updatedShopInv = Array.from(invMap.values());
-      localStorage.setItem(localKey, JSON.stringify(updatedShopInv));
-      window.dispatchEvent(new CustomEvent('seller-inventory-updated', { detail: { storeId, inventory: updatedShopInv } }));
-    } catch (errLocal) {
-      console.warn('Lỗi cập nhật local shop inventory:', errLocal);
+      const res = await api.put(`/supply-contracts/${contractId}/approve-request`, { note: adminInfo.note });
+      return notifyContractsUpdated(res);
+    } catch (err) {
+      throw new Error(readApiError(err, 'Duyệt yêu cầu thất bại!'), { cause: err });
     }
-
-    const updated = {
-      ...target,
-      trangThai: 'HOAN_THANH',
-      ngayHoanThanh: new Date().toISOString(),
-    };
-    saveGlobalContract(updated);
-    return updated;
   },
 
-  // Từ chối yêu cầu hợp đồng (Admin hoặc Kho từ chối)
-  rejectSupplyContract: async (contractId, reason = 'Không đủ điều kiện cung ứng', adminInfo = {}) => {
-    const list = getGlobalContracts();
-    const target = list.find((c) => String(c.id) === String(contractId) || c.maHopDong === contractId);
-    if (!target) throw new Error('Không tìm thấy hợp đồng!');
-
-    const updated = {
-      ...target,
-      trangThai: 'TU_CHOI',
-      lyDoTuChoi: reason,
-      nguoiTuChoi: adminInfo.name || 'Quản Trị Viên (Admin)',
-      ngayTuChoi: new Date().toISOString(),
-    };
-    saveGlobalContract(updated);
-    return updated;
+  // Bước 3: Shop ký số điện tử
+  shopSignContract: async (contractId, signInfo) => {
+    try {
+      const res = await api.put(`/supply-contracts/${contractId}/sign`, {
+        signerName: signInfo.signerName,
+        signerRole: signInfo.signerRole,
+        signaturePin: signInfo.signaturePin,
+        agreedTerms: !!signInfo.agreedTerms,
+      });
+      return notifyContractsUpdated(res);
+    } catch (err) {
+      throw new Error(readApiError(err, 'Ký số thất bại!'), { cause: err });
+    }
   },
 
-  // Lưu hợp đồng cung ứng điện tử sau khi ký số (Tương thích ngược)
-  saveStoreContract: async (storeId, contractData) => {
-    return saveLocalContract(storeId, contractData);
+  // Bước 4: Admin duyệt vòng 2 -> chuyển lệnh sang Kho Tổng
+  adminApproveAndTransferToWarehouse: async (contractId, adminInfo = {}) => {
+    try {
+      const res = await api.put(`/supply-contracts/${contractId}/approve-transfer`, { note: adminInfo.note });
+      return notifyContractsUpdated(res);
+    } catch (err) {
+      throw new Error(readApiError(err, 'Duyệt chuyển kho thất bại!'), { cause: err });
+    }
+  },
+
+  // Bước 5: Kho Tổng xuất hàng (backend trừ tồn Kho Tổng + lập phiếu xuất + ghi thẻ kho)
+  warehouseDispatchContractOrder: async (contractId, warehouseStaffInfo = {}) => {
+    try {
+      const res = await api.put(`/supply-contracts/${contractId}/dispatch`, {
+        shippingProvider: warehouseStaffInfo.shippingProvider,
+      });
+      return notifyContractsUpdated(res);
+    } catch (err) {
+      throw new Error(readApiError(err, 'Xuất kho thất bại!'), { cause: err });
+    }
+  },
+
+  // Bước 6: Shop xác nhận nhận hàng (backend cộng tồn kho shop + ghi thẻ kho)
+  completeContractDelivery: async (contractId) => {
+    try {
+      const res = await api.put(`/supply-contracts/${contractId}/complete`);
+      return notifyContractsUpdated(res);
+    } catch (err) {
+      throw new Error(readApiError(err, 'Xác nhận nhận hàng thất bại!'), { cause: err });
+    }
+  },
+
+  // Từ chối / rút yêu cầu hợp đồng
+  rejectSupplyContract: async (contractId, reason = 'Không đủ điều kiện cung ứng') => {
+    try {
+      const res = await api.put(`/supply-contracts/${contractId}/reject`, { reason });
+      return notifyContractsUpdated(res);
+    } catch (err) {
+      throw new Error(readApiError(err, 'Từ chối hợp đồng thất bại!'), { cause: err });
+    }
   },
 
   // Chủ shop BẬT / TẮT đăng bán sản phẩm lên Sàn TMĐT và định giá bán lẻ
   publishProductToMarketplace: async (inventoryId, publishData) => {
     try {
-      await api.put(`/inventory/${inventoryId}/publish`, publishData);
+      const res = await api.put(`/inventory/${inventoryId}/publish`, publishData);
+      window.dispatchEvent(new CustomEvent('seller-inventory-updated', { detail: res }));
+      return res;
     } catch (err) {
-      console.warn('Backend publish fallback:', err?.message);
+      throw new Error(readApiError(err, 'Đăng bán thất bại!'), { cause: err });
     }
-
-    // Cập nhật cả vào localStorage của các shop
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('seller_inventory_')) {
-          const raw = localStorage.getItem(key);
-          if (raw) {
-            let invList = JSON.parse(raw);
-            let changed = false;
-            invList = invList.map((item) => {
-              if (String(item.id) === String(inventoryId) || String(item.sanPhamId) === String(inventoryId)) {
-                changed = true;
-                return {
-                  ...item,
-                  dangBan: publishData.dangBan,
-                  giaBanHienTai: publishData.giaBanHienTai !== undefined ? publishData.giaBanHienTai : item.giaBanHienTai,
-                  soLuongToiThieu: publishData.soLuongCanhBao !== undefined ? publishData.soLuongCanhBao : item.soLuongToiThieu,
-                };
-              }
-              return item;
-            });
-            if (changed) {
-              localStorage.setItem(key, JSON.stringify(invList));
-            }
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('Lỗi cập nhật local publish status:', e);
-    }
-
-    return { id: inventoryId, ...publishData };
   },
 
   // Lấy danh sách toàn bộ đơn hàng thuộc quyền quản lý của Gian hàng
@@ -916,32 +594,19 @@ export const marketplaceService = {
 
   // Chủ shop tạo Voucher khuyến mãi riêng cho Gian hàng của mình
   createStoreVoucher: async (voucherData) => {
-    const storeId = voucherData.cuaHangId;
-    const localKey = `store_vouchers_${storeId}`;
     try {
-      const res = await api.post('/vouchers', voucherData);
-      const current = JSON.parse(localStorage.getItem(localKey) || '[]');
-      localStorage.setItem(localKey, JSON.stringify([res, ...current]));
-      return res;
+      return await api.post('/vouchers', voucherData);
     } catch (err) {
-      const fallbackVc = { ...voucherData, id: Date.now() };
-      const current = JSON.parse(localStorage.getItem(localKey) || '[]');
-      localStorage.setItem(localKey, JSON.stringify([fallbackVc, ...current]));
-      return fallbackVc;
+      throw new Error(readApiError(err, 'Tạo voucher thất bại!'), { cause: err });
     }
   },
 
-  // Chủ shop gỡ bỏ Voucher khỏi gian hàng
-  deleteStoreVoucher: async (storeId, maVoucher) => {
-    const localKey = `store_vouchers_${storeId}`;
+  // Chủ shop hủy phát hành Voucher (backend kết thúc hiệu lực ngay, khách không dùng được nữa)
+  deleteStoreVoucher: async (_storeId, maVoucher) => {
     try {
-      const current = JSON.parse(localStorage.getItem(localKey) || '[]');
-      const filtered = current.filter((v) => v.maVoucher !== maVoucher);
-      localStorage.setItem(localKey, JSON.stringify(filtered));
-      return true;
-    } catch (e) {
-      console.warn(e);
-      return false;
+      return await api.put(`/vouchers/${encodeURIComponent(maVoucher)}/deactivate`);
+    } catch (err) {
+      throw new Error(readApiError(err, 'Hủy phát hành voucher thất bại!'), { cause: err });
     }
   },
 

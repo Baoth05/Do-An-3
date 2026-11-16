@@ -30,6 +30,7 @@ export const authService = {
         username: cleanUser,
         password: cleanPass
       };
+      const response = await api.post('/auth/login', payload);
       const rawRole = (response.vaiTro || response.role || 'CUSTOMER').toUpperCase().replace('ROLE_', '');
 
       // Nghiệp vụ Kho không được dùng tài khoản kho để mua hàng
@@ -69,64 +70,12 @@ export const authService = {
       if (err.message && (err.message.includes('Từ chối') || err.message.includes('Kho Bãi'))) {
         throw err;
       }
-      if (err.response?.data) {
-        const msg = typeof err.response.data === 'string'
-          ? err.response.data
-          : (err.response.data.message || 'Tài khoản hoặc mật khẩu không chính xác!');
-
-        // Bỏ qua lỗi phê duyệt đăng nhập ở ecommerce theo đúng yêu cầu người dùng
-        if (msg.includes('chờ quản trị viên phê duyệt') || msg.includes('chờ phê duyệt') || msg.includes('chờ duyệt')) {
-          console.info('Bỏ qua kiểm tra phê duyệt khi đăng nhập ecommerce:', msg);
-          let savedProfile = null;
-          try {
-            const p = localStorage.getItem(`customer_profile_${cleanUser}`);
-            if (p) savedProfile = JSON.parse(p);
-          } catch (e) { }
-
-          const customerData = {
-            id: Math.abs(cleanUser.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) || 101,
-            taiKhoan: cleanUser,
-            email: savedProfile?.email || `${cleanUser}@ctutgear.vn`,
-            hoTen: savedProfile?.hoTen || (cleanUser === 'hungbakkka' ? 'Hùng Bakkka' : (cleanUser === 'baomap05' ? 'Trương Hoàng Bảo' : cleanUser)),
-            soDienThoai: savedProfile?.soDienThoai || '0901234567',
-            diaChi: savedProfile?.diaChi || 'Cần Thơ, Việt Nam',
-            vaiTro: 'CUSTOMER',
-          };
-          const clientToken = 'CUSTOMER_JWT_ACTIVE_' + Date.now();
-          localStorage.setItem('customer_token', clientToken);
-          localStorage.setItem('customer_user', JSON.stringify(customerData));
-          localStorage.setItem(`customer_profile_${cleanUser}`, JSON.stringify(customerData));
-          window.dispatchEvent(new Event('customer-user-updated'));
-          return customerData;
-        }
-
-        throw new Error(msg);
+      const data = err.response?.data;
+      if (data) {
+        throw new Error(typeof data === 'string' ? data : (data.message || 'Tài khoản hoặc mật khẩu không chính xác!'));
       }
-
-      // Fallback an toàn cho Khách Hàng khi Backend Gateway chưa khởi động
-      console.warn('Backend login fallback cho Khách Hàng:', err?.message);
-      let savedProfile = null;
-      try {
-        const p = localStorage.getItem(`customer_profile_${cleanUser}`);
-        if (p) savedProfile = JSON.parse(p);
-      } catch (e) { }
-
-      const mockCustomer = {
-        id: Math.abs(cleanUser.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) || 101,
-        taiKhoan: cleanUser,
-        email: savedProfile?.email || `${cleanUser}@ctutgear.vn`,
-        hoTen: savedProfile?.hoTen || (cleanUser === 'hungbakkka' ? 'Hùng Bakkka' : (cleanUser === 'baomap05' ? 'Trương Hoàng Bảo' : cleanUser)),
-        soDienThoai: savedProfile?.soDienThoai || '0901234567',
-        diaChi: savedProfile?.diaChi || 'Cần Thơ, Việt Nam',
-        vaiTro: 'CUSTOMER',
-      };
-      const mockToken = 'CUSTOMER_JWT_TOKEN_' + Date.now();
-      localStorage.setItem('customer_token', mockToken);
-      localStorage.setItem('customer_user', JSON.stringify(mockCustomer));
-      localStorage.setItem(`customer_profile_${cleanUser}`, JSON.stringify(mockCustomer));
-
-      window.dispatchEvent(new Event('customer-user-updated'));
-      return mockCustomer;
+      // Không còn tạo phiên đăng nhập giả khi mất kết nối máy chủ
+      throw new Error('Không kết nối được máy chủ. Vui lòng thử lại sau!');
     }
   },
 
@@ -158,8 +107,12 @@ export const authService = {
       const response = await api.post('/auth/register', payload);
       return response;
     } catch (err) {
-      console.warn('Backend register fallback cho khách hàng:', err?.message);
-      return { success: true, message: 'Đăng ký tài khoản khách hàng thành công!' };
+      const data = err.response?.data;
+      if (data) {
+        const msg = typeof data === 'string' ? data : (data.message || Object.values(data).join(', '));
+        throw new Error(msg || 'Đăng ký thất bại!');
+      }
+      throw new Error('Không kết nối được máy chủ. Vui lòng thử lại sau!');
     }
   },
 
@@ -167,45 +120,73 @@ export const authService = {
   // 2. MODEL NGƯỜI BÁN HÀNG (SELLER MODEL) - KÊNH NGƯỜI BÁN (/seller/login, /seller)
   // ============================================================================
 
-  // Đồng bộ phiên Người Bán từ tài khoản Khách Hàng hiện tại (khi chuyển qua Kênh Người Bán)
-  syncSellerFromCustomer: (customer) => {
-    if (!customer) return null;
-    let storeInfo = null;
-    try {
-      const s = localStorage.getItem(`seller_store_${customer.taiKhoan}`);
-      if (s) storeInfo = JSON.parse(s);
-    } catch (e) { }
+  // Chuyển nhanh 1 chạm từ phiên Khách Hàng sang Kênh Người Bán (Fast-Switch) - KHÔNG cần nhập lại mật khẩu.
+  // Vai trò được nâng THẬT trên backend (token mới chứa STORE_OWNER), gian hàng được tạo THẬT trên WMS.
+  syncSellerFromCustomer: async (customer) => {
+    if (!customer) throw new Error('Vui lòng đăng nhập tài khoản khách hàng trước!');
+    let token = localStorage.getItem('customer_token');
+    if (!token) throw new Error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!');
 
-    const storeId = storeInfo?.id || customer.id || Math.abs(customer.taiKhoan.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) || 101;
-    if (!storeInfo) {
-      storeInfo = {
-        id: storeId,
-        tenKho: `Gian Hàng ${customer.hoTen || customer.taiKhoan}`,
-        maKho: `STORE-${customer.taiKhoan.toUpperCase()}`,
-        diaChi: customer.diaChi || 'Cần Thơ, Việt Nam',
-        loaiHinh: 'KHO_CUA_HANG',
-        taiKhoan: customer.taiKhoan,
-        trangThai: 'HOAT_DONG',
-      };
-      localStorage.setItem(`seller_store_${customer.taiKhoan}`, JSON.stringify(storeInfo));
+    const readErr = (err, fallback) => {
+      const data = err?.response?.data;
+      return typeof data === 'string' && data ? data : (data?.message || err?.message || fallback);
+    };
+
+    // 1. Khách hàng thường: nâng vai trò lên Chủ cửa hàng & nhận token mới
+    let role = (customer.vaiTro || '').toUpperCase();
+    if (role !== 'STORE_OWNER' && role !== 'SELLER' && role !== 'ADMIN') {
+      try {
+        const upgraded = await api.put('/auth/upgrade-to-seller', null, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        token = upgraded.token;
+        role = 'STORE_OWNER';
+        localStorage.setItem('customer_token', token);
+        const updatedCustomer = { ...customer, vaiTro: 'STORE_OWNER' };
+        localStorage.setItem('customer_user', JSON.stringify(updatedCustomer));
+        window.dispatchEvent(new Event('customer-user-updated'));
+      } catch (err) {
+        throw new Error('Không thể chuyển sang Kênh Người Bán: ' + readErr(err, 'Lỗi nâng cấp tài khoản'), { cause: err });
+      }
+    }
+    const authHeader = { headers: { Authorization: `Bearer ${token}` } };
+
+    // 2. Lấy gian hàng thật của tài khoản; chưa có thì tự khởi tạo gian hàng mặc định
+    let store = null;
+    try {
+      store = await api.get(`/stores/manager/${customer.id}`, authHeader);
+    } catch { /* chưa có gian hàng */ }
+    if ((!store || !store.id) && role !== 'ADMIN') {
+      try {
+        store = await api.post('/stores', {
+          tenKho: `Gian Hàng ${customer.hoTen || customer.taiKhoan}`,
+          maKho: `STORE-${String(customer.taiKhoan).toUpperCase()}`,
+          diaChi: customer.diaChi || 'Việt Nam',
+          soDienThoai: customer.soDienThoai || '',
+          email: customer.email || '',
+          loaiHinh: 'KHO_CUA_HANG',
+        }, authHeader);
+      } catch (err) {
+        throw new Error('Không thể khởi tạo gian hàng: ' + readErr(err, 'Lỗi tạo gian hàng'), { cause: err });
+      }
     }
 
     const sellerData = {
-      id: customer.id || storeId,
+      id: customer.id,
       taiKhoan: customer.taiKhoan,
-      email: customer.email || `${customer.taiKhoan}@seller.ctutgear.vn`,
-      hoTen: customer.hoTen || storeInfo.tenKho,
-      vaiTro: 'STORE_OWNER',
+      email: customer.email,
+      hoTen: customer.hoTen || store?.tenKho,
+      vaiTro: role === 'ADMIN' ? 'ADMIN' : 'STORE_OWNER',
       isSeller: true,
-      storeId: Number(storeId),
-      tenShop: storeInfo.tenKho,
+      storeId: store?.id ? Number(store.id) : null,
+      tenShop: store?.tenKho || '',
     };
-    localStorage.setItem('seller_user', JSON.stringify(sellerData));
-    const cToken = localStorage.getItem('customer_token');
-    if (cToken) {
-      localStorage.setItem('seller_token', cToken);
+    if (store?.id) {
+      localStorage.setItem(`seller_store_${customer.taiKhoan}`, JSON.stringify(store));
+      localStorage.setItem('seller_selected_store_id', String(store.id));
     }
-    localStorage.setItem('seller_selected_store_id', String(storeId));
+    localStorage.setItem('seller_token', token);
+    localStorage.setItem('seller_user', JSON.stringify(sellerData));
     window.dispatchEvent(new Event('seller-user-updated'));
     return sellerData;
   },
@@ -227,6 +208,7 @@ export const authService = {
         username: cleanUser,
         password: cleanPass
       };
+      const response = await api.post('/auth/login', payload);
       const rawRole = (response.vaiTro || response.role || '').toUpperCase().replace('ROLE_', '');
 
       // 1. Chặn nhân viên kho vào kênh người bán (chỉ làm việc tại WMS)
@@ -234,15 +216,30 @@ export const authService = {
         throw new Error('Từ chối truy cập: Tài khoản của bạn thuộc phân hệ Quản Lý Kho Bãi (WMS). Không thể truy cập Kênh Người Bán!');
       }
 
-      const token = response.token || ('SELLER_JWT_' + Date.now());
-      localStorage.setItem('seller_token', token);
+      // 2. Tài khoản khách hàng chưa mở gian hàng: hướng dẫn dùng Fast-Switch / Mở gian hàng
+      if (rawRole !== 'STORE_OWNER' && rawRole !== 'SELLER' && rawRole !== 'ADMIN') {
+        throw new Error('Từ chối truy cập: Tài khoản chưa đăng ký bán hàng. Hãy đăng nhập Sàn và bấm "Vào Kênh Người Bán" để mở gian hàng!');
+      }
+
+      if (!response.token) {
+        throw new Error('Đăng nhập thất bại: máy chủ không trả về token!');
+      }
+      localStorage.setItem('seller_token', response.token);
+
+      // Ưu tiên lấy gian hàng thật của chủ shop từ WMS (theo quanLyId = userId)
+      let backendStore = null;
+      try {
+        if (response.id) backendStore = await api.get(`/stores/manager/${response.id}`);
+      } catch (e) { }
 
       // Đọc hoặc tự động tạo kho riêng cho shop nếu chưa có
-      let storeInfo = null;
-      try {
-        const s = localStorage.getItem(`seller_store_${cleanUser}`);
-        if (s) storeInfo = JSON.parse(s);
-      } catch (e) { }
+      let storeInfo = backendStore && backendStore.id ? { ...backendStore, taiKhoan: cleanUser } : null;
+      if (!storeInfo) {
+        try {
+          const s = localStorage.getItem(`seller_store_${cleanUser}`);
+          if (s) storeInfo = JSON.parse(s);
+        } catch (e) { }
+      }
 
       const storeId = storeInfo?.id || localStorage.getItem(`seller_store_id_${response.id}`) || response.id || Math.abs(cleanUser.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) || 101;
       if (!storeInfo) {
@@ -276,98 +273,15 @@ export const authService = {
       window.dispatchEvent(new Event('seller-user-updated'));
       return sellerData;
     } catch (err) {
-      if (err.message && err.message.includes('Kho Bãi')) {
+      if (err.message && (err.message.includes('Từ chối') || err.message.includes('Kho Bãi'))) {
         throw err;
       }
-      if (err.response?.data) {
-        const msg = typeof err.response.data === 'string'
-          ? err.response.data
-          : (err.response.data.message || 'Tài khoản hoặc mật khẩu không chính xác!');
-
-        // Bỏ qua lỗi phê duyệt đăng nhập ở ecommerce
-        if (msg.includes('chờ quản trị viên phê duyệt') || msg.includes('chờ phê duyệt') || msg.includes('chờ duyệt')) {
-          console.info('Bỏ qua kiểm tra phê duyệt khi đăng nhập Người Bán:', msg);
-          let storeInfo = null;
-          try {
-            const s = localStorage.getItem(`seller_store_${cleanUser}`);
-            if (s) storeInfo = JSON.parse(s);
-          } catch (e) { }
-
-          const storeId = storeInfo?.id || Math.abs(cleanUser.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) || 101;
-          if (!storeInfo) {
-            storeInfo = {
-              id: storeId,
-              tenKho: `Gian Hàng ${cleanUser}`,
-              maKho: `STORE-${cleanUser.toUpperCase()}`,
-              diaChi: 'Cần Thơ, Việt Nam',
-              loaiHinh: 'KHO_CUA_HANG',
-              taiKhoan: cleanUser,
-              trangThai: 'HOAT_DONG',
-            };
-            localStorage.setItem(`seller_store_${cleanUser}`, JSON.stringify(storeInfo));
-          }
-
-          const sellerData = {
-            id: storeId,
-            taiKhoan: cleanUser,
-            email: `${cleanUser}@seller.ctutgear.vn`,
-            hoTen: storeInfo?.tenKho || `Chủ Shop ${cleanUser}`,
-            vaiTro: 'STORE_OWNER',
-            isSeller: true,
-            storeId: Number(storeId),
-            tenShop: storeInfo?.tenKho || `Gian Hàng ${cleanUser}`,
-          };
-          const token = 'SELLER_JWT_ACTIVE_' + Date.now();
-          localStorage.setItem('seller_token', token);
-          localStorage.setItem('seller_user', JSON.stringify(sellerData));
-          localStorage.setItem('seller_selected_store_id', String(storeId));
-          window.dispatchEvent(new Event('seller-user-updated'));
-          return sellerData;
-        }
-
-        throw new Error(msg);
+      const data = err.response?.data;
+      if (data) {
+        throw new Error(typeof data === 'string' ? data : (data.message || 'Tài khoản hoặc mật khẩu không chính xác!'));
       }
-
-      // Fallback an toàn cho Người Bán khi Backend Gateway chưa khởi động
-      console.warn('Backend login fallback cho Người Bán:', err?.message);
-      let storeInfo = null;
-      try {
-        const s = localStorage.getItem(`seller_store_${cleanUser}`);
-        if (s) storeInfo = JSON.parse(s);
-      } catch (e) { }
-
-      const storeId = storeInfo?.id || Math.abs(cleanUser.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) || 101;
-      if (!storeInfo) {
-        storeInfo = {
-          id: storeId,
-          tenKho: `Gian Hàng ${cleanUser}`,
-          maKho: `STORE-${cleanUser.toUpperCase()}`,
-          diaChi: 'Cần Thơ, Việt Nam',
-          loaiHinh: 'KHO_CUA_HANG',
-          taiKhoan: cleanUser,
-          trangThai: 'HOAT_DONG',
-        };
-        localStorage.setItem(`seller_store_${cleanUser}`, JSON.stringify(storeInfo));
-      }
-
-      localStorage.setItem('seller_selected_store_id', String(storeId));
-
-      const mockSeller = {
-        id: storeId,
-        taiKhoan: cleanUser,
-        email: `${cleanUser}@seller.ctutgear.vn`,
-        hoTen: cleanUser === 'admin' ? 'Quản Trị Viên (Admin)' : (storeInfo?.tenKho || `Chủ Shop ${cleanUser}`),
-        vaiTro: cleanUser === 'admin' ? 'ADMIN' : 'STORE_OWNER',
-        isSeller: true,
-        storeId: Number(storeId),
-        tenShop: storeInfo?.tenKho || `Gian Hàng ${cleanUser}`,
-      };
-      const mockToken = 'SELLER_JWT_TOKEN_' + Date.now();
-      localStorage.setItem('seller_token', mockToken);
-      localStorage.setItem('seller_user', JSON.stringify(mockSeller));
-
-      window.dispatchEvent(new Event('seller-user-updated'));
-      return mockSeller;
+      // Không còn tạo phiên đăng nhập giả khi mất kết nối máy chủ
+      throw new Error('Không kết nối được máy chủ. Vui lòng thử lại sau!');
     }
   },
 
@@ -376,13 +290,7 @@ export const authService = {
     try {
       const sellerStr = localStorage.getItem('seller_user');
       if (sellerStr) return JSON.parse(sellerStr);
-
-      // Nếu đang có phiên Khách Hàng đăng nhập và chuyển qua Kênh Người Bán
-      const customerStr = localStorage.getItem('customer_user');
-      if (customerStr) {
-        const customer = JSON.parse(customerStr);
-        return authService.syncSellerFromCustomer(customer);
-      }
+      // Chưa có phiên người bán: người dùng cần đăng nhập Kênh Người Bán hoặc dùng Fast-Switch tại /seller/login
       return null;
     } catch {
       return null;
@@ -412,8 +320,19 @@ export const authService = {
       };
       await api.post('/auth/register', payload);
     } catch (e) {
-      console.warn('Backend register seller user fallback:', e?.message);
+      const data = e.response?.data;
+      if (data) {
+        const msg = typeof data === 'string' ? data : (data.message || Object.values(data).join(', '));
+        throw new Error(msg || 'Đăng ký tài khoản người bán thất bại!');
+      }
+      throw new Error('Không kết nối được máy chủ. Vui lòng thử lại sau!');
     }
+
+    // Đăng nhập ngay để lấy token thật (tạo gian hàng yêu cầu đăng nhập với vai trò Chủ shop)
+    const loginRes = await api.post('/auth/login', {
+      taiKhoan: sellerData.taiKhoan,
+      matKhau: sellerData.matKhau,
+    });
 
     // 2. Tạo kho riêng cho shop trên WMS Core
     const storePayload = {
@@ -429,17 +348,15 @@ export const authService = {
 
     let createdStore = null;
     try {
-      createdStore = await api.post('/stores', storePayload);
+      createdStore = await api.post('/stores', storePayload, {
+        headers: { Authorization: `Bearer ${loginRes.token}` },
+      });
     } catch (e) {
-      console.warn('API /stores register fallback:', e?.message);
-      createdStore = {
-        id: Date.now(),
-        ...storePayload,
-        ngayTao: new Date().toISOString(),
-      };
+      const data = e.response?.data;
+      throw new Error('Tạo gian hàng thất bại: ' + (typeof data === 'string' ? data : (data?.message || e.message)));
     }
 
-    const storeId = createdStore?.id || Date.now();
+    const storeId = createdStore.id;
     const finalStore = { ...createdStore, id: storeId, taiKhoan: sellerData.taiKhoan };
 
     localStorage.setItem(`seller_store_${sellerData.taiKhoan}`, JSON.stringify(finalStore));
@@ -461,19 +378,29 @@ export const authService = {
       trangThai: 'HOAT_DONG',
     };
 
+    // 1. Nâng vai trò tài khoản lên Chủ cửa hàng và nhận token mới chứa vai trò STORE_OWNER
+    let upgraded;
+    try {
+      upgraded = await api.put('/auth/upgrade-to-seller');
+    } catch (err) {
+      const data = err.response?.data;
+      throw new Error('Không thể mở gian hàng: ' + (typeof data === 'string' ? data : (data?.message || err.message)));
+    }
+    localStorage.setItem('customer_token', upgraded.token);
+    localStorage.setItem('seller_token', upgraded.token);
+
+    // 2. Tạo gian hàng thật trên WMS (backend tự gán quanLyId = tài khoản đang đăng nhập)
     let createdStore = null;
     try {
-      createdStore = await api.post('/stores', storePayload);
+      createdStore = await api.post('/stores', storePayload, {
+        headers: { Authorization: `Bearer ${upgraded.token}` },
+      });
     } catch (err) {
-      console.warn('API /stores fallback:', err?.message);
-      createdStore = {
-        id: Date.now(),
-        ...storePayload,
-        ngayTao: new Date().toISOString(),
-      };
+      const data = err.response?.data;
+      throw new Error('Tạo gian hàng thất bại: ' + (typeof data === 'string' ? data : (data?.message || err.message)));
     }
 
-    const storeId = createdStore?.id || Date.now();
+    const storeId = createdStore.id;
     const finalStore = { ...createdStore, id: storeId, quanLyId: customer.id, taiKhoan: customer.taiKhoan };
 
     localStorage.setItem(`seller_store_${customer.taiKhoan}`, JSON.stringify(finalStore));

@@ -22,8 +22,11 @@ public class BinhLuanService {
     private final BinhLuanRepository binhLuanRepository;
 
     public BinhLuan themBinhLuan(BinhLuanRequest request) {
+        com.ctut.wms.interactionservice.security.CurrentUser.requireAuthenticated();
+        Long me = com.ctut.wms.interactionservice.security.CurrentUser.id();
         BinhLuan binhLuan = new BinhLuan();
-        binhLuan.setNguoiDungId(request.getNguoiDungId());
+        // Người bình luận luôn là người đang đăng nhập (không tin nguoiDungId client gửi lên)
+        binhLuan.setNguoiDungId(me != null ? me : request.getNguoiDungId());
         binhLuan.setCuaHangId(request.getCuaHangId());
         binhLuan.setMaHangHoa(request.getMaHangHoa());
         binhLuan.setNoiDung(request.getNoiDung());

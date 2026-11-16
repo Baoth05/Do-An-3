@@ -10,6 +10,7 @@ package com.ctut.wms.identityservice.service;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -20,8 +21,9 @@ import java.util.Map;
 @Service
 public class JwtService {
 
-    // Khóa bí mật đã đồng bộ chuẩn Base64 để khớp với Gateway
-    public static final String SECRET = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
+    // Khóa bí mật (Base64) đọc từ cấu hình jwt.secret / biến môi trường JWT_SECRET, phải khớp với Gateway
+    @Value("${jwt.secret}")
+    private String secret;
 
     public String generateToken(String taiKhoan) {
         return generateToken(taiKhoan, "CUSTOMER", null);
@@ -47,7 +49,7 @@ public class JwtService {
 
     // Ở bản 0.12.x, bắt buộc trả về SecretKey thay vì Key chung chung
     private SecretKey getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET);
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 

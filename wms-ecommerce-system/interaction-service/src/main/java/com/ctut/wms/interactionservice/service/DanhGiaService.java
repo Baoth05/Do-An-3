@@ -20,20 +20,25 @@ import java.util.List;
 public class DanhGiaService {
 
     private final DanhGiaRepository danhGiaRepository;
+    private final com.ctut.wms.interactionservice.client.OrderClient orderClient;
 
     public DanhGia themDanhGia(DanhGiaRequest request) {
+        com.ctut.wms.interactionservice.security.CurrentUser.requireAuthenticated();
+        Long me = com.ctut.wms.interactionservice.security.CurrentUser.id();
         DanhGia danhGia = new DanhGia();
-        danhGia.setNguoiDungId(request.getNguoiDungId());
+        // Người đánh giá luôn là người đang đăng nhập (không tin nguoiDungId client gửi lên)
+        danhGia.setNguoiDungId(me != null ? me : request.getNguoiDungId());
         danhGia.setCuaHangId(request.getCuaHangId());
         danhGia.setMaHangHoa(request.getMaHangHoa());
         danhGia.setDonHangId(request.getDonHangId());
 
-        if (request.getSoSao() < 1 || request.getSoSao() > 5) {
+        if (request.getSoSao() == null || request.getSoSao() < 1 || request.getSoSao() > 5) {
             throw new IllegalArgumentException("Số sao phải nằm trong khoảng từ 1 đến 5");
         }
         danhGia.setSoSao(request.getSoSao());
         danhGia.setNoiDung(request.getNoiDung());
-        danhGia.setDaMuaHang(true); // Ghi nhận khách mua hàng thật
+        // Xác minh qua order-service: chỉ gắn nhãn "Đã mua hàng" khi người dùng thực sự đã nhận sản phẩm này
+        danhGia.setDaMuaHang(orderClient.hasPurchased(danhGia.getNguoiDungId(), request.getMaHangHoa()));
         danhGia.setTrangThai("ĐÃ DUYỆT");
 
         return danhGiaRepository.save(danhGia);

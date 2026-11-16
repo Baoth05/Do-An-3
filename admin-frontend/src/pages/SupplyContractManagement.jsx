@@ -1,14 +1,13 @@
 // src/pages/SupplyContractManagement.jsx
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FiFileText, FiCheckCircle, FiClock, FiShield, 
   FiTruck, FiBox, FiX, FiCheck, FiSearch, FiRefreshCw, FiAlertTriangle 
 } from 'react-icons/fi';
-import { AuthContext } from '../context/AuthContext';
+import api from '../services/api';
 import './SupplyContractManagement.css';
 
 const SupplyContractManagement = () => {
-  const { user } = useContext(AuthContext);
   const [contracts, setContracts] = useState([]);
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,14 +21,21 @@ const SupplyContractManagement = () => {
   const [rejectModalContract, setRejectModalContract] = useState(null);
   const [rejectReason, setRejectReason] = useState('Kho tổng tạm thời hết hàng hoặc vượt hạn mức cung ứng.');
 
-  const fetchContracts = () => {
+  // Hợp đồng cung ứng được lưu trên backend (wms-core-service: /supply-contracts)
+  const readError = (err, fallback) => {
+    const data = err?.response?.data;
+    if (typeof data === 'string' && data) return data;
+    return data?.message || err?.message || fallback;
+  };
+
+  const fetchContracts = async () => {
     setLoading(true);
     try {
-      const raw = localStorage.getItem('global_supply_contracts');
-      const list = raw ? JSON.parse(raw) : [];
-      setContracts(list);
+      const res = await api.get('/supply-contracts');
+      setContracts(Array.isArray(res.data) ? res.data : []);
     } catch (e) {
-      console.warn('Lỗi đọc hợp đồng:', e);
+      console.warn('Lỗi tải hợp đồng:', e);
+      setAlertNotice('⚠️ ' + readError(e, 'Không tải được danh sách hợp đồng!'));
       setContracts([]);
     } finally {
       setLoading(false);
@@ -38,111 +44,49 @@ const SupplyContractManagement = () => {
 
   useEffect(() => {
     fetchContracts();
-    const handleUpdate = () => {
-      fetchContracts();
-    };
-    window.addEventListener('supply-contracts-updated', handleUpdate);
-    window.addEventListener('storage', handleUpdate);
-    return () => {
-      window.removeEventListener('supply-contracts-updated', handleUpdate);
-      window.removeEventListener('storage', handleUpdate);
-    };
   }, []);
 
-  const saveContractUpdate = (updatedContract) => {
+  // Gọi API thao tác rồi tải lại danh sách
+  const runAction = async (request, successMessage) => {
     try {
-      const raw = localStorage.getItem('global_supply_contracts');
-      const list = raw ? JSON.parse(raw) : [];
-      const idx = list.findIndex(
-        (c) => String(c.id) === String(updatedContract.id) || c.maHopDong === updatedContract.maHopDong
-      );
-      let nextList;
-      if (idx >= 0) {
-        nextList = [...list];
-        nextList[idx] = updatedContract;
-      } else {
-        nextList = [updatedContract, ...list];
-      }
-      localStorage.setItem('global_supply_contracts', JSON.stringify(nextList));
-
-      // Đồng bộ theo shop
-      if (updatedContract.storeId) {
-        const shopList = nextList.filter((c) => String(c.storeId) === String(updatedContract.storeId));
-        localStorage.setItem(`seller_contracts_${updatedContract.storeId}`, JSON.stringify(shopList));
-      }
-
-      window.dispatchEvent(new CustomEvent('supply-contracts-updated', { detail: updatedContract }));
-      setContracts(nextList);
+      await request();
+      setAlertNotice(successMessage);
+      await fetchContracts();
     } catch (e) {
-      console.warn('Lỗi lưu hợp đồng:', e);
+      alert('Thao tác thất bại: ' + readError(e, 'Lỗi không xác định'));
     }
   };
 
   // 1. Duyệt Vòng 1: Admin Duyệt Yêu Cầu Cung Ứng -> Cho phép Shop Ký Số
-  const handleApproveRound1 = (c) => {
-    const adminName = user?.hoTen || user?.fullName || user?.name || user?.taiKhoan || 'Quản Trị Viên (Admin)';
-    const updated = {
-      ...c,
-      trangThai: 'CHO_SHOP_KY',
-      adminDuyetVong1: {
-        daDuyet: true,
-        nguoiDuyet: adminName,
-        ngayDuyet: new Date().toISOString(),
-        ghiChu: 'Admin đã thẩm định yêu cầu nhập hàng. Cho phép chủ cửa hàng tiến hành ký số hợp đồng.',
-      },
-    };
-    saveContractUpdate(updated);
-    setAlertNotice(`✅ Đã duyệt yêu cầu hợp đồng ${c.maHopDong}! Hợp đồng chuyển sang chờ Shop ký số.`);
-  };
+  const handleApproveRound1 = (c) => runAction(
+    () => api.put(`/supply-contracts/${c.id}/approve-request`, {
+      note: 'Admin đã thẩm định yêu cầu nhập hàng. Cho phép chủ cửa hàng tiến hành ký số hợp đồng.',
+    }),
+    `✅ Đã duyệt yêu cầu hợp đồng ${c.maHopDong}! Hợp đồng chuyển sang chờ Shop ký số.`
+  );
 
   // 2. Duyệt Vòng 2: Admin Duyệt Chuyển Kho -> Chuyển Sang Kho Tổng Lên Đơn
-  const handleApproveRound2 = (c) => {
-    const adminName = user?.hoTen || user?.fullName || user?.name || user?.taiKhoan || 'Quản Trị Viên (Admin)';
-    const updated = {
-      ...c,
-      trangThai: 'CHUYEN_QUA_KHO',
-      adminDuyetVong2: {
-        daDuyet: true,
-        nguoiDuyet: adminName,
-        ngayDuyet: new Date().toISOString(),
-        ghiChu: 'Hợp đồng đã có chữ ký số điện tử của shop. Lệnh xuất kho đã chuyển sang Kho Tổng.',
-      },
-    };
-    saveContractUpdate(updated);
-    setAlertNotice(`🏢 Đã duyệt hợp đồng ${c.maHopDong} và chuyển lệnh xuất sang Kho Tổng!`);
-  };
+  const handleApproveRound2 = (c) => runAction(
+    () => api.put(`/supply-contracts/${c.id}/approve-transfer`, {
+      note: 'Hợp đồng đã có chữ ký số điện tử của shop. Lệnh xuất kho đã chuyển sang Kho Tổng.',
+    }),
+    `🏢 Đã duyệt hợp đồng ${c.maHopDong} và chuyển lệnh xuất sang Kho Tổng!`
+  );
 
-  // 3. Kho Tổng lên đơn xuất kho
-  const handleDispatchOrder = (c) => {
-    const exportCode = `PXK-CTUT-${Date.now().toString().slice(-6)}`;
-    const updated = {
-      ...c,
-      trangThai: 'DANG_GIAO_HANG',
-      thongTinXuatKho: {
-        daLenDon: true,
-        maPhieuXuat: exportCode,
-        nguoiXuat: 'Thủ Kho Trưởng CTUT',
-        ngayXuat: new Date().toISOString(),
-        donViVanChuyen: 'CTUT Express Logistics',
-      },
-    };
-    saveContractUpdate(updated);
-    setAlertNotice(`📦 Đã lên đơn xuất kho [${exportCode}] cho hợp đồng ${c.maHopDong}! Đang vận chuyển sang shop.`);
-  };
+  // 3. Kho Tổng lên đơn xuất kho (backend trừ tồn Kho Tổng, lập phiếu xuất, ghi thẻ kho)
+  const handleDispatchOrder = (c) => runAction(
+    () => api.put(`/supply-contracts/${c.id}/dispatch`, { shippingProvider: 'CTUT Express Logistics' }),
+    `📦 Đã xuất kho cho hợp đồng ${c.maHopDong}! Hàng đang vận chuyển sang shop.`
+  );
 
   // 4. Từ chối yêu cầu
-  const handleRejectConfirm = () => {
+  const handleRejectConfirm = async () => {
     if (!rejectModalContract) return;
-    const adminName = user?.hoTen || user?.fullName || user?.name || user?.taiKhoan || 'Quản Trị Viên (Admin)';
-    const updated = {
-      ...rejectModalContract,
-      trangThai: 'TU_CHOI',
-      lyDoTuChoi: rejectReason,
-      nguoiTuChoi: adminName,
-      ngayTuChoi: new Date().toISOString(),
-    };
-    saveContractUpdate(updated);
-    setAlertNotice(`❌ Đã từ chối hợp đồng ${rejectModalContract.maHopDong}.`);
+    const target = rejectModalContract;
+    await runAction(
+      () => api.put(`/supply-contracts/${target.id}/reject`, { reason: rejectReason }),
+      `❌ Đã từ chối hợp đồng ${target.maHopDong}.`
+    );
     setRejectModalContract(null);
   };
 

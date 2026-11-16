@@ -61,7 +61,11 @@ public class ExportNote extends BaseEntity {
     private LocalDateTime ngayXuat;
 
     @Column(name = "trang_thai")
-    private String trangThai = "CHỜ GOM HÀNG"; // CHỜ GOM HÀNG, ĐÃ XUẤT, HỦY
+    private String trangThai = "CHỜ DUYỆT"; // CHỜ DUYỆT -> CHỜ XUẤT KHO -> HOÀN THÀNH (hoặc TỪ CHỐI / ĐÃ HỦY)
+
+    // true: số lượng khả dụng đã được giữ chỗ ngay khi lập phiếu (phiếu cũ trước khi có cơ chế này = null)
+    @Column(name = "da_giu_cho")
+    private Boolean daGiuCho;
     @OneToMany(mappedBy = "phieuXuat", fetch = FetchType.LAZY)
     private List<ExportNoteDetail> exportNoteDetails;
 }

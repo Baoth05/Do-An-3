@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping({"/finance", "/wms/finance"})
-@CrossOrigin("*")
 @RequiredArgsConstructor
 public class FinanceController {
 
@@ -17,7 +16,7 @@ public class FinanceController {
     @GetMapping("/summary")
     public ResponseEntity<?> getSummary(@RequestParam(required = false) Integer month,
                                         @RequestParam(required = false) Integer year) {
-        return ResponseEntity.ok(financeService.getFinancialSummary());
+        return ResponseEntity.ok(financeService.getFinancialSummary(month, year));
     }
 
     // API lấy dữ liệu biểu đồ tài chính 6 tháng

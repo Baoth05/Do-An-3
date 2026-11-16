@@ -13,4 +13,5 @@ import lombok.Data;
 public class WmsExportDetailRequest {
     private Long sanPhamId;
     private Integer soLuong;
+    private Double donGia; // Giá bán thực tế trên đơn hàng (WMS dùng cho báo cáo doanh thu)
 }

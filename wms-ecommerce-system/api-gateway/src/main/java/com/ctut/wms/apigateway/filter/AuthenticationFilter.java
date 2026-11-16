@@ -20,6 +20,7 @@ package com.ctut.wms.apigateway.filter;
 
 import com.ctut.wms.apigateway.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -38,8 +39,17 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class AuthenticationFilter implements GlobalFilter, Ordered {
 
+    public static final String HEADER_ACCOUNT = "X-User-Account";
+    public static final String HEADER_ROLE = "X-User-Role";
+    public static final String HEADER_USER_ID = "X-User-Id";
+    public static final String HEADER_INTERNAL_SECRET = "X-Internal-Secret";
+
     @Autowired
     private JwtUtil jwtUtil;
+
+    // Khóa bí mật nội bộ: các microservice chỉ chấp nhận request có header này (tức là đi qua Gateway)
+    @Value("${internal.secret}")
+    private String internalSecret;
 
     @Override
     public int getOrder() {
@@ -52,83 +62,96 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         String path = request.getURI().getPath();
         HttpMethod method = request.getMethod();
 
+        // 0. Chặn các đường dẫn bất thường có thể dùng để lách luật phân quyền theo path
+        String rawPath = request.getURI().getRawPath();
+        String lowerRaw = rawPath != null ? rawPath.toLowerCase() : "";
+        if (lowerRaw.contains("//") || lowerRaw.contains("..") || lowerRaw.contains("%2e")
+                || lowerRaw.contains("%2f") || lowerRaw.contains("%5c") || lowerRaw.contains(";")
+                || lowerRaw.contains("\\")) {
+            return sendErrorResponse(exchange, HttpStatus.BAD_REQUEST, "Đường dẫn không hợp lệ!");
+        }
+
         // 1. Cho phép yêu cầu OPTIONS (CORS preflight) đi qua không cần kiểm tra
         if (method == HttpMethod.OPTIONS) {
-            return chain.filter(exchange);
+            return chain.filter(forward(exchange, null, null, null));
         }
 
-        // 2. Kiểm tra xem có phải là Endpoint công khai (Public) hay không
-        if (isPublicEndpoint(path, method)) {
-            // Nếu có gửi kèm Authorization header thì parse để forward, nếu không thì cứ cho qua
-            if (request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-                String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-                if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                    String token = authHeader.substring(7);
-                    try {
-                        jwtUtil.validateToken(token);
-                        String username = jwtUtil.extractUsername(token);
-                        String role = jwtUtil.extractRole(token);
-                        ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
-                                .header("X-User-Account", username != null ? username : "")
-                                .header("X-User-Role", role != null ? role : "CUSTOMER")
-                                .build();
-                        return chain.filter(exchange.mutate().request(mutatedRequest).build());
-                    } catch (Exception ignored) {
-                    }
-                }
-            }
-            return chain.filter(exchange);
-        }
-
-        // 3. Nếu là Endpoint được bảo vệ, bắt buộc phải có Authorization Header
-        if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-            return sendErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Vui lòng đăng nhập để thực hiện thao tác này!");
-        }
+        // 2. Giải mã token (nếu có). Không bao giờ tin các header X-User-* do client tự gửi lên.
+        String username = null;
+        String role = null;
+        String userId = null;
+        boolean tokenValid = false;
 
         String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            try {
+                jwtUtil.validateToken(token);
+                username = jwtUtil.extractUsername(token);
+                role = normalizeRole(jwtUtil.extractRole(token));
+                userId = jwtUtil.extractUserId(token);
+                tokenValid = true;
+            } catch (Exception ignored) {
+                tokenValid = false;
+            }
+        }
+
+        // 3. Endpoint công khai: cho qua, kèm thông tin người dùng nếu token hợp lệ
+        if (isPublicEndpoint(path, method)) {
+            return tokenValid
+                    ? chain.filter(forward(exchange, username, role, userId))
+                    : chain.filter(forward(exchange, null, null, null));
+        }
+
+        // 4. Endpoint được bảo vệ: bắt buộc có token hợp lệ
+        if (authHeader == null) {
+            return sendErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Vui lòng đăng nhập để thực hiện thao tác này!");
+        }
+        if (!authHeader.startsWith("Bearer ")) {
             return sendErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Header Authorization không đúng định dạng Bearer Token!");
         }
-
-        String token = authHeader.substring(7);
-
-        // Bỏ qua xác thực cho token dev/mock
-        if ("mock-jwt-token-wms-2026".equals(token)) {
-            ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
-                    .header("X-User-Account", "admin_dev")
-                    .header("X-User-Role", "ADMIN")
-                    .build();
-            return chain.filter(exchange.mutate().request(mutatedRequest).build());
-        }
-
-        String username;
-        String role;
-        try {
-            jwtUtil.validateToken(token);
-            username = jwtUtil.extractUsername(token);
-            role = jwtUtil.extractRole(token);
-            if (role != null) {
-                role = role.toUpperCase().replace("ROLE_", "");
-            } else {
-                role = "CUSTOMER";
-            }
-        } catch (Exception e) {
+        if (!tokenValid) {
             return sendErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Token xác thực không hợp lệ hoặc đã hết hạn!");
         }
 
-        // 4. KIỂM TRA PHÂN QUYỀN RBAC (Role-Based Access Control)
+        // 5. KIỂM TRA PHÂN QUYỀN RBAC (Role-Based Access Control)
         if (!isAuthorized(path, method, role)) {
-            return sendErrorResponse(exchange, HttpStatus.FORBIDDEN, 
+            return sendErrorResponse(exchange, HttpStatus.FORBIDDEN,
                     "Từ chối truy cập (403): Vai trò [" + role + "] không có quyền truy cập tài nguyên này!");
         }
 
-        // 5. Gắn Header người dùng và vai trò để chuyển tiếp đến các Microservice bên trong
-        ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
-                .header("X-User-Account", username != null ? username : "")
-                .header("X-User-Role", role)
-                .build();
+        // 6. Gắn Header người dùng, vai trò và khóa nội bộ để chuyển tiếp đến các Microservice
+        return chain.filter(forward(exchange, username, role, userId));
+    }
 
-        return chain.filter(exchange.mutate().request(mutatedRequest).build());
+    /**
+     * Xóa mọi header định danh do client gửi lên, sau đó gắn lại header do Gateway xác thực.
+     */
+    private ServerWebExchange forward(ServerWebExchange exchange, String username, String role, String userId) {
+        ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
+                .headers(h -> {
+                    h.remove(HEADER_ACCOUNT);
+                    h.remove(HEADER_ROLE);
+                    h.remove(HEADER_USER_ID);
+                    h.remove(HEADER_INTERNAL_SECRET);
+                    h.set(HEADER_INTERNAL_SECRET, internalSecret);
+                    if (role != null) {
+                        h.set(HEADER_ACCOUNT, username != null ? username : "");
+                        h.set(HEADER_ROLE, role);
+                        if (userId != null) {
+                            h.set(HEADER_USER_ID, userId);
+                        }
+                    }
+                })
+                .build();
+        return exchange.mutate().request(mutatedRequest).build();
+    }
+
+    private String normalizeRole(String role) {
+        if (role == null || role.isBlank()) {
+            return "CUSTOMER";
+        }
+        return role.toUpperCase().replace("ROLE_", "");
     }
 
     /**
@@ -136,25 +159,27 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
      */
     private boolean isPublicEndpoint(String path, HttpMethod method) {
         // Cổng xác thực công khai
-        if (path.startsWith("/auth/login") || 
-            path.startsWith("/auth/register") || 
-            path.startsWith("/auth/validate")) {
+        if (path.equals("/auth/login") ||
+            path.equals("/auth/register") ||
+            path.equals("/auth/validate")) {
             return true;
         }
 
         // Các API đọc công khai trên Sàn TMĐT cho khách hàng & người xem
-        if (path.startsWith("/inventory") && method == HttpMethod.GET) return true;
-        if (path.startsWith("/categories") && method == HttpMethod.GET) return true;
-        if (path.startsWith("/products") && method == HttpMethod.GET) return true;
-        if (path.startsWith("/stores") && method == HttpMethod.GET) return true;
-        if (path.startsWith("/warehouses") && method == HttpMethod.GET) return true;
-        if (path.startsWith("/vouchers") && method == HttpMethod.GET) return true;
-        if (path.startsWith("/interactions") && method == HttpMethod.GET) return true;
-        if (path.startsWith("/binh-luan") && method == HttpMethod.GET) return true;
-        if (path.startsWith("/danh-gia") && method == HttpMethod.GET) return true;
+        if (method == HttpMethod.GET) {
+            if (path.startsWith("/inventory")) return true;
+            if (path.startsWith("/categories")) return true;
+            if (path.startsWith("/products")) return true;
+            if (path.startsWith("/stores")) return true;
+            if (path.startsWith("/warehouses")) return true;
+            if (path.startsWith("/vouchers")) return true;
+            if (path.startsWith("/interactions")) return true;
+            if (path.startsWith("/binh-luan")) return true;
+            if (path.startsWith("/danh-gia")) return true;
+        }
 
-        // Callback thanh toán
-        if (path.startsWith("/payments/momo/ipn") || path.startsWith("/payments/callback")) {
+        // Webhook IPN của MoMo (được bảo vệ bằng chữ ký HMAC ở payment-service)
+        if (path.equals("/payments/momo-ipn") && method == HttpMethod.POST) {
             return true;
         }
 
@@ -163,6 +188,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
     /**
      * Kiểm tra vai trò của người dùng có quyền truy cập endpoint hay không.
+     * Nguyên tắc: liệt kê tường minh từng nhóm endpoint, MẶC ĐỊNH TỪ CHỐI.
+     * (Quyền sở hữu dữ liệu - "của ai" - được kiểm tra thêm tại từng microservice.)
      */
     private boolean isAuthorized(String path, HttpMethod method, String role) {
         // 1. ADMIN có toàn quyền vào TẤT CẢ chức năng
@@ -170,86 +197,113 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             return true;
         }
 
-        // 2. Nhóm quyền Quản trị hệ thống (Chỉ ADMIN)
-        boolean isAdminOnlyEndpoint = (path.equals("/auth/users") && (method == HttpMethod.GET || method == HttpMethod.POST)) ||
-                                      path.contains("/toggle-status") ||
-                                      path.startsWith("/auth/staff") ||
-                                      path.startsWith("/auth/stats") ||
-                                      path.startsWith("/auth/delete");
-        if (isAdminOnlyEndpoint) {
-            return "ADMIN".equals(role);
-        }
-
-        // 3. Nhóm quyền Quản lý Kho bãi WMS:
-        // Thủ kho, Nhân viên kho và Admin có quyền
-        boolean isWarehouseEndpoint = path.startsWith("/warehouses") ||
-                                      path.startsWith("/export-notes") ||
-                                      path.startsWith("/import-notes") ||
-                                      path.startsWith("/actual-imports") ||
-                                      path.startsWith("/stock-cards") ||
-                                      path.startsWith("/suppliers") ||
-                                      path.startsWith("/transfers") ||
-                                      path.startsWith("/shippers") ||
-                                      path.startsWith("/shipping-providers") ||
-                                      path.startsWith("/purchase-orders") ||
-                                      path.startsWith("/wms");
-
-        if (isWarehouseEndpoint) {
-            return isWarehouseRole(role);
-        }
-
-        // Chỉnh sửa danh mục master/sản phẩm master catalog: Chỉ kho và admin
-        if ((path.startsWith("/products") || path.startsWith("/categories")) && 
-            (method == HttpMethod.POST || method == HttpMethod.PUT || method == HttpMethod.DELETE)) {
-            return isWarehouseRole(role);
-        }
-
-        // 4. Nhóm quyền Kênh Người Bán (Chủ Cửa Hàng):
-        // Chỉ Chủ shop (STORE_OWNER / SELLER) và Admin có quyền
-        boolean isSellerEndpoint = path.contains("/publish") ||
-                                   path.startsWith("/inventory/add") ||
-                                   path.startsWith("/orders/store") ||
-                                   (path.startsWith("/orders/") && path.contains("/status")) ||
-                                   (path.startsWith("/orders/") && path.contains("/shipping-status")) ||
-                                   (path.startsWith("/vouchers") && method == HttpMethod.POST) ||
-                                   (path.startsWith("/stores") && (method == HttpMethod.PUT || method == HttpMethod.POST));
-
-        if (isSellerEndpoint) {
-            return isSellerRole(role);
-        }
-
-        // 5. Nếu là Thủ kho / Nhân viên kho: Chỉ có quyền ở kho bãi, không được vào các thao tác người bán
-        if (isWarehouseRole(role)) {
-            // Thủ kho có thể xem thông tin cá nhân và đổi mật khẩu
-            if (path.startsWith("/auth/profile") || path.startsWith("/auth/change-password")) {
-                return true;
-            }
-            // Không cho phép nhân viên kho truy cập Kênh người bán hoặc đặt đơn gian hàng
+        // 2. Nhóm chỉ dành cho ADMIN
+        if (isAdminOnlyEndpoint(path, method)) {
             return false;
         }
 
-        // 6. Nhóm quyền Khách Hàng (CUSTOMER):
-        // Chỉ xem và thao tác ở phần Khách Hàng (Đặt hàng, xem đơn cá nhân, thanh toán, đánh giá)
-        if ("CUSTOMER".equals(role)) {
-            boolean isCustomerAllowed = path.startsWith("/orders/checkout") ||
-                                        path.startsWith("/orders/user") ||
-                                        (path.startsWith("/orders/") && path.endsWith("/cancel")) ||
-                                        path.startsWith("/payments") ||
-                                        path.startsWith("/interactions") ||
-                                        path.startsWith("/binh-luan") ||
-                                        path.startsWith("/danh-gia") ||
-                                        path.startsWith("/auth/profile") ||
-                                        (path.startsWith("/auth/users/") && method == HttpMethod.PUT) ||
-                                        path.startsWith("/auth/change-password");
-            return isCustomerAllowed;
+        // 3a. Hợp đồng cung ứng Kho Tổng -> Cửa hàng: Chủ shop & nhân sự kho
+        //     (service kiểm tra chi tiết: ai được duyệt / ký / xuất / nhận ở từng bước)
+        if (path.equals("/supply-contracts") || path.startsWith("/supply-contracts/")) {
+            return isSellerRole(role) || isWarehouseRole(role);
         }
 
-        // 7. Chủ shop (STORE_OWNER / SELLER) cũng có thể mua sắm như khách hàng
-        if (isSellerRole(role)) {
+        // 3. Nhóm Quản lý Kho bãi WMS: Thủ kho, Nhân viên kho
+        if (isWarehouseEndpoint(path, method)) {
+            return isWarehouseRole(role);
+        }
+
+        // 4. Tài khoản cá nhân (xem/sửa hồ sơ, đổi mật khẩu): mọi vai trò đã đăng nhập
+        if (isSelfAccountEndpoint(path, method)) {
             return true;
         }
 
+        // 5. Ngưỡng cảnh báo tồn kho: Chủ shop (gian hàng của mình) hoặc nhân sự kho
+        if (method == HttpMethod.PUT && path.matches("^/inventory/\\d+/thresholds$")) {
+            return isSellerRole(role) || isWarehouseRole(role);
+        }
+
+        // 6. Kênh Người Bán: Chủ cửa hàng
+        if (isSellerEndpoint(path, method)) {
+            return isSellerRole(role);
+        }
+
+        // 7. Mua sắm: Khách hàng và Chủ shop (chủ shop cũng có thể mua hàng)
+        if (isShoppingEndpoint(path, method)) {
+            return "CUSTOMER".equals(role) || isSellerRole(role);
+        }
+
+        // 8. Mặc định: từ chối
         return false;
+    }
+
+    private boolean isAdminOnlyEndpoint(String path, HttpMethod method) {
+        return (path.equals("/auth/users") && (method == HttpMethod.GET || method == HttpMethod.POST))
+                || path.matches("^/auth/users/\\d+/toggle-status$")
+                || path.matches("^/auth/users/\\d+/approve$")
+                || path.startsWith("/auth/staff")
+                || path.startsWith("/auth/stats")
+                || path.startsWith("/auth/delete/")
+                || path.startsWith("/auth/customers")
+                || (path.equals("/orders") && method == HttpMethod.GET)
+                // Trạng thái thanh toán: chỉ Admin (payment-service gọi nội bộ, không qua Gateway)
+                || path.endsWith("/payment-status")
+                || path.startsWith("/payments/confirm-manual/")
+                || (path.equals("/payments/crypto") && method == HttpMethod.GET)
+                || path.matches("^/payments/crypto/\\d+/(confirm|reject)$")
+                // Báo cáo tài chính & chiến lược: chỉ Quản trị viên
+                || path.startsWith("/wms/finance");
+    }
+
+    private boolean isWarehouseEndpoint(String path, HttpMethod method) {
+        boolean wmsArea = path.startsWith("/wms/")
+                || path.startsWith("/warehouses")
+                || path.startsWith("/export-notes")
+                || path.startsWith("/import-notes")
+                || path.startsWith("/stock-cards")
+                || path.startsWith("/suppliers")
+                || path.startsWith("/transfers")
+                || path.startsWith("/shippers")
+                || path.startsWith("/shipping-providers");
+        // Chỉnh sửa danh mục master / sản phẩm master catalog
+        boolean catalogWrite = (path.startsWith("/products") || path.startsWith("/categories"))
+                && (method == HttpMethod.POST || method == HttpMethod.PUT || method == HttpMethod.DELETE);
+        return wmsArea || catalogWrite;
+    }
+
+    private boolean isSelfAccountEndpoint(String path, HttpMethod method) {
+        return (method == HttpMethod.GET && path.matches("^/auth/profile/[^/]+$"))
+                || (method == HttpMethod.PUT && path.matches("^/auth/users/\\d+$"))
+                || (method == HttpMethod.PUT && path.matches("^/auth/change-password/[^/]+$"))
+                || (method == HttpMethod.PUT && path.equals("/auth/upgrade-to-seller"));
+    }
+
+    private boolean isSellerEndpoint(String path, HttpMethod method) {
+        return (method == HttpMethod.PUT && path.matches("^/inventory/\\d+/publish$"))
+                || (method == HttpMethod.POST && path.equals("/inventory/add"))
+                || (method == HttpMethod.GET && path.matches("^/orders/store/\\d+$"))
+                || (method == HttpMethod.PUT && path.matches("^/orders/\\d+/status$"))
+                || (method == HttpMethod.PUT && path.matches("^/orders/\\d+/shipping-status$"))
+                || (method == HttpMethod.POST && path.equals("/vouchers"))
+                || (method == HttpMethod.PUT && path.matches("^/vouchers/[^/]+/deactivate$"))
+                || (method == HttpMethod.POST && path.equals("/stores"))
+                || (method == HttpMethod.PUT && path.matches("^/stores/\\d+$"));
+    }
+
+    private boolean isShoppingEndpoint(String path, HttpMethod method) {
+        return (method == HttpMethod.POST && path.equals("/orders"))
+                || (method == HttpMethod.POST && path.equals("/orders/checkout-multishop"))
+                || (method == HttpMethod.GET && path.matches("^/orders/checkout-session/[^/]+$"))
+                || (method == HttpMethod.GET && path.matches("^/orders/user/\\d+$"))
+                || (method == HttpMethod.GET && path.matches("^/orders/DH-[^/]+$"))
+                || (method == HttpMethod.PUT && path.matches("^/orders/\\d+/cancel$"))
+                || (method == HttpMethod.POST && path.equals("/payments/create"))
+                || (method == HttpMethod.GET && path.matches("^/payments/status/[^/]+$"))
+                || (method == HttpMethod.POST && path.equals("/payments/crypto/submit"))
+                || (method == HttpMethod.GET && path.matches("^/payments/crypto/session/[^/]+$"))
+                || path.startsWith("/interactions/")
+                || path.equals("/binh-luan") || path.startsWith("/binh-luan/")
+                || path.equals("/danh-gia") || path.startsWith("/danh-gia/");
     }
 
     private boolean isWarehouseRole(String role) {

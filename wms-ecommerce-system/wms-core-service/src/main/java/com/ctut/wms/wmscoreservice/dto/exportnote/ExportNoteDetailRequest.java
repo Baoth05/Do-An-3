@@ -15,4 +15,5 @@ import lombok.Data;
 public class ExportNoteDetailRequest {
     private Long sanPhamId;
     private Integer soLuong;
+    private Double donGia; // Giá bán thực tế (order-service gửi kèm giá trên đơn hàng)
 }

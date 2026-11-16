@@ -88,32 +88,6 @@ export const AuthProvider = ({ children }) => {
         return { success: false, message: errorMsg };
       }
 
-      // Fallback dự phòng an toàn khi backend chưa bật hoặc ngoại tuyến cho các tài khoản nghiệp vụ kho
-      const lower = cleanUser.toLowerCase();
-      if ((lower === 'admin' && (cleanPass === 'admin' || cleanPass === '123456')) ||
-          (lower === 'thukho' && cleanPass === '123456') ||
-          (lower === 'nvkho' && cleanPass === '123456')) {
-        const assignedRole = lower === 'admin' ? 'ADMIN' : (lower === 'thukho' ? 'WAREHOUSE_MANAGER' : 'WAREHOUSE_STAFF');
-        const roleLabel = lower === 'admin' ? 'Quản Trị Viên Kho' : (lower === 'thukho' ? 'Thủ Kho Tổng Trung Tâm' : 'Nhân Viên Kho Vận');
-        const fallbackUser = {
-          id: lower === 'admin' ? 1 : 2,
-          taiKhoan: cleanUser,
-          name: roleLabel,
-          role: assignedRole,
-          email: `${cleanUser}@ctutgear.vn`,
-        };
-        const fallbackToken = 'WMS_OFFLINE_JWT_' + Date.now();
-        localStorage.setItem('wms_token', fallbackToken);
-        localStorage.setItem('wms_user', JSON.stringify(fallbackUser));
-        setToken(fallbackToken);
-        setUser(fallbackUser);
-        return { 
-          success: true, 
-          offlineMode: true,
-          message: 'Đăng nhập thành công (Phiên làm việc kho bãi dự phòng)!' 
-        };
-      }
-
       return { 
         success: false, 
         message: 'Không thể kết nối tới Backend API Gateway (Port 8080). Vui lòng kiểm tra các service Spring Boot hoặc thử lại!' 

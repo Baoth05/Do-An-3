@@ -19,6 +19,7 @@ const SellerLayout = () => {
   const [currentStore, setCurrentStore] = useState(null);
   const [currentStoreId, setCurrentStoreId] = useState('');
   const [loadingStore, setLoadingStore] = useState(true);
+  const [storeError, setStoreError] = useState('');
 
   useEffect(() => {
     // 🌟 ROUTE GUARD KÊNH NGƯỜI BÁN: Bắt buộc phiên đăng nhập của Model Người Bán (Seller Model)
@@ -56,74 +57,25 @@ const SellerLayout = () => {
           return;
         }
 
-        // 🌟 2. VỚI CHỦ CỬA HÀNG: Định vị kho và bảo toàn hàng hóa đã có
-        let myStore = null;
+        // 🌟 2. VỚI CHỦ CỬA HÀNG: chỉ tin dữ liệu backend (gian hàng có quan_ly_id = tài khoản đang đăng nhập)
+        let myStore = await marketplaceService.getStoreByManager(currentSeller.id);
 
-        // Ưu tiên 1: Đọc từ kho đã lưu theo tài khoản seller_store_{taiKhoan}
-        const savedStoreStr = localStorage.getItem(`seller_store_${currentSeller.taiKhoan}`);
-        if (savedStoreStr) {
-          try {
-            const parsed = JSON.parse(savedStoreStr);
-            if (parsed && parsed.id) {
-              const matchedInAll = allStores.find((s) => s.id === Number(parsed.id));
-              myStore = matchedInAll || parsed;
-            }
-          } catch {}
-        }
-
-        // Ưu tiên 2: Đọc từ seller_selected_store_id (Bảo toàn kho hàng đã dùng ở lần test trước)
-        if (!myStore) {
-          const savedId = localStorage.getItem('seller_selected_store_id');
-          if (savedId) {
-            const found = allStores.find((s) => s.id === Number(savedId));
-            if (found) myStore = found;
-          }
-        }
-
-        // Ưu tiên 3: Gọi backend lấy kho theo quanLyId của chủ shop
+        // Chưa có gian hàng: tạo mới trên backend (backend tự gán quan_ly_id cho người đang đăng nhập)
         if (!myStore) {
           try {
-            myStore = await marketplaceService.getStoreByManager(currentSeller.id);
+            myStore = await marketplaceService.createStore({
+              maKho: `STORE-${currentSeller.taiKhoan.toUpperCase().substring(0, 20)}`,
+              tenKho: currentSeller.hoTen ? `Gian Hàng ${currentSeller.hoTen}` : `Gian Hàng ${currentSeller.taiKhoan}`,
+              diaChi: currentSeller.diaChi || '',
+              soDienThoai: currentSeller.soDienThoai || '',
+              email: currentSeller.email || '',
+              sucChuaToiDa: 1000,
+              loaiHinh: 'KHO_CUA_HANG',
+              moTaGianHang: `Gian hàng của ${currentSeller.hoTen || currentSeller.taiKhoan}`,
+            });
           } catch (e) {
-            console.warn('Lỗi gọi /stores/manager:', e);
-          }
-        }
-
-        // Ưu tiên 4: Tìm trong allStores theo quanLyId, email, sđt hoặc tài khoản
-        if (!myStore && Array.isArray(allStores) && allStores.length > 0) {
-          myStore = allStores.find(
-            (s) => s.quanLyId === currentSeller.id || 
-                   s.taiKhoan === currentSeller.taiKhoan ||
-                   (s.email && currentSeller.email && s.email.toLowerCase() === currentSeller.email.toLowerCase()) ||
-                   (s.soDienThoai && s.soDienThoai === currentSeller.soDienThoai)
-          );
-        }
-
-        // Ưu tiên 5: Nếu tài khoản là SELLER nhưng chưa khớp ID cụ thể, kết nối với kho cửa hàng có sẵn (Kho 2 hoặc kho đầu) để bảo tồn danh mục hàng hóa
-        if (!myStore && Array.isArray(allStores) && allStores.length > 0) {
-          myStore = allStores.find((s) => s.id === 2) || allStores[0];
-        }
-
-        // Ưu tiên 6: Nếu chưa có kho nào trong CSDL, khởi tạo kho mặc định
-        if (!myStore) {
-          const autoStoreData = {
-            maKho: `STORE-${currentSeller.taiKhoan.toUpperCase().substring(0, 10)}`,
-            tenKho: currentSeller.hoTen ? `Gian Hàng ${currentSeller.hoTen}` : `Gian Hàng ${currentSeller.taiKhoan}`,
-            diaChi: currentSeller.diaChi || '',
-            soDienThoai: currentSeller.soDienThoai || '',
-            email: currentSeller.email || `${currentSeller.taiKhoan}@seller.ctutgear.vn`,
-            sucChuaToiDa: 1000,
-            loaiHinh: 'KHO_CUA_HANG',
-            moTaGianHang: `Gian hàng phân phối chính hãng của ${currentSeller.hoTen || currentSeller.taiKhoan}`,
-            anhDaiDienShop: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200&auto=format&fit=crop',
-            quanLyId: currentSeller.id,
-            taiKhoan: currentSeller.taiKhoan,
-            trangThai: 'HOAT_DONG'
-          };
-          try {
-            myStore = await marketplaceService.createStore(autoStoreData);
-          } catch (e) {
-            myStore = { id: 2, ...autoStoreData };
+            setStoreError('Không xác định được gian hàng của bạn: ' + e.message);
+            myStore = null;
           }
         }
 
@@ -293,6 +245,11 @@ const SellerLayout = () => {
 
         {/* Dynamic Outlet Pages */}
         <main className="seller-content-body">
+          {storeError && (
+            <div style={{ background: '#fdecea', color: '#b71c1c', padding: '12px 16px', borderRadius: 8, marginBottom: 16 }}>
+              ⚠️ {storeError}
+            </div>
+          )}
           <Outlet context={{ 
             storeId: currentStoreId, 
             currentStore, 

@@ -76,7 +76,12 @@ const SellerVouchers = () => {
 
   const handleDeleteVoucher = async (maVoucher) => {
     if (!window.confirm(`Bạn có chắc chắn muốn hủy phát hành mã "${maVoucher}" không?`)) return;
-    await marketplaceService.deleteStoreVoucher(storeId, maVoucher);
+    try {
+      await marketplaceService.deleteStoreVoucher(storeId, maVoucher);
+    } catch (err) {
+      alert(err.message);
+      return;
+    }
     setAlertNotice(`Đã hủy phát hành mã "${maVoucher}"!`);
     setTimeout(() => setAlertNotice(''), 3000);
     await fetchVouchers();

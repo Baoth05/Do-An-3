@@ -16,5 +16,6 @@ import java.util.Optional;
 @Repository
 public interface GiaoDichMoMoRepository extends JpaRepository<GiaoDichMoMo, Long> {
     Optional<GiaoDichMoMo> findByMomoOrderId(String momoOrderId);
-    Optional<GiaoDichMoMo> findByDonHangId(String donHangId);
+    // Một đơn có thể tạo nhiều giao dịch (khách bấm thanh toán lại) => lấy giao dịch mới nhất
+    Optional<GiaoDichMoMo> findFirstByDonHangIdOrderByIdDesc(String donHangId);
 }

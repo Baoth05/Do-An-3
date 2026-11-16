@@ -7,6 +7,7 @@
  */
 package com.ctut.wms.paymentservice.service;
 
+import com.ctut.wms.paymentservice.client.OrderClient;
 import com.ctut.wms.paymentservice.config.MomoConfig;
 import com.ctut.wms.paymentservice.config.MomoSecurity;
 import com.ctut.wms.paymentservice.dto.MomoIpnRequest;
@@ -14,6 +15,7 @@ import com.ctut.wms.paymentservice.dto.PaymentRequest;
 import com.ctut.wms.paymentservice.dto.PaymentResponse;
 import com.ctut.wms.paymentservice.entity.GiaoDichMoMo;
 import com.ctut.wms.paymentservice.repository.GiaoDichMoMoRepository;
+import com.ctut.wms.paymentservice.security.CurrentUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -25,7 +27,9 @@ import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -36,27 +40,32 @@ public class PaymentService {
     private final GiaoDichMoMoRepository repository;
     private final RestTemplate restTemplate;
     private final MomoConfig momoConfig;
+    private final OrderClient orderClient;
+
+    private static final Set<String> PAID_STATUSES = Set.of("ĐÃ THANH TOÁN", "PAID", "SUCCESS");
 
     /**
      * Khởi tạo giao dịch thanh toán MoMo (Tự động kết nối Cổng MoMo V2 và tạo mã QR nhận tiền)
      */
     @Transactional
     public PaymentResponse createPayment(PaymentRequest request) {
-        if (request.getSoTien() == null || request.getSoTien().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Số tiền thanh toán phải lớn hơn 0!");
+        String targetIdentifier = (request.getMaGiaoDichGoc() != null && !request.getMaGiaoDichGoc().isBlank())
+                ? request.getMaGiaoDichGoc()
+                : request.getDonHangId();
+        if (targetIdentifier == null || targetIdentifier.isBlank()) {
+            throw new IllegalArgumentException("Thiếu mã đơn hàng hoặc mã phiên thanh toán!");
         }
 
-        long amount = request.getSoTien().longValue();
+        // Số tiền LUÔN lấy từ order-service (không tin số tiền client gửi lên)
+        BigDecimal soTien = calculateAmountDue(request.getDonHangId(), request.getMaGiaoDichGoc());
+        long amount = soTien.longValue();
+
         String momoOrderId = "MOMO" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 4).toUpperCase();
         String requestId = String.valueOf(System.currentTimeMillis());
-        String targetIdentifier = request.getDonHangId() != null ? request.getDonHangId() : request.getMaGiaoDichGoc();
-        String orderInfo = (request.getThongTinDonHang() != null && !request.getThongTinDonHang().isBlank())
-                ? request.getThongTinDonHang()
-                : "Thanh toan don hang " + targetIdentifier;
-        String redirectUrl = (request.getRedirectUrl() != null && !request.getRedirectUrl().isBlank())
-                ? request.getRedirectUrl()
-                : momoConfig.getRedirectUrl();
-        String extraData = (request.getExtraData() != null) ? request.getExtraData() : "";
+        String orderInfo = "Thanh toan don hang " + targetIdentifier;
+        // Không nhận redirectUrl từ client (chống chuyển hướng tới trang lừa đảo)
+        String redirectUrl = momoConfig.getRedirectUrl();
+        String extraData = "";
 
         // 1. Tạo chữ ký số HMAC-SHA256 chuẩn MoMo V2 API
         String rawSignature = "accessKey=" + momoConfig.getAccessKey()
@@ -140,7 +149,7 @@ public class PaymentService {
         giaoDich.setMaGiaoDichGoc(request.getMaGiaoDichGoc());
         giaoDich.setMomoOrderId(momoOrderId);
         giaoDich.setMomoRequestId(requestId);
-        giaoDich.setSoTien(request.getSoTien());
+        giaoDich.setSoTien(soTien);
         giaoDich.setThongTinDonHang(orderInfo);
         giaoDich.setPayUrl(payUrl);
         giaoDich.setQrCodeUrl(qrCodeUrl);
@@ -158,7 +167,7 @@ public class PaymentService {
                 .momoOrderId(momoOrderId)
                 .donHangId(giaoDich.getDonHangId())
                 .maGiaoDichGoc(giaoDich.getMaGiaoDichGoc())
-                .soTien(request.getSoTien())
+                .soTien(soTien)
                 .trangThai("PENDING")
                 .message("Khởi tạo liên kết và mã QR thanh toán MoMo thành công!")
                 .accountNumber(momoConfig.getAccountNumber())
@@ -182,7 +191,14 @@ public class PaymentService {
             return "SUCCESS_ALREADY_PROCESSED";
         }
 
-        if (ipnRequest.getSignature() != null && !ipnRequest.getSignature().isEmpty()) {
+        // Bắt buộc có chữ ký hợp lệ: IPN không có chữ ký bị coi là giả mạo
+        if (ipnRequest.getSignature() == null || ipnRequest.getSignature().isBlank()
+                || ipnRequest.getAmount() == null
+                || !momoConfig.getPartnerCode().equals(ipnRequest.getPartnerCode())) {
+            log.error("CẢNH BÁO BẢO MẬT: IPN thiếu chữ ký / sai partnerCode! OrderId: {}", ipnRequest.getOrderId());
+            throw new RuntimeException("IPN không hợp lệ!");
+        }
+        {
             String rawSignature = "accessKey=" + momoConfig.getAccessKey()
                     + "&amount=" + ipnRequest.getAmount().longValue()
                     + "&extraData=" + (ipnRequest.getExtraData() != null ? ipnRequest.getExtraData() : "")
@@ -206,7 +222,7 @@ public class PaymentService {
             }
         }
 
-        if (ipnRequest.getAmount() != null && ipnRequest.getAmount().compareTo(giaoDich.getSoTien()) != 0) {
+        if (ipnRequest.getAmount().compareTo(giaoDich.getSoTien()) != 0) {
             log.error("CẢNH BÁO BẢO MẬT: Gian lận số tiền! DB yêu cầu: {}, MoMo báo về: {}", giaoDich.getSoTien(), ipnRequest.getAmount());
             giaoDich.setTrangThai("AMOUNT_MISMATCH");
             repository.save(giaoDich);
@@ -231,7 +247,8 @@ public class PaymentService {
 
     @Transactional
     public PaymentResponse confirmManualPayment(String donHangId, Long transId, String ghiChu) {
-        GiaoDichMoMo giaoDich = repository.findByDonHangId(donHangId)
+        CurrentUser.requireAdmin();
+        GiaoDichMoMo giaoDich = repository.findFirstByDonHangIdOrderByIdDesc(donHangId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch cho mã đơn hàng: " + donHangId));
 
         giaoDich.setMomoTransId(transId != null ? transId : System.currentTimeMillis());
@@ -258,56 +275,49 @@ public class PaymentService {
                 .build();
     }
 
-    @Transactional
-    public PaymentResponse mockPaymentSuccess(String momoOrderId) {
-        GiaoDichMoMo giaoDich = repository.findByMomoOrderId(momoOrderId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch với mã: " + momoOrderId));
-
-        giaoDich.setMomoTransId(System.currentTimeMillis());
-        giaoDich.setTrangThai("SUCCESS");
-        repository.save(giaoDich);
-
-        syncOrderStatus(giaoDich.getDonHangId(), "ĐÃ THANH TOÁN");
-
-        return PaymentResponse.builder()
-                .paymentUrl(giaoDich.getPayUrl())
-                .qrCodeUrl(giaoDich.getQrCodeUrl())
-                .momoOrderId(momoOrderId)
-                .donHangId(giaoDich.getDonHangId())
-                .maGiaoDichGoc(giaoDich.getMaGiaoDichGoc())
-                .soTien(giaoDich.getSoTien())
-                .trangThai("SUCCESS")
-                .message("Giả lập nhận tiền MoMo thành công!")
-                .accountNumber(giaoDich.getSoDienThoaiNhanTien())
-                .accountName(giaoDich.getTenNguoiNhan())
-                .build();
-    }
-
-    @Transactional
-    public PaymentResponse mockPaymentSuccessByDonHangId(String donHangId) {
-        GiaoDichMoMo giaoDich = repository.findByDonHangId(donHangId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch cho mã đơn hàng: " + donHangId));
-        return mockPaymentSuccess(giaoDich.getMomoOrderId());
-    }
 
     public GiaoDichMoMo getPaymentStatus(String donHangId) {
-        return repository.findByDonHangId(donHangId)
+        // Chỉ chủ đơn hàng (hoặc Admin) được xem trạng thái thanh toán
+        if (!CurrentUser.isAdmin()) {
+            List<OrderClient.OrderSummary> orders = orderClient.findOrders(donHangId, null);
+            if (orders.isEmpty()) {
+                throw new RuntimeException("Không tìm thấy đơn hàng: " + donHangId);
+            }
+            orders.forEach(o -> CurrentUser.requireSelfOrAdmin(o.getNguoiDungId()));
+        }
+        return repository.findFirstByDonHangIdOrderByIdDesc(donHangId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy giao dịch cho đơn hàng: " + donHangId));
     }
 
-    private void syncOrderStatus(String maDonHang, String paymentStatus) {
-        try {
-            if (maDonHang != null) {
-                if (maDonHang.startsWith("CHECKOUT-")) {
-                    String sessionUrl = "http://localhost:8082/orders/checkout-session/" + maDonHang + "/payment-status?paymentStatus=" + paymentStatus;
-                    restTemplate.put(sessionUrl, null);
-                } else {
-                    String orderUrl = "http://localhost:8082/orders/" + maDonHang + "/payment-status?paymentStatus=" + paymentStatus;
-                    restTemplate.put(orderUrl, null);
-                }
-            }
-        } catch (Exception e) {
-            log.warn("Không thể gọi sang order-service để đồng bộ đơn {}: {}", maDonHang, e.getMessage());
+    /**
+     * Tính số tiền phải trả dựa trên dữ liệu đơn hàng thật ở order-service.
+     * Đồng thời kiểm tra đơn thuộc về người đang thanh toán và chưa được thanh toán / chưa bị hủy.
+     */
+    private BigDecimal calculateAmountDue(String donHangId, String maGiaoDichGoc) {
+        List<OrderClient.OrderSummary> orders = orderClient.findOrders(donHangId, maGiaoDichGoc);
+        if (orders.isEmpty()) {
+            throw new IllegalArgumentException("Không tìm thấy đơn hàng cần thanh toán!");
         }
+        BigDecimal total = BigDecimal.ZERO;
+        for (OrderClient.OrderSummary o : orders) {
+            CurrentUser.requireSelfOrAdmin(o.getNguoiDungId());
+            if (o.getTrangThaiThanhToan() != null && PAID_STATUSES.contains(o.getTrangThaiThanhToan().toUpperCase())) {
+                throw new IllegalArgumentException("Đơn hàng " + o.getMaDonHang() + " đã được thanh toán!");
+            }
+            if (o.getTrangThaiDonHang() != null && o.getTrangThaiDonHang().toUpperCase().startsWith("CANCELLED")) {
+                throw new IllegalArgumentException("Đơn hàng " + o.getMaDonHang() + " đã bị hủy (có thể do quá hạn thanh toán)!");
+            }
+            if (o.getTongThanhToan() != null) {
+                total = total.add(o.getTongThanhToan());
+            }
+        }
+        if (total.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Số tiền thanh toán phải lớn hơn 0!");
+        }
+        return total;
+    }
+
+    private void syncOrderStatus(String maDonHang, String paymentStatus) {
+        orderClient.syncPaymentStatus(maDonHang, paymentStatus);
     }
 }
