@@ -17,5 +17,8 @@ public class ExportNoteRequest {
     private Long khoHangId;
     private Long donViVanChuyenId;
     private String nguoiTao;
+    private String tenShop;     // 🌟 Thêm trường này
+    private String diaChiNhan;
+    private Long cuaHangNhanId;
     private List<ExportNoteDetailRequest> danhSachHangHoa;
 }

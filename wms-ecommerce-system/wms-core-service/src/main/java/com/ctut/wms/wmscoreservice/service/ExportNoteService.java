@@ -49,6 +49,19 @@ public class ExportNoteService {
         // 🌟 SỬA Ở ĐÂY: Trạng thái ban đầu chỉ là CHỜ DUYỆT
         exportNote.setTrangThai("CHỜ DUYỆT");
 
+
+        // Ưu tiên truy vấn trực tiếp từ bảng kho_va_cua_hang để dữ liệu chính xác 100%
+        if (request.getCuaHangNhanId() != null) {
+            warehouseRepository.findById(request.getCuaHangNhanId()).ifPresent(shop -> {
+                exportNote.setTenShop(shop.getTenKho());
+                exportNote.setDiaChiNhan(shop.getDiaChi());
+            });
+        } else {
+            // Dự phòng: Lấy dữ liệu Frontend gửi xuống nếu không có ID
+            exportNote.setTenShop(request.getTenShop());
+            exportNote.setDiaChiNhan(request.getDiaChiNhan());
+        }
+
         ExportNote savedExportNote = exportNoteRepository.save(exportNote);
         List<ExportNoteDetailResponse> detailResponses = new ArrayList<>();
         double tongTien = 0.0;
@@ -57,8 +70,6 @@ public class ExportNoteService {
             for (ExportNoteDetailRequest detailRequest : request.getDanhSachHangHoa()) {
                 Product product = productRepository.findById(detailRequest.getSanPhamId())
                         .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy sản phẩm ID " + detailRequest.getSanPhamId()));
-
-                // 🌟 ĐÃ XÓA LOGIC TRỪ TỒN KHO VÀ GHI THẺ KHO Ở ĐÂY
 
                 ExportNoteDetail detail = new ExportNoteDetail();
                 detail.setPhieuXuat(savedExportNote);
@@ -86,11 +97,45 @@ public class ExportNoteService {
         return mapToResponse(savedExportNote, detailResponses, tongTien);
     }
 
+
+    // 1. SỬA HÀM LẤY TẤT CẢ PHIẾU XUẤT
     public List<ExportNoteResponse> getAllExportNotes() {
-        return exportNoteRepository.findAll().stream()
-                .map(note -> mapToResponse(note, null, 0.0))
-                .collect(Collectors.toList());
+        // Lấy tất cả phiếu xuất từ DB
+        List<ExportNote> exportNotes = exportNoteRepository.findAll();
+
+        return exportNotes.stream().map(note -> {
+            // Nạp danh sách chi tiết cho từng phiếu xuất
+            List<ExportNoteDetail> details = exportNoteDetailRepository.findByPhieuXuat(note);
+
+            List<ExportNoteDetailResponse> detailResponses = new ArrayList<>();
+            double tongTien = 0.0;
+
+            // Xử lý map chi tiết và tính tổng tiền
+            for (ExportNoteDetail d : details) {
+                Product p = d.getSanPham();
+                double gia = p != null && p.getGiaBan() != null ? p.getGiaBan() : 0.0;
+                int sl = d.getSoLuong() != null ? d.getSoLuong() : 0;
+                double tt = gia * sl;
+                tongTien += tt;
+
+                detailResponses.add(ExportNoteDetailResponse.builder()
+                        .id(d.getId())
+                        .sanPhamId(p != null ? p.getId() : null)
+                        .sku(p != null ? p.getSku() : "")
+                        .tenSanPham(p != null ? p.getTenSanPham() : "")
+                        .donViTinh(p != null ? p.getDonViTinh() : "")
+                        .soLuong(sl)
+                        .donGia(gia)
+                        .thanhTien(tt)
+                        .build());
+            }
+
+            // Truyền detailResponses đã có dữ liệu vào hàm map
+            return mapToResponse(note, detailResponses, tongTien);
+
+        }).collect(Collectors.toList());
     }
+
 
     public ExportNoteResponse getExportNoteById(Long id) {
         ExportNote note = exportNoteRepository.findById(id)
@@ -126,7 +171,6 @@ public class ExportNoteService {
         note.setTrangThai(status);
         return mapToResponse(exportNoteRepository.save(note), null, 0.0);
     }
-
     private ExportNoteResponse mapToResponse(ExportNote note, List<ExportNoteDetailResponse> details, double total) {
         Warehouse w = note.getKhoHang();
         ShippingProvider sp = note.getDonViVanChuyen();
@@ -143,6 +187,9 @@ public class ExportNoteService {
                 .ngayXuat(note.getNgayXuat())
                 .trangThai(note.getTrangThai())
                 .tongGiaTri(total)
+                // 🌟 BỔ SUNG: Trả đúng dữ liệu đã được lưu trong DB lên Frontend
+                .tenShop(note.getTenShop())
+                .diaChiNhan(note.getDiaChiNhan())
                 .danhSachHangHoa(details != null ? details : new ArrayList<>())
                 .build();
     }
@@ -151,9 +198,23 @@ public class ExportNoteService {
         ExportNote exportNote = exportNoteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy phiếu xuất có ID = " + id));
 
-        // Kiểm tra xem phiếu có đúng trạng thái chờ duyệt không
         if (!"CHỜ DUYỆT".equalsIgnoreCase(exportNote.getTrangThai())) {
             throw new RuntimeException("Lỗi: Chỉ có thể duyệt phiếu đang ở trạng thái CHỜ DUYỆT!");
+        }
+
+        // Chỉ đổi trạng thái để chuyển sang bộ phận kho nhặt hàng
+        exportNote.setTrangThai("CHỜ XUẤT KHO");
+        exportNoteRepository.save(exportNote);
+
+        return getExportNoteById(id);
+    }
+    @Transactional
+    public ExportNoteResponse confirmActualExport(Long id) {
+        ExportNote exportNote = exportNoteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy phiếu xuất có ID = " + id));
+
+        if (!"CHỜ XUẤT KHO".equalsIgnoreCase(exportNote.getTrangThai())) {
+            throw new RuntimeException("Lỗi: Phiếu phải được duyệt (CHỜ XUẤT KHO) mới có thể xuất thực tế!");
         }
 
         Warehouse warehouse = exportNote.getKhoHang();
@@ -162,7 +223,7 @@ public class ExportNoteService {
         for (ExportNoteDetail detail : details) {
             Product product = detail.getSanPham();
 
-            // Tìm và kiểm tra tồn kho
+            // Kiểm tra tồn kho
             Inventory inventory = inventoryRepository.findBySanPhamAndKhoHang(product, warehouse)
                     .orElseThrow(() -> new RuntimeException("Lỗi: Sản phẩm " + product.getTenSanPham() + " không có trong kho này!"));
 
@@ -172,7 +233,7 @@ public class ExportNoteService {
 
             int soLuongCu = inventory.getSoLuongThucTe();
 
-            // Thực hiện trừ tồn kho
+            // Trừ tồn kho
             inventory.setSoLuongThucTe(inventory.getSoLuongThucTe() - detail.getSoLuong());
             inventory.setSoLuongKhaDung(inventory.getSoLuongKhaDung() - detail.getSoLuong());
             inventoryRepository.save(inventory);
@@ -191,12 +252,12 @@ public class ExportNoteService {
             theKhoRepository.save(theKho);
         }
 
-        // Cập nhật trạng thái phiếu xuất thành HOÀN THÀNH
+        // Hoàn thành phiếu xuất
         exportNote.setTrangThai("HOÀN THÀNH");
         exportNoteRepository.save(exportNote);
 
-        // Gọi lại hàm getExportNoteById để trả về cục dữ liệu chuẩn cho Frontend
         return getExportNoteById(id);
     }
+
 
 }

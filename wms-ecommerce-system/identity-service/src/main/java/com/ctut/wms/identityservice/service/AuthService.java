@@ -47,13 +47,9 @@ public class AuthService {
         String maQuyen = (request.getVaiTro() != null && !request.getVaiTro().isEmpty()) ? request.getVaiTro() : "CUSTOMER";
         newuser.setVaiTro(maQuyen);
 
-        // 2. LOGIC MỚI: Xử lý trạng thái tài khoản dựa trên vai trò
-        // Nếu là chủ cửa hàng (người bán), tài khoản sẽ bị khóa (false) chờ Admin duyệt
-        if (maQuyen.equalsIgnoreCase("STORE_OWNER")) {
-            newuser.setTrangThai(false);
-        } else {
-            newuser.setTrangThai(true); // Khách hàng bình thường thì hoạt động ngay
-        }
+        // 2. LOGIC: Tài khoản đăng ký ở E-Commerce đều hoạt động ngay (không cần duyệt để đăng nhập)
+        newuser.setTrangThai(true);
+        newuser.setIsApproved(true);
 
         roleRepository.findByMaVaiTro(maQuyen).ifPresent(role -> {
             newuser.getRoles().add(role);
@@ -82,10 +78,7 @@ public class AuthService {
             throw new RuntimeException("Lỗi: Sai mật khẩu!");
         }
 
-        // MỚI THÊM: Kiểm tra nếu tài khoản chưa được duyệt hoặc bị khóa
-        if (Boolean.FALSE.equals(user.getIsApproved())) {
-            throw new RuntimeException("Lỗi: Tài khoản của bạn đang chờ quản trị viên phê duyệt!");
-        }
+        // Kiểm tra nếu tài khoản bị khóa
         if (Boolean.FALSE.equals(user.getTrangThai())) {
             throw new RuntimeException("Lỗi: Tài khoản của bạn đã bị khóa!");
         }

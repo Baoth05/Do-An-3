@@ -31,6 +31,9 @@ public class ExportNoteResponse {
     private LocalDateTime ngayXuat;
     private String trangThai;
     private Double tongGiaTri;
+    private String diaChiNhan;
+    private String tenShop;
+    private Long cuaHangNhanId;
     private List<ExportNoteDetailResponse> danhSachHangHoa;
 }
 

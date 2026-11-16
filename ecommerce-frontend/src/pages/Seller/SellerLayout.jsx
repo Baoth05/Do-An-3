@@ -21,26 +21,15 @@ const SellerLayout = () => {
   const [loadingStore, setLoadingStore] = useState(true);
 
   useEffect(() => {
-    const customer = authService.getCurrentCustomer();
-    let seller = authService.getCurrentSeller();
+    // 🌟 ROUTE GUARD KÊNH NGƯỜI BÁN: Bắt buộc phiên đăng nhập của Model Người Bán (Seller Model)
+    const seller = authService.getCurrentSeller();
 
-    if (!customer && !seller) {
-      navigate('/login', { state: { from: location, message: 'Vui lòng đăng nhập tài khoản để vào Kênh Người Bán!' } });
+    if (!seller) {
+      navigate('/seller/login', { 
+        state: { from: location, message: 'Vui lòng đăng nhập tài khoản Người Bán để truy cập Kênh Người Bán!' },
+        replace: true 
+      });
       return;
-    }
-
-    if (!seller && customer) {
-      // Tự động kích hoạt quyền người bán cho tài khoản hiện tại để không bị out
-      seller = {
-        ...customer,
-        vaiTro: 'STORE_OWNER',
-        isSeller: true,
-      };
-      localStorage.setItem('seller_user', JSON.stringify(seller));
-      const cToken = localStorage.getItem('customer_token');
-      if (cToken) {
-        localStorage.setItem('seller_token', cToken);
-      }
     }
 
     setCurrentSeller(seller);

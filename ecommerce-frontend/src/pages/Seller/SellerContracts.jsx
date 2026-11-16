@@ -1,5 +1,5 @@
 // src/pages/Seller/SellerContracts.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useOutletContext, Link, useLocation } from 'react-router-dom';
 import { marketplaceService } from '../../services/marketplaceService';
 import { 
@@ -26,12 +26,13 @@ const SellerContracts = () => {
     return currentSeller?.vaiTro === 'ADMIN' ? 'ADMIN' : 'SHOP';
   });
 
-  // Modal tạo yêu cầu hợp đồng mới (2 bước: 1. Chọn hàng trong kho thật, 2. Xem văn bản & Gửi yêu cầu)
+  // Modal tạo yêu cầu hợp đồng mới (2 bước: 1. Chọn hàng trong kho thật từ DB, 2. Xem văn bản & Gửi yêu cầu)
   const [modalOpen, setModalOpen] = useState(false);
   const [step, setStep] = useState(1);
-  const [centralWarehouses, setCentralWarehouses] = useState([]);
-  const [selectedCentralId, setSelectedCentralId] = useState('');
+  const [centralWarehouse, setCentralWarehouse] = useState(null); // Kho Tổng duy nhất trong CSDL
+  const [loadingWarehouse, setLoadingWarehouse] = useState(false);
   const [masterProducts, setMasterProducts] = useState([]);
+  const [productSearch, setProductSearch] = useState('');
   const [selectedItems, setSelectedItems] = useState({}); // { [sanPhamId]: quantity }
   const [loadingProducts, setLoadingProducts] = useState(false);
 
@@ -79,6 +80,26 @@ const SellerContracts = () => {
     };
   }, [storeId]);
 
+  // Nạp thông tin Kho Tổng Duy Nhất từ CSDL
+  const fetchSingleCentralWarehouse = async () => {
+    setLoadingWarehouse(true);
+    try {
+      const wh = await marketplaceService.getSingleCentralWarehouse();
+      setCentralWarehouse(wh);
+      const targetId = wh?.id || 1;
+      await loadWarehouseInventory(targetId);
+    } catch (e) {
+      console.warn('Lỗi nạp kho tổng từ CSDL:', e);
+      await loadWarehouseInventory(1);
+    } finally {
+      setLoadingWarehouse(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSingleCentralWarehouse();
+  }, []);
+
   useEffect(() => {
     if (currentSeller && (!signerInfo.signerName || signerInfo.signerName === 'Trần Minh Quân')) {
       setSignerInfo((prev) => ({
@@ -88,27 +109,31 @@ const SellerContracts = () => {
     }
   }, [currentSeller]);
 
-  // Tải danh sách sản phẩm THẬT trong kho được chọn
+  // Tải danh sách sản phẩm THẬT trong kho tổng từ CSDL (Không dùng dữ liệu giả)
   const loadWarehouseInventory = async (whId) => {
     setLoadingProducts(true);
     try {
       const inventoryList = await marketplaceService.getWarehouseInventory(whId);
       const realProds = (inventoryList || []).map((p) => {
-        const qty = p.soLuongKhaDung !== undefined ? p.soLuongKhaDung : (p.soLuongThucTe || 0);
+        const qty = p.soLuongKhaDung !== undefined 
+          ? p.soLuongKhaDung 
+          : (p.soLuongTonKho !== undefined ? p.soLuongTonKho : (p.soLuongThucTe || 0));
         return {
           id: p.sanPhamId || p.id,
+          sanPhamId: p.sanPhamId || p.id,
           sku: p.sku || `SP00${p.sanPhamId || p.id}`,
           tenHangHoa: p.tenSanPham || p.tenHangHoa || 'Sản phẩm kho tổng',
           donViTinh: p.donViTinh || 'Cái',
-          giaBan: p.giaBan || p.giaBanHienTai || 1000000,
+          giaBan: p.giaBan || p.giaBanHienTai || 0,
+          giaNhap: p.giaNhap || (p.giaBan ? Math.round(p.giaBan * 0.9) : 0),
           soLuongTonKho: qty,
-          danhMuc: p.danhMuc || 'Thiết bị công nghệ',
-          hinhAnh: p.hinhAnh,
+          danhMuc: p.danhMuc || '',
+          hinhAnh: p.hinhAnh || '',
         };
       });
       setMasterProducts(realProds);
     } catch (err) {
-      console.error('Lỗi tải sản phẩm trong kho:', err);
+      console.error('Lỗi tải sản phẩm trong kho từ CSDL:', err);
       setMasterProducts([]);
     } finally {
       setLoadingProducts(false);
@@ -119,24 +144,17 @@ const SellerContracts = () => {
   const handleOpenCreateContract = async () => {
     setStep(1);
     setSelectedItems({});
+    setProductSearch('');
     setModalOpen(true);
-
-    try {
-      const warehouses = await marketplaceService.getCentralWarehouses();
-      setCentralWarehouses(warehouses);
-      const chosenId = warehouses.length > 0 ? String(warehouses[0].id) : '1';
-      setSelectedCentralId(chosenId);
-      await loadWarehouseInventory(chosenId);
-    } catch (err) {
-      console.error('Lỗi tải danh sách kho:', err);
-    }
+    await fetchSingleCentralWarehouse();
   };
 
   // Khi đổi kho cung ứng
   const handleCentralWarehouseChange = async (newWhId) => {
-    setSelectedCentralId(newWhId);
+    const idStr = String(newWhId);
+    setSelectedCentralId(idStr);
     setSelectedItems({});
-    await loadWarehouseInventory(newWhId);
+    await loadWarehouseInventory(idStr);
   };
 
   // Thay đổi số lượng sản phẩm nhập (Giới hạn theo tồn kho thực tế của kho)
@@ -157,9 +175,9 @@ const SellerContracts = () => {
 
   // Tính tổng giá trị hợp đồng
   const contractItemsList = Object.keys(selectedItems).map((id) => {
-    const prod = masterProducts.find((p) => p.id === Number(id));
+    const prod = masterProducts.find((p) => Number(p.id) === Number(id) || Number(p.sanPhamId) === Number(id));
     const qty = selectedItems[id];
-    const wholesalePrice = prod?.giaBan ? Math.round(prod.giaBan * 0.9) : 1000000; // Giá sỉ B2B chiết khấu 10%
+    const wholesalePrice = prod?.giaNhap || (prod?.giaBan ? Math.round(prod.giaBan * 0.9) : 1000000); // Giá sỉ B2B chiết khấu 10%
     return {
       sanPhamId: Number(id),
       sku: prod?.sku || `SP00${id}`,
@@ -168,11 +186,24 @@ const SellerContracts = () => {
       soLuong: qty,
       donGiaSi: wholesalePrice,
       thanhTien: wholesalePrice * qty,
+      hinhAnh: prod?.hinhAnh || '',
+      danhMuc: prod?.danhMuc || 'Thiết bị công nghệ',
     };
   });
 
   const totalContractAmount = contractItemsList.reduce((sum, i) => sum + i.thanhTien, 0);
   const totalItemCount = contractItemsList.reduce((sum, i) => sum + i.soLuong, 0);
+
+  // Bộ lọc tìm kiếm sản phẩm trong kho tổng
+  const filteredMasterProducts = useMemo(() => {
+    return masterProducts.filter((p) => {
+      if (!productSearch.trim()) return true;
+      const q = productSearch.toLowerCase().trim();
+      return (p.tenHangHoa || '').toLowerCase().includes(q) ||
+             (p.sku || '').toLowerCase().includes(q) ||
+             (p.danhMuc || '').toLowerCase().includes(q);
+    });
+  }, [masterProducts, productSearch]);
 
   // BƯỚC 1 CỦA SHOP: Gửi Yêu Cầu Hợp Đồng Nhập Hàng Đến Admin (Chờ duyệt vòng 1)
   const handleSubmitContractRequest = async () => {
@@ -182,12 +213,6 @@ const SellerContracts = () => {
     }
 
     try {
-      const selectedWh = centralWarehouses.find((w) => w.id === Number(selectedCentralId)) || {
-        id: Number(selectedCentralId) || 1,
-        tenKho: 'Kho Tổng Trung Tâm CTUT Logistics',
-        diaChi: '256 Nguyễn Văn Cừ, Cần Thơ',
-      };
-
       const contractCode = `HDCU-${new Date().getFullYear()}/${currentStore?.maKho || 'STORE'}-${Math.floor(1000 + Math.random() * 9000)}`;
 
       const newContract = {
@@ -197,9 +222,10 @@ const SellerContracts = () => {
         storeId: Number(storeId),
         tenKhoCuaHang: currentStore?.tenKho || 'Gian Hàng Của Bạn',
         maKhoCuaHang: currentStore?.maKho || 'STORE',
-        khoTongId: selectedWh.id,
-        khoCungUng: selectedWh.tenKho || 'Kho Tổng Trung Tâm CTUT',
-        diaChiKhoCungUng: selectedWh.diaChi || 'Cần Thơ',
+        khoTongId: centralWarehouse?.id || 1,
+        khoCungUng: centralWarehouse?.tenKho || 'Kho Tổng Trung Tâm (Bên A)',
+        diaChiKhoCungUng: centralWarehouse?.diaChi || '256 Nguyễn Văn Cừ, Cần Thơ',
+        soDienThoaiKhoCungUng: centralWarehouse?.soDienThoai || '1900 6868',
         tongTien: totalContractAmount,
         soLuongMatHang: contractItemsList.length,
         tongSoLuongHang: totalItemCount,
@@ -652,25 +678,55 @@ const SellerContracts = () => {
               <FiX className="btn-close-modal" onClick={() => setModalOpen(false)} />
             </div>
 
-            {/* BƯỚC 1: CHỌN SẢN PHẨM THẬT TRONG KHO */}
+            {/* BƯỚC 1: CHỌN SẢN PHẨM THẬT TRONG KHO TỔNG TỪ CSDL */}
             {step === 1 && (
               <div className="wizard-step-content">
                 <div className="form-group-seller">
-                  <label>Chọn Kho Cung Ứng / Kho Tổng Trung Tâm (Bên A) *</label>
-                  <select 
-                    value={selectedCentralId}
-                    onChange={(e) => handleCentralWarehouseChange(e.target.value)}
-                  >
-                    {centralWarehouses.map((w) => (
-                      <option key={w.id} value={w.id}>
-                        {w.tenKho} (Mã: {w.maKho} - {w.diaChi || 'Cần Thơ'})
-                      </option>
-                    ))}
-                  </select>
+                  <label style={{ fontWeight: '600', marginBottom: '8px', display: 'block' }}>
+                    Kho Cung Ứng / Kho Tổng Trung Tâm (Bên A):
+                  </label>
+                  {loadingWarehouse ? (
+                    <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '8px', color: '#64748b', fontSize: '13px' }}>
+                      <div className="spinner" style={{ display: 'inline-block', width: '14px', height: '14px', marginRight: '8px', verticalAlign: 'middle' }}></div>
+                      Đang lấy thông tin Kho Tổng từ CSDL...
+                    </div>
+                  ) : centralWarehouse ? (
+                    <div style={{ padding: '12px 16px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <strong style={{ fontSize: '15px', color: '#166534' }}>
+                          🏢 {centralWarehouse.tenKho || 'Kho Tổng Trung Tâm'}
+                        </strong>
+                        <span style={{ fontSize: '11px', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '12px', fontWeight: '600' }}>
+                          Kho Tổng Duy Nhất Hệ Thống (Bên A)
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '12.5px', color: '#374151' }}>
+                        <span>Mã kho: <strong>{centralWarehouse.maKho || 'KHO-TONG'}</strong></span> • 
+                        <span> Địa chỉ: <strong>{centralWarehouse.diaChi || 'Cần Thơ'}</strong></span>
+                        {centralWarehouse.soDienThoai && <span> • Hotline: <strong>{centralWarehouse.soDienThoai}</strong></span>}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ padding: '12px 16px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', color: '#1e40af', fontSize: '13px' }}>
+                      🏢 <strong>Kho Tổng Trung Tâm (Bên A)</strong>
+                      <span style={{ display: 'block', fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                        * Đang kết nối với Kho Tổng duy nhất trong CSDL
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="catalog-selection-header">
-                  <h4>Sản Phẩm Đang Có Sẵn Trong Kho Này:</h4>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, flexWrap: 'wrap' }}>
+                    <h4>Sản Phẩm Trong Kho Tổng CSDL ({filteredMasterProducts.length}):</h4>
+                    <input 
+                      type="text" 
+                      placeholder="🔍 Lọc theo tên sản phẩm, mã SKU..." 
+                      value={productSearch}
+                      onChange={(e) => setProductSearch(e.target.value)}
+                      style={{ padding: '6px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', width: '260px' }}
+                    />
+                  </div>
                   <span className="selected-summary-pill">
                     Đã chọn: <strong>{totalItemCount} sản phẩm</strong> ({Number(totalContractAmount).toLocaleString('vi-VN')} đ)
                   </span>
@@ -679,33 +735,49 @@ const SellerContracts = () => {
                 {loadingProducts ? (
                   <div style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>
                     <div className="spinner" style={{ margin: '0 auto 10px auto' }}></div>
-                    Đang kiểm tra tồn kho thực tế...
+                    Đang nạp tồn kho thực tế từ CSDL...
                   </div>
-                ) : masterProducts.length === 0 ? (
-                  <div style={{ padding: '30px', textAlign: 'center', background: '#fffbeb', borderRadius: '8px', color: '#b45309' }}>
+                ) : filteredMasterProducts.length === 0 ? (
+                  <div style={{ padding: '30px', textAlign: 'center', background: '#fffbeb', borderRadius: '8px', color: '#b45309', border: '1px solid #fef3c7' }}>
                     <FiAlertTriangle size={32} style={{ marginBottom: '8px' }} />
-                    <p style={{ margin: 0, fontWeight: '700' }}>Kho này hiện chưa có sản phẩm sẵn trong kho để cung ứng.</p>
-                    <small>Vui lòng chọn Kho Tổng khác hoặc liên hệ Quản trị viên nhập hàng vào kho tổng trước.</small>
+                    <p style={{ margin: 0, fontWeight: '700' }}>Kho tổng trong CSDL hiện chưa có sản phẩm sẵn có để cung ứng.</p>
+                    <small>Vui lòng tiến hành nhập hàng vào Kho Tổng trên phân hệ WMS trước khi tạo hợp đồng.</small>
                   </div>
                 ) : (
                   <div className="import-products-picker-list">
-                    {masterProducts.map((p) => {
-                      const wholesalePrice = p.giaBan ? Math.round(p.giaBan * 0.9) : 1000000;
+                    {filteredMasterProducts.map((p) => {
+                      const wholesalePrice = p.giaNhap || (p.giaBan ? Math.round(p.giaBan * 0.9) : 0);
                       const selectedQty = selectedItems[p.id] || 0;
                       const isOutOfStock = p.soLuongTonKho <= 0;
 
                       return (
                         <div key={p.id} className={`picker-item-card ${selectedQty > 0 ? 'selected' : ''}`}>
-                          <div className="p-card-left">
-                            <strong>{p.tenHangHoa}</strong>
-                            <div className="p-meta-sub">
-                              <span>Mã SKU: <strong>{p.sku}</strong></span> • 
-                              <span> Giá sỉ B2B: <strong>{Number(wholesalePrice).toLocaleString('vi-VN')} đ</strong></span>
-                              {isOutOfStock ? (
-                                <span className="stock-out-tag">⚠️ Hết hàng trong kho tổng</span>
-                              ) : (
-                                <span className="stock-available-tag">✓ Có sẵn trong kho: {p.soLuongTonKho} {p.donViTinh}</span>
-                              )}
+                          <div className="p-card-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            {p.hinhAnh ? (
+                              <img 
+                                src={p.hinhAnh} 
+                                alt={p.tenHangHoa} 
+                                style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e2e8f0', flexShrink: 0 }} 
+                              />
+                            ) : (
+                              <div style={{ width: '48px', height: '48px', background: '#f1f5f9', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <FiBox size={20} color="#64748b" />
+                              </div>
+                            )}
+                            <div>
+                              <strong style={{ fontSize: '14px', display: 'block' }}>{p.tenHangHoa}</strong>
+                              <div className="p-meta-sub">
+                                <span>Mã SKU: <strong>{p.sku}</strong></span>
+                                {p.danhMuc && <span> • Danh mục: <em>{p.danhMuc}</em></span>}
+                                {wholesalePrice > 0 && (
+                                  <span> • Giá sỉ B2B: <strong>{Number(wholesalePrice).toLocaleString('vi-VN')} đ</strong></span>
+                                )}
+                                {isOutOfStock ? (
+                                  <span className="stock-out-tag">⚠️ Hết hàng trong kho tổng</span>
+                                ) : (
+                                  <span className="stock-available-tag">✓ Có sẵn trong kho: {p.soLuongTonKho} {p.donViTinh}</span>
+                                )}
+                              </div>
                             </div>
                           </div>
 
@@ -770,8 +842,9 @@ const SellerContracts = () => {
                   <div className="contract-parties-box">
                     <div className="party-block">
                       <strong>BÊN CUNG ỨNG (KHO TỔNG - BÊN A):</strong>
-                      <p>{centralWarehouses.find((w) => w.id === Number(selectedCentralId))?.tenKho || 'Kho Tổng Trung Tâm CTUT'}</p>
-                      <p>Địa chỉ: 256 Nguyễn Văn Cừ, Ninh Kiều, Cần Thơ</p>
+                      <p>{centralWarehouse?.tenKho || 'Kho Tổng Trung Tâm'}</p>
+                      <p>Địa chỉ: {centralWarehouse?.diaChi || 'Cần Thơ'}</p>
+                      {centralWarehouse?.soDienThoai && <p>Hotline: {centralWarehouse.soDienThoai}</p>}
                     </div>
 
                     <div className="party-block">

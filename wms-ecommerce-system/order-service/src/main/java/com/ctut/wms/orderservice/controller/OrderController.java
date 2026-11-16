@@ -2,10 +2,14 @@ package com.ctut.wms.orderservice.controller;
 
 import com.ctut.wms.orderservice.dto.MultiShopCheckoutRequest;
 import com.ctut.wms.orderservice.dto.OrderRequest;
+import com.ctut.wms.orderservice.entity.Voucher;
 import com.ctut.wms.orderservice.service.OrderService;
+import com.ctut.wms.orderservice.service.VoucherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/orders")
@@ -13,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
     private final OrderService orderService; // Dùng Service thay vì Repository
-
+    private  final VoucherService voucherService;
     // API đặt đơn hàng đơn lẻ (Dành cho mua trực tiếp 1 shop)
     @PostMapping
     public ResponseEntity<?> placeOrder(@RequestBody OrderRequest request) {
@@ -124,5 +128,12 @@ public class OrderController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+    @GetMapping("/stores")
+    public ResponseEntity<List<Voucher>> getAllStoreVouchers() {
+        // Cậu cần gọi Service để truy vấn Database lấy các voucher có cuaHangId khác null
+        List<Voucher> storeVouchers = voucherService.findAllStoreVouchers();
+
+        return ResponseEntity.ok(storeVouchers);
     }
 }

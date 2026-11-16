@@ -12,40 +12,10 @@ export const PromoSlider = ({ products = [], stores = [] }) => {
   const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef(null);
 
-  // Thuật toán hệ thống: Tự động tuyển chọn sản phẩm Mới lên sàn và Bán chạy nhất để quảng bá
+  // Tuyển chọn sản phẩm Mới lên sàn và Bán chạy nhất từ CSDL để quảng bá
   const promoSlides = useMemo(() => {
     if (!products || products.length === 0) {
-      // Fallback banner mặc định nếu CSDL chưa nạp sản phẩm
-      return [
-        {
-          id: 'def-1',
-          productId: 1,
-          badgeType: 'BEST_SELLER',
-          badgeText: '🔥 SẢN PHẨM BÁN CHẠY NHẤT TOÀN SÀN',
-          tenSanPham: 'VGA ASUS ROG Strix GeForce RTX 4090 24GB GDDR6X Gaming OC',
-          tenShop: 'ASUS ROG Flagship Store CTUT',
-          giaBan: 52990000,
-          giaGoc: 59990000,
-          phanTramGiam: 12,
-          hinhAnh: 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=800&auto=format&fit=crop',
-          moTa: 'Chiến mượt mọi tựa game AAA ở độ phân giải 4K Ultra Settings. Bảo hành 1 đổi 1 trong 30 ngày tại Kho Tổng.',
-          highlight: 'Ray Tracing Thế Hệ 3 • DLSS 3.5 AI'
-        },
-        {
-          id: 'def-2',
-          productId: 2,
-          badgeType: 'NEW_ARRIVAL',
-          badgeText: '🚀 SIÊU PHẨM MỚI LÊN KỆ HÔM NAY',
-          tenSanPham: 'Laptop Gaming Alienware M18 R2 Core i9-14900HX / RTX 4080',
-          tenShop: 'CTUT Gaming & Gear Hub',
-          giaBan: 76990000,
-          giaGoc: 84990000,
-          phanTramGiam: 10,
-          hinhAnh: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=800&auto=format&fit=crop',
-          moTa: 'Quái vật hiệu năng thế hệ mới với màn hình 18 inch QHD+ 165Hz. Phân phối chính hãng từ Master Catalog.',
-          highlight: 'Hệ Thống Tản Nhiệt Cryo-Tech • Màn Hình 18 Inch'
-        }
-      ];
+      return [];
     }
 
     const slides = [];

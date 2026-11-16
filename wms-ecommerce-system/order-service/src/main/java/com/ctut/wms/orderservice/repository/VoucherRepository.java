@@ -19,4 +19,5 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
     Optional<Voucher> findByMaVoucher(String maVoucher);
     List<Voucher> findByCuaHangId(Long cuaHangId);
     List<Voucher> findByCuaHangIdIsNull();
+    List<Voucher> findByCuaHangIdIsNotNull();
 }

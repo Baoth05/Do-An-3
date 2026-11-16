@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080',
-  timeout: 10000,
+  timeout: 4000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -11,8 +11,12 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    // Tự động kiểm tra token khách hàng hoặc token chủ shop
-    const token = localStorage.getItem('customer_token') || localStorage.getItem('seller_token');
+    // Phân tách token theo ngữ cảnh phân hệ: Kênh Người Bán dùng seller_token, Sàn Mua Hàng dùng customer_token
+    const isSellerRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/seller');
+    const token = isSellerRoute 
+      ? (localStorage.getItem('seller_token') || localStorage.getItem('customer_token'))
+      : (localStorage.getItem('customer_token') || localStorage.getItem('seller_token'));
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

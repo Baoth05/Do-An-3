@@ -1,16 +1,37 @@
-# React + Vite
+# CTUT GEAR MARKETPLACE (ECOMMERCE FRONTEND)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **Phân hệ:** Sàn Thương Mại Điện Tử & Kênh Quản Trị Người Bán (B2B2C)  
+> **Framework:** React 18, Vite, React Router DOM, React Icons, Axios  
+> **Tài liệu kiến trúc chi tiết:** Xem tại [ECOMMERCE_SELLER_ARCHITECTURE.md](../ECOMMERCE_SELLER_ARCHITECTURE.md)  
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 1. TỔNG QUAN
 
-## React Compiler
+`ecommerce-frontend` là phân hệ giao diện phục vụ hai nhóm đối tượng người dùng độc lập:
+1. **Khách Hàng (Customer Model):** Mua sắm linh kiện PC, Laptop, Gaming Gear chính hãng, giỏ hàng đa shop, áp voucher 2 tầng, thanh toán tách đơn, ví ảo CTUT Pay, chat với gian hàng.
+2. **Chủ Cửa Hàng (Seller Model):** Quản trị gian hàng, quản lý kho riêng độc lập, ký kết hợp đồng cung ứng 5 bước với Kho Tổng Trung Tâm, quản lý tồn kho kệ hàng, đăng bán sản phẩm và xử lý đơn hàng.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 2. KHỞI CHẠY DỰ ÁN
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+# Cài đặt thư viện
+npm install
+
+# Khởi chạy môi trường phát triển
+npm run dev
+
+# Biên dịch sản phẩm (Production Build)
+npm run build
+```
+
+---
+
+## 3. CÁC TÀI KHOẢN KIỂM THỬ MẪU (TEST ACCOUNTS)
+
+- **Khách Hàng (có thể chuyển sang Bán Hàng):** `hungbakkka` / `123456`
+- **Chủ Shop (Kênh Người Bán):** `seller_minhquan` / `123456`
+- **Khách Mua Hàng:** `baomap05` / `123456` hoặc `khachhang` / `123456`
+- **Quản Trị Viên:** `admin` / `admin`

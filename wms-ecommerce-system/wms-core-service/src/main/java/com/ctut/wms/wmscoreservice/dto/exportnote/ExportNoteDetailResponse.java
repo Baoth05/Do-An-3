@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExportNoteDetailResponse {
+
     private Long id;
     private Long sanPhamId;
     private String sku;
@@ -27,5 +28,7 @@ public class ExportNoteDetailResponse {
     private Integer soLuong;
     private Double donGia;
     private Double thanhTien;
+
+
 }
 

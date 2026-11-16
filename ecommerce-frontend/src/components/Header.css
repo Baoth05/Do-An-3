@@ -325,6 +325,29 @@
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
 }
 
+.btn-auth-seller-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ea580c;
+  background: #fff7ed;
+  border: 1px solid #ffedd5;
+  text-decoration: none;
+  transition: all 0.2s;
+  margin-left: 2px;
+}
+
+.btn-auth-seller-header:hover {
+  background: #ea580c;
+  color: #ffffff;
+  border-color: #ea580c;
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.25);
+}
+
 .logout-item {
   color: #dc2626 !important;
   background: none;

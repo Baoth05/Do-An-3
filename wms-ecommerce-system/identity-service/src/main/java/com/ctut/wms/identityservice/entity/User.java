@@ -65,7 +65,7 @@ public class User {
     private String vaiTro = "USER";
 
     @Column(name = "is_approved")
-    private Boolean isApproved = false;
+    private Boolean isApproved = true;
 
 }
 

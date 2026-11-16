@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "phieu_xuat_kho")
@@ -51,9 +52,16 @@ public class ExportNote extends BaseEntity {
     @Column(name = "nguoi_tao")
     private String nguoiTao;
 
+    @Column(name = "ten_Shop")
+    private String tenShop;
+    @Column(name = "dia_chi_nhan", columnDefinition = "TEXT")
+    private String diaChiNhan;
+
     @Column(name = "ngay_xuat")
     private LocalDateTime ngayXuat;
 
     @Column(name = "trang_thai")
     private String trangThai = "CHỜ GOM HÀNG"; // CHỜ GOM HÀNG, ĐÃ XUẤT, HỦY
+    @OneToMany(mappedBy = "phieuXuat", fetch = FetchType.LAZY)
+    private List<ExportNoteDetail> exportNoteDetails;
 }

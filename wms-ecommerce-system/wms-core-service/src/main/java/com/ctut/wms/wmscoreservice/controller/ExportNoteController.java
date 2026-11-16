@@ -60,4 +60,9 @@ public class ExportNoteController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    //API xác nhận xuất kho thực tế (Trừ tồn kho)
+    @PutMapping("/{id}/confirm")
+    public ResponseEntity<ExportNoteResponse> confirmActualExport(@PathVariable Long id) {
+        return ResponseEntity.ok(exportNoteService.confirmActualExport(id));
+    }
 }

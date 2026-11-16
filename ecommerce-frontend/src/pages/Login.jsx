@@ -1,11 +1,15 @@
 // src/pages/Login.jsx
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { FiEye, FiEyeOff, FiMonitor, FiZap, FiBox, FiCheck, FiShoppingBag, FiArrowRight, FiAlertCircle } from 'react-icons/fi';
+import {
+    FiEye, FiEyeOff, FiMonitor, FiZap, FiBox, FiCheck,
+    FiShoppingBag, FiArrowRight, FiAlertCircle, FiUser, FiLock, FiShield
+} from 'react-icons/fi';
 import { authService } from '../services/authService';
 import './Login.css';
 
 const Login = () => {
+    // Để trống hoàn toàn các trường dữ liệu khi mới mở form
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -30,16 +34,41 @@ const Login = () => {
 
         setLoading(true);
         try {
+            // 1. Gọi API xác thực từ authService
             const customer = await authService.loginCustomer({
                 taiKhoan: username.trim(),
                 matKhau: password,
             });
 
+            // 2. Logic kiểm tra Vai trò (Role-based Validation)
+            // Lấy danh sách quyền từ backend (có thể là mảng roles hoặc chuỗi vaiTro)
+            const userRoles = customer.roles || customer.vaiTro || [];
+            const roleString = Array.isArray(userRoles) ? userRoles.join(',') : String(userRoles);
+
+            // Chặn nhân viên kho bãi truy cập vào cổng mua sắm
+            if (
+                roleString.includes('WAREHOUSE_MANAGER') ||
+                roleString.includes('THUKHO') ||
+                roleString.includes('NVKHO') ||
+                roleString.includes('WAREHOUSE_STAFF')
+            ) {
+                // Xóa token rác nếu authService đã lỡ lưu
+                localStorage.removeItem('customer_token');
+                localStorage.removeItem('customer_user');
+
+                setErrorMsg('Truy cập bị từ chối: Tài khoản nghiệp vụ kho không được phép truy cập cổng mua sắm!');
+                setLoading(false);
+                return; // Dừng tại đây, không cho chuyển hướng
+            }
+
+            // 3. Nếu hợp lệ, cho phép đăng nhập thành công
             window.dispatchEvent(new Event('customer-user-updated'));
             setSuccessNotice(`Chào mừng trở lại, ${customer.hoTen || customer.taiKhoan}! Đang chuyển hướng...`);
+
             setTimeout(() => {
                 navigate(from, { replace: true });
-            }, 800);
+            }, 700);
+
         } catch (err) {
             setErrorMsg(err.response?.data?.message || err.message || 'Tài khoản hoặc mật khẩu không chính xác!');
         } finally {
@@ -59,7 +88,7 @@ const Login = () => {
                         </div>
                     </Link>
                     <span className="nav-divider">|</span>
-                    <span className="nav-portal-title">Cổng Đăng Nhập Mua Hàng</span>
+                    <span className="nav-portal-title">Cổng Đăng Nhập Khách Hàng</span>
                 </div>
                 <div className="nav-right">
                     <Link to="/seller/login" className="seller-portal-cta">
@@ -71,72 +100,70 @@ const Login = () => {
 
             {/* Main Login Container */}
             <div className="login-main-container">
-
                 {/* Left Side: Promo Content */}
                 <div className="login-promo-side">
                     <div className="promo-overlay"></div>
                     <div className="promo-content">
                         <div className="promo-badges">
                             <span className="badge-official"><FiCheck size={12} /> CTUT OFFICIAL MALL</span>
-                            <span className="badge-flash"><span className="dot"></span> Kho Hàng Sẵn Sàng</span>
+                            <span className="badge-flash"><span className="dot"></span> Kho Tổng Sẵn Sàng</span>
                         </div>
 
                         <h1 className="promo-title">Nâng Tầm Không Gian Chiến Game & Sáng Tạo</h1>
-                        <p className="promo-subtitle">Sàn thương mại điện tử thiết bị phần cứng & Gaming Gear hàng đầu Việt Nam.</p>
+                        <p className="promo-subtitle">Sàn thương mại điện tử thiết bị phần cứng & Gaming Gear chính hãng hàng đầu Việt Nam.</p>
 
                         <div className="promo-features">
                             <div className="feat-box">
                                 <div className="feat-icon"><FiMonitor /></div>
                                 <div className="feat-text">
                                     <strong>100% Linh Kiện Chính Hãng & Đổi Mới 1-1</strong>
-                                    <p>Chính sách bảo hành trực tiếp từ Kho Tổng CTUT Gear cho toàn bộ GPU, Mainboard, Switch.</p>
+                                    <p>Bảo hành chính ngạch từ Kho Tổng Trung Tâm cho mọi GPU, Mainboard, Phím cơ.</p>
                                 </div>
                             </div>
                             <div className="feat-box">
                                 <div className="feat-icon"><FiZap /></div>
                                 <div className="feat-text">
                                     <strong>Giao Hỏa Tốc & Tự Động Phân Tuyến Shop</strong>
-                                    <p>Tối ưu hóa hành trình giao vận thông minh giữa các kho cửa hàng đối tác trên cả nước.</p>
+                                    <p>Tối ưu hóa hành trình giao nhận hàng giữa Kho Tổng và các Shop đối tác.</p>
                                 </div>
                             </div>
                             <div className="feat-box">
                                 <div className="feat-icon"><FiBox /></div>
                                 <div className="feat-text">
-                                    <strong>Voucher Toàn Sàn & Ưu Đãi Độc Quyền</strong>
-                                    <p>Áp dụng mã giảm giá nhiều tầng cho giỏ hàng đa gian hàng, thanh toán tiện lợi linh hoạt.</p>
+                                    <strong>Voucher Toàn Sàn & Thanh Toán Đa Kênh</strong>
+                                    <p>Áp dụng mã giảm giá nhiều tầng cho giỏ hàng đa gian hàng, thanh toán CTUT Pay tiện lợi.</p>
                                 </div>
                             </div>
                         </div>
 
                         <div className="promo-trust-badge">
                             <div className="trust-avatars">
-                                <span className="av">Q</span><span className="av">K</span><span className="av">H</span>
+                                <span className="av">B</span><span className="av">Q</span><span className="av">H</span>
                             </div>
                             <div className="trust-text">
                                 <div className="stars">★★★★★ 4.9/5</div>
-                                <div className="desc">Tin dùng bởi hơn 120.000 game thủ & PC Builder</div>
+                                <div className="desc">Tin dùng bởi hơn 150.000 game thủ & PC Builder</div>
                             </div>
-                            <div className="authentic-tag">CHÍNH HÃNG</div>
+                            <div className="authentic-tag">CHÍNH HÃNG 100%</div>
                         </div>
                     </div>
                 </div>
 
-                {/* Right Side: Login Form */}
+                {/* Right Side: Login Form Cho Riêng Model Khách Hàng */}
                 <div className="login-form-side">
                     <div className="form-tabs">
                         <button className="tab-btn active" type="button">Đăng Nhập Khách</button>
-                        <button 
-                            className="tab-btn" 
-                            type="button"
-                            onClick={() => navigate('/register')}
-                        >
+                        <button className="tab-btn" type="button" onClick={() => navigate('/register')}>
                             Đăng Ký Khách Mới
                         </button>
                     </div>
 
                     <div className="form-header">
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: '800', marginBottom: '8px' }}>
+                            <FiShield size={12} /> MODEL KHÁCH HÀNG (CUSTOMER)
+                        </div>
                         <h2>Chào Mừng Trở Lại!</h2>
-                        <p>Đăng nhập tài khoản khách hàng để quản lý đơn hàng & giỏ đồ công nghệ.</p>
+                        <p>Đăng nhập tài khoản mua sắm để theo dõi đơn hàng & voucher ưu đãi cá nhân.</p>
                     </div>
 
                     {errorMsg && (
@@ -155,35 +182,39 @@ const Login = () => {
 
                     <form onSubmit={handleLogin} className="auth-form">
                         <div className="input-group">
-                            <label>Tên đăng nhập hoặc Email</label>
+                            <label>Tên đăng nhập hoặc Email <span className="req">*</span></label>
                             <div className="input-wrapper">
-                                <span className="input-icon">👤</span>
+                                <span className="input-icon"><FiUser /></span>
                                 <input
                                     type="text"
-                                    placeholder="ví dụ: user_minhquan hoặc email"
+                                    placeholder="Nhập tên đăng nhập..."
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     required
                                     autoFocus
+                                    autoComplete="username"
                                 />
                             </div>
                         </div>
 
                         <div className="input-group">
-                            <label>Mật khẩu</label>
+                            <label>Mật khẩu xác thực <span className="req">*</span></label>
                             <div className="input-wrapper">
-                                <span className="input-icon">🔒</span>
+                                <span className="input-icon"><FiLock /></span>
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     placeholder="••••••••••••"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
+                                    autoComplete="current-password"
                                 />
                                 <button
                                     type="button"
                                     className="btn-toggle-pass"
                                     onClick={() => setShowPassword(!showPassword)}
+                                    tabIndex="-1"
+                                    aria-label="Ẩn hiện mật khẩu"
                                 >
                                     {showPassword ? <FiEyeOff /> : <FiEye />}
                                 </button>
@@ -200,44 +231,47 @@ const Login = () => {
                                 <span className="checkmark"></span>
                                 Ghi nhớ đăng nhập
                             </label>
-                            <a href="#" className="forgot-link" onClick={(e) => { e.preventDefault(); alert('Vui lòng liên hệ Bot Tư Vấn hoặc bộ phận hỗ trợ 1900-888-CTUT để khôi phục mật khẩu.'); }}>
+                            <a
+                                href="#forgot"
+                                className="forgot-link"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    alert('Vui lòng liên hệ tổng đài hỗ trợ để đặt lại mật khẩu.');
+                                }}
+                            >
                                 Quên mật khẩu?
                             </a>
                         </div>
 
-                        <button 
-                            type="submit" 
-                            className="btn-primary-login"
-                            disabled={loading}
-                        >
-                            {loading ? 'ĐANG XÁC THỰC...' : 'ĐĂNG NHẬP MUA HÀNG →'}
+                        <button type="submit" className="btn-primary-login" disabled={loading}>
+                            <span>{loading ? 'ĐANG XÁC THỰC...' : 'ĐĂNG NHẬP MUA HÀNG'}</span>
+                            <FiArrowRight size={18} />
                         </button>
                     </form>
 
                     <div className="register-prompt">
                         <p>
-                            Chưa có tài khoản mua hàng?{' '}
+                            Chưa có tài khoản khách hàng?{' '}
                             <Link to="/register" className="highlight-link">
                                 Đăng ký tài khoản khách ngay
                             </Link>
                         </p>
                     </div>
 
-                    {/* Dedicated Seller Portal Section */}
+                    {/* Dedicated Seller Portal Section Switch */}
                     <div className="seller-switch-banner">
                         <div className="seller-banner-icon">
                             <FiShoppingBag size={20} />
                         </div>
                         <div className="seller-banner-text">
                             <strong>Bạn là Chủ Cửa Hàng / Đối Tác?</strong>
-                            <p>Quản lý gian hàng, kho hàng và ký hợp đồng cung ứng B2B2C.</p>
+                            <p>Phân hệ Người Bán có cổng đăng nhập riêng biệt để quản lý gian hàng và kho shop.</p>
                         </div>
                         <Link to="/seller/login" className="btn-go-seller">
                             Vào Kênh Người Bán <FiArrowRight size={14} />
                         </Link>
                     </div>
                 </div>
-
             </div>
 
             {/* Bottom Footer */}
@@ -250,10 +284,12 @@ const Login = () => {
                     <span>🛡️ Bảo Hành Chính Hãng Kho Tổng</span>
                 </div>
                 <div className="footer-policy">
-                    <a href="#">Chính Sách Bảo Mật</a> | <a href="#">Điều Khoản Dịch Vụ</a> | <a href="#">Quy Định Đổi Trả</a>
+                    <a href="#policy" onClick={(e) => e.preventDefault()}>Chính Sách Bảo Mật</a> |
+                    <a href="#terms" onClick={(e) => e.preventDefault()}> Điều Khoản Dịch Vụ</a> |
+                    <a href="#returns" onClick={(e) => e.preventDefault()}> Quy Định Đổi Trả</a>
                 </div>
                 <div className="footer-copyright">
-                    © 2024 CTUT Gear E-Commerce Platform. All Rights Reserved.
+                    © 2026 CTUT Gear E-Commerce Platform. Sàn Thương Mại Điện Tử & Chuỗi Cung Ứng Chuẩn B2B2C.
                 </div>
             </footer>
         </div>

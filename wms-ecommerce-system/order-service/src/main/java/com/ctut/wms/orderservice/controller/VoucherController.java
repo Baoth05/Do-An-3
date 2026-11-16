@@ -77,4 +77,11 @@ public class VoucherController {
     public ResponseEntity<Voucher> createVoucher(@RequestBody Voucher voucher) {
         return ResponseEntity.ok(voucherRepository.save(voucher));
     }
+    // Lấy danh sách toàn bộ Voucher của TẤT CẢ các Cửa hàng (Shop)
+    // API: GET /vouchers/stores
+    @GetMapping("/stores")
+    public ResponseEntity<List<Voucher>> getAllStoreVouchers() {
+        // Gọi repository để tìm các voucher có cuaHangId khác null (nghĩa là thuộc về một gian hàng nào đó)
+        return ResponseEntity.ok(voucherRepository.findByCuaHangIdIsNotNull());
+    }
 }

@@ -23,8 +23,8 @@ const Header = ({ onSearch }) => {
   const [customer, setCustomer] = useState(() => authService.getCurrentCustomer());
   const isSeller = Boolean(
     customer && (
-      customer.isSeller || 
-      customer.vaiTro === 'STORE_OWNER' || 
+      customer.isSeller ||
+      customer.vaiTro === 'STORE_OWNER' ||
       customer.vaiTro === 'SELLER' ||
       !!localStorage.getItem(`seller_store_${customer.taiKhoan}`)
     )
@@ -175,13 +175,11 @@ const Header = ({ onSearch }) => {
                       <FiShoppingCart size={16} /> Giỏ Hàng ({totalQuantity})
                     </Link>
                     <div className="dropdown-divider"></div>
-                    {isSeller && (
-                      <Link to="/seller" className="dropdown-item seller-menu-item">
-                        <FiShoppingBag size={16} /> 🏪 Vào Kênh Người Bán
-                      </Link>
-                    )}
-                    <button 
-                      type="button" 
+                    <Link to="/seller" className="dropdown-item seller-menu-item">
+                      <FiShoppingBag size={16} /> 🏪 Vào Kênh Người Bán
+                    </Link>
+                    <button
+                      type="button"
                       className="dropdown-item logout-item"
                       onClick={handleCustomerLogout}
                     >

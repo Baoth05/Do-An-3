@@ -42,6 +42,15 @@ const SellerProducts = () => {
     if (storeId) {
       fetchInventory();
     }
+    const handleUpdate = () => {
+      fetchInventory();
+    };
+    window.addEventListener('seller-inventory-updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('seller-inventory-updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, [storeId]);
 
   // Mở modal đăng bán / sửa thông tin bán

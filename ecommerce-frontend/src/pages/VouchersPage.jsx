@@ -2,13 +2,14 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { marketplaceService } from '../services/marketplaceService';
-import { 
-  FiTag, FiCheck, FiCopy, FiGift, FiShoppingBag, FiTrash2, 
-  FiArrowRight, FiCheckCircle 
+import {
+  FiTag, FiCheck, FiCopy, FiGift, FiShoppingBag, FiTrash2,
+  FiArrowRight, FiCheckCircle
 } from 'react-icons/fi';
 import './VouchersPage.css';
 
 const VouchersPage = () => {
+  // KHỞI TẠO STATE TRỐNG HOÀN TOÀN
   const [globalVouchers, setGlobalVouchers] = useState([]);
   const [storeVouchersList, setStoreVouchersList] = useState([]);
   const [savedVouchers, setSavedVouchers] = useState([]);
@@ -17,28 +18,28 @@ const VouchersPage = () => {
   const [toastMessage, setToastMessage] = useState('');
 
   const loadData = async () => {
-    // 1. Voucher Toàn Sàn
-    const gVouchers = await marketplaceService.getGlobalVouchers();
-    setGlobalVouchers(gVouchers);
-
-    // 2. Voucher Gian Hàng (Store 1, 2, 3)
     try {
-      const [s1, s2, s3] = await Promise.all([
-        marketplaceService.getStoreVouchers(1),
-        marketplaceService.getStoreVouchers(2),
-        marketplaceService.getStoreVouchers(3)
-      ]);
-      const s1Tagged = s1.map((v) => ({ ...v, storeName: 'Apple Store Chính Hãng CTUT' }));
-      const s2Tagged = s2.map((v) => ({ ...v, storeName: 'CTUT Gaming & Gear Hub' }));
-      const s3Tagged = s3.map((v) => ({ ...v, storeName: 'ASUS ROG Official Store' }));
-      setStoreVouchersList([...s1Tagged, ...s2Tagged, ...s3Tagged]);
-    } catch (e) {
-      console.warn(e);
-    }
+      // 1. Voucher Toàn Sàn (Lấy từ API)
+      const gVouchers = await marketplaceService.getGlobalVouchers();
+      // Đảm bảo là mảng, nếu lỗi thì đặt mảng rỗng để không bị lỗi giao diện
+      setGlobalVouchers(Array.isArray(gVouchers) ? gVouchers : []);
 
-    // 3. Voucher người dùng đã lưu
-    const saved = await marketplaceService.getUserSavedVouchers();
-    setSavedVouchers(saved);
+      // 2. Voucher Tất Cả Các Gian Hàng (Lấy từ API)
+      // Chú ý: Cần đảm bảo marketplaceService.getAllStoreVouchers() gọi API thật (vd: GET /vouchers/stores)
+      const sVouchers = await marketplaceService.getAllStoreVouchers();
+      setStoreVouchersList(Array.isArray(sVouchers) ? sVouchers : []);
+
+      // 3. Voucher người dùng đã lưu (Lấy từ API)
+      const saved = await marketplaceService.getUserSavedVouchers();
+      setSavedVouchers(Array.isArray(saved) ? saved : []);
+
+    } catch (error) {
+      console.error("Lỗi khi tải dữ liệu Voucher:", error);
+      // Nếu lỗi kết nối, đảm bảo dữ liệu là rỗng
+      setGlobalVouchers([]);
+      setStoreVouchersList([]);
+      setSavedVouchers([]);
+    }
   };
 
   useEffect(() => {
@@ -46,25 +47,35 @@ const VouchersPage = () => {
   }, []);
 
   const handleSaveVoucher = async (voucher) => {
-    const saved = await marketplaceService.saveUserVoucher(voucher);
-    const updated = await marketplaceService.getUserSavedVouchers();
-    setSavedVouchers(updated);
+    try {
+      await marketplaceService.saveUserVoucher(voucher);
+      const updated = await marketplaceService.getUserSavedVouchers();
+      setSavedVouchers(Array.isArray(updated) ? updated : []);
 
-    navigator.clipboard?.writeText(voucher.maVoucher);
-    setCopiedCode(voucher.maVoucher);
-    setToastMessage(`Đã lưu mã "${voucher.maVoucher}" vào ví ưu đãi của bạn!`);
+      navigator.clipboard?.writeText(voucher.maVoucher);
+      setCopiedCode(voucher.maVoucher);
+      setToastMessage(`Đã lưu mã "${voucher.maVoucher}" vào ví ưu đãi của bạn!`);
 
-    setTimeout(() => {
-      setCopiedCode('');
-      setToastMessage('');
-    }, 2500);
+      setTimeout(() => {
+        setCopiedCode('');
+        setToastMessage('');
+      }, 2500);
+    } catch (error) {
+      console.error("Lỗi khi lưu voucher:", error);
+      setToastMessage("Không thể lưu mã. Vui lòng thử lại sau.");
+      setTimeout(() => setToastMessage(''), 2500);
+    }
   };
 
   const handleRemoveSavedVoucher = async (code) => {
-    const updated = await marketplaceService.removeUserSavedVoucher(code);
-    setSavedVouchers(updated);
-    setToastMessage(`Đã bỏ lưu mã "${code}"`);
-    setTimeout(() => setToastMessage(''), 2000);
+    try {
+      const updated = await marketplaceService.removeUserSavedVoucher(code);
+      setSavedVouchers(Array.isArray(updated) ? updated : []);
+      setToastMessage(`Đã bỏ lưu mã "${code}"`);
+      setTimeout(() => setToastMessage(''), 2000);
+    } catch (error) {
+      console.error("Lỗi khi bỏ lưu voucher:", error);
+    }
   };
 
   const isSaved = (code) => {
@@ -105,19 +116,19 @@ const VouchersPage = () => {
 
         {/* Tabs Điều Hướng */}
         <div className="voucher-tabs">
-          <button 
+          <button
             className={`v-tab-btn ${activeTab === 'ALL' ? 'active' : ''}`}
             onClick={() => setActiveTab('ALL')}
           >
             🌐 Mã Toàn Sàn ({globalVouchers.length})
           </button>
-          <button 
+          <button
             className={`v-tab-btn ${activeTab === 'STORES' ? 'active' : ''}`}
             onClick={() => setActiveTab('STORES')}
           >
             🏪 Mã Gian Hàng ({storeVouchersList.length})
           </button>
-          <button 
+          <button
             className={`v-tab-btn ${activeTab === 'SAVED' ? 'active' : ''}`}
             onClick={() => setActiveTab('SAVED')}
           >
@@ -153,8 +164,8 @@ const VouchersPage = () => {
                     <div className="b-header-line">
                       <div className="b-code-badge">{v.maVoucher}</div>
                       {saved && activeTab === 'SAVED' && (
-                        <button 
-                          className="btn-remove-v" 
+                        <button
+                          className="btn-remove-v"
                           onClick={() => handleRemoveSavedVoucher(v.maVoucher)}
                           title="Bỏ lưu voucher này"
                         >
@@ -175,7 +186,7 @@ const VouchersPage = () => {
                       </span>
 
                       <div className="voucher-actions-btn-group">
-                        <button 
+                        <button
                           className={`btn-copy-code ${saved ? 'is-saved' : ''}`}
                           onClick={() => handleSaveVoucher(v)}
                         >
@@ -188,8 +199,8 @@ const VouchersPage = () => {
                           )}
                         </button>
 
-                        <Link 
-                          to="/cart" 
+                        <Link
+                          to="/cart"
                           state={{ autoApplyCode: v.maVoucher, targetShopId: v.cuaHangId }}
                           className="btn-use-now"
                         >

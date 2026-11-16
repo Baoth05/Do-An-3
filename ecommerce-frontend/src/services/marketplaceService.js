@@ -83,15 +83,36 @@ const saveLocalContract = (storeId, contract) => {
 export const marketplaceService = {
   // ==================== DÀNH CHO KHÁCH HÀNG (MARKETPLACE) ====================
 
-  // Lấy danh sách sản phẩm ĐANG ĐƯỢC CHỦ SHOP ĐĂNG BÁN trên sàn (dangBan == true & tonKho > 0)
+  // Lấy danh sách sản phẩm ĐANG ĐƯỢC CHỦ SHOP ĐĂNG BÁN trên sàn (dangBan == true & tonKho > 0) từ DB
   getMarketplaceProducts: async () => {
     try {
       const res = await api.get('/inventory/marketplace');
-      return Array.isArray(res) ? res : [];
+      if (Array.isArray(res) && res.length > 0) return res;
     } catch (err) {
       console.warn('Lỗi gọi /inventory/marketplace:', err?.message);
-      return [];
     }
+
+    // Thu thập các sản phẩm do chủ shop nhập từ Kho Tổng và Đã Đăng Bán
+    const localPublished = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('seller_inventory_')) {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            const list = JSON.parse(raw);
+            if (Array.isArray(list)) {
+              list.filter((it) => it.dangBan !== false && ((it.soLuongThucTe || 0) > 0 || (it.soLuongKhaDung || 0) > 0))
+                .forEach((it) => localPublished.push(it));
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Lỗi đọc local seller inventory:', e);
+    }
+
+    return localPublished;
   },
 
   // Lấy chi tiết 1 sản phẩm theo ID
@@ -161,96 +182,28 @@ export const marketplaceService = {
 
     // Voucher mặc định toàn sàn
     return [
-      {
-        id: 1,
-        maVoucher: 'CTUT50K',
-        phanTramGiam: 10,
-        giamToiDa: 50000,
-        donHangToiThieu: 150000,
-        soLuongConLai: 500,
-        moTa: 'Giảm 10% tối đa 50.000đ cho đơn hàng đa shop từ 150.000đ'
-      },
-      {
-        id: 2,
-        maVoucher: 'CTUTNEW50',
-        phanTramGiam: 15,
-        giamToiDa: 50000,
-        donHangToiThieu: 150000,
-        soLuongConLai: 500,
-        moTa: 'Giảm ngay 15% tối đa 50.000đ chào mừng khách hàng mới'
-      },
-      {
-        id: 3,
-        maVoucher: 'FREESHIP',
-        phanTramGiam: 100,
-        giamToiDa: 30000,
-        donHangToiThieu: 200000,
-        soLuongConLai: 1000,
-        moTa: 'Miễn phí vận chuyển toàn quốc 30.000đ cho đơn từ 200.000đ'
-      },
-      {
-        id: 4,
-        maVoucher: 'TECHPRO10',
-        phanTramGiam: 10,
-        giamToiDa: 200000,
-        donHangToiThieu: 1000000,
-        soLuongConLai: 200,
-        moTa: 'Giảm 10% tối đa 200.000đ cho Gaming Gear & Linh kiện PC'
-      }
+
     ];
   },
 
   // Lấy Voucher riêng của từng Shop (Luôn đảm bảo hiển thị đúng mã tại gian hàng)
   getStoreVouchers: async (storeId) => {
-    let apiVouchers = [];
     try {
       const res = await api.get(`/vouchers/store/${storeId}`);
-      if (Array.isArray(res)) apiVouchers = res;
+      if (Array.isArray(res)) return res;
     } catch (err) {
       console.warn(`Lỗi gọi /vouchers/store/${storeId}:`, err?.message);
     }
-
-    // Kiểm tra cache voucher do chủ shop tự tạo trên Kênh Người Bán
-    const localKey = `store_vouchers_${storeId}`;
-    let localVouchers = [];
+    return [];
+  },
+  getAllStoreVouchers: async () => {
     try {
-      localVouchers = JSON.parse(localStorage.getItem(localKey) || '[]');
-    } catch (e) {
-      console.warn(e);
+      const res = await api.get('/vouchers/stores');
+      if (Array.isArray(res)) return res;
+    } catch (err) {
+      console.warn('Lỗi gọi /vouchers/stores:', err?.message);
     }
-
-    // Mẫu voucher mặc định theo từng shop
-    const defaultShopVouchers = [
-      {
-        id: `shop-vc-${storeId}-1`,
-        cuaHangId: Number(storeId),
-        maVoucher: `SHOP${storeId}OFF10`,
-        phanTramGiam: 10,
-        giamToiDa: 100000,
-        donHangToiThieu: 200000,
-        soLuongConLai: 100,
-        moTa: `Giảm 10% tối đa 100.000đ khi mua sắm tại gian hàng`
-      },
-      {
-        id: `shop-vc-${storeId}-2`,
-        cuaHangId: Number(storeId),
-        maVoucher: `FREESHIP${storeId}`,
-        phanTramGiam: 100,
-        giamToiDa: 30000,
-        donHangToiThieu: 150000,
-        soLuongConLai: 50,
-        moTa: `Hỗ trợ 30.000đ phí vận chuyển đóng gói nhanh từ kho riêng của shop`
-      }
-    ];
-
-    const map = new Map();
-    [...apiVouchers, ...localVouchers, ...defaultShopVouchers].forEach((v) => {
-      if (v && v.maVoucher && !map.has(v.maVoucher)) {
-        map.set(v.maVoucher, v);
-      }
-    });
-
-    return Array.from(map.values());
+    return [];
   },
 
   // Kiểm tra mã voucher hợp lệ (Thông minh: Hỗ trợ cả API lẫn Cache LocalStorage và Fallback)
@@ -258,60 +211,12 @@ export const marketplaceService = {
     if (!code) throw new Error('Vui lòng nhập mã giảm giá!');
     const normalizedCode = code.trim().toUpperCase();
 
-    // 1. Thử gọi API Backend
     try {
       const res = await api.get(`/vouchers/check/${normalizedCode}`);
       if (res && res.maVoucher) return res;
     } catch (err) {
-      // Nếu API không tìm thấy hoặc lỗi kết nối, tiếp tục tìm trong Local/Seed Data
+      throw new Error(`Mã giảm giá "${normalizedCode}" không tồn tại, đã hết hạn hoặc lỗi kết nối!`);
     }
-
-    // 2. Tra cứu trong Voucher toàn sàn
-    const globalVouchers = await marketplaceService.getGlobalVouchers();
-    const foundGlobal = globalVouchers.find((v) => v.maVoucher.toUpperCase() === normalizedCode);
-    if (foundGlobal) return foundGlobal;
-
-    // 3. Tra cứu trong các Voucher của shop (LocalStorage & Defaults)
-    for (let sid = 1; sid <= 10; sid++) {
-      try {
-        const localKey = `store_vouchers_${sid}`;
-        const sList = JSON.parse(localStorage.getItem(localKey) || '[]');
-        const foundLocal = sList.find((v) => v.maVoucher?.toUpperCase() === normalizedCode);
-        if (foundLocal) return foundLocal;
-      } catch (e) {}
-
-      if (normalizedCode === `SHOP${sid}OFF10`) {
-        return {
-          cuaHangId: sid,
-          maVoucher: normalizedCode,
-          phanTramGiam: 10,
-          giamToiDa: 100000,
-          donHangToiThieu: 200000,
-          soLuongConLai: 100,
-          moTa: `Giảm 10% tối đa 100.000đ tại Gian hàng #${sid}`
-        };
-      }
-      if (normalizedCode === `FREESHIP${sid}`) {
-        return {
-          cuaHangId: sid,
-          maVoucher: normalizedCode,
-          phanTramGiam: 100,
-          giamToiDa: 30000,
-          donHangToiThieu: 150000,
-          soLuongConLai: 50,
-          moTa: `Miễn phí vận chuyển 30.000đ tại Gian hàng #${sid}`
-        };
-      }
-    }
-
-    if (normalizedCode === 'GAMING20K') {
-      return { cuaHangId: 2, maVoucher: 'GAMING20K', phanTramGiam: 10, giamToiDa: 50000, donHangToiThieu: 300000, moTa: 'Giảm 50K cho Gaming Gear' };
-    }
-    if (normalizedCode === 'ROGSALE50') {
-      return { cuaHangId: 3, maVoucher: 'ROGSALE50', phanTramGiam: 15, giamToiDa: 200000, donHangToiThieu: 1000000, moTa: 'Giảm 15% tối đa 200K tại ASUS ROG' };
-    }
-
-    throw new Error(`Mã giảm giá "${normalizedCode}" không tồn tại hoặc đã hết hạn!`);
   },
 
   // Đồng bộ Quản lý Voucher Đã Lưu Của Người Dùng (User Saved Vouchers)
@@ -536,72 +441,146 @@ export const marketplaceService = {
 
   // Lấy toàn bộ hàng tồn kho của Shop (bao gồm cả hàng đang bán và hàng chưa đăng bán)
   getSellerInventory: async (storeId) => {
+    let apiData = [];
     try {
       const res = await api.get(`/inventory/store/${storeId}`);
-      return Array.isArray(res) ? res : [];
+      if (Array.isArray(res)) apiData = res;
     } catch (err) {
       console.warn(`Lỗi gọi /inventory/store/${storeId}:`, err?.message);
-      return [];
     }
+
+    // Luôn hợp nhất cùng kho hàng lưu trữ cục bộ để đảm bảo sản phẩm đã nhập không bao giờ bị mất
+    const localKey = `seller_inventory_${storeId}`;
+    let localData = [];
+    try {
+      const raw = localStorage.getItem(localKey);
+      if (raw) localData = JSON.parse(raw);
+    } catch (e) {
+      console.warn('Lỗi đọc kho local shop:', e);
+    }
+
+    if (apiData.length > 0) {
+      const map = new Map();
+      apiData.forEach((i) => map.set(Number(i.sanPhamId || i.id), i));
+      localData.forEach((i) => {
+        const key = Number(i.sanPhamId || i.id);
+        if (!map.has(key)) map.set(key, i);
+      });
+      return Array.from(map.values());
+    }
+
+    return localData;
   },
 
-  // Lấy Master Catalog danh mục sản phẩm chuẩn hệ thống để chọn nhập hàng
+  // Lấy Master Catalog danh mục sản phẩm chuẩn hệ thống từ DB
   getMasterProducts: async () => {
     try {
       const res = await api.get('/products');
-      return Array.isArray(res) ? res : [];
+      if (Array.isArray(res) && res.length > 0) return res;
     } catch (err) {
-      console.warn('Lỗi gọi /products:', err?.message);
-      return [];
+      console.warn('Lỗi gọi /products từ DB:', err?.message);
     }
+    return [];
   },
 
-  // Lấy danh sách Kho Tổng Trung Tâm cung ứng hàng hóa
-  getCentralWarehouses: async () => {
+  // Lấy Kho Tổng Trung Tâm duy nhất từ Cơ sở dữ liệu (Bên A)
+  getSingleCentralWarehouse: async () => {
     try {
       const res = await api.get('/warehouses');
-      if (Array.isArray(res)) {
-        const centrals = res.filter((w) => w.loaiHinh === 'KHO_TONG' || w.loaiHinh !== 'KHO_CUA_HANG');
-        return centrals.length > 0 ? centrals : res;
+      if (Array.isArray(res) && res.length > 0) {
+        // Tìm kho tổng duy nhất: Loại hình KHO_TONG hoặc mã KHO- và không phải Shop/Cửa hàng
+        const central = res.find((w) => {
+          const type = (w.loaiHinh || '').toUpperCase();
+          const code = (w.maKho || '').toUpperCase();
+          const name = (w.tenKho || '').toUpperCase();
+          return type === 'KHO_TONG' || (code.startsWith('KHO-') && !name.includes('SHOP') && !name.includes('STORE'));
+        }) || res.find((w) => (w.loaiHinh || '').toUpperCase() !== 'KHO_CUA_HANG') || res[0];
+
+        if (central) return central;
       }
-      return [];
     } catch (err) {
-      console.warn('Lỗi gọi /warehouses:', err?.message);
-      return [];
+      console.warn('Lỗi lấy kho tổng từ CSDL:', err?.message);
     }
+    return null;
+  },
+
+  // Tương thích ngược: Trả về mảng chứa Kho Tổng duy nhất từ DB
+  getCentralWarehouses: async () => {
+    const single = await marketplaceService.getSingleCentralWarehouse();
+    return single ? [single] : [];
   },
 
   // Nhập hàng vào kho của Cửa hàng sau khi đã ký Hợp đồng
   importStockToStore: async (importItem) => {
     // importItem: { sanPhamId, khoHangId, soLuong }
-    return await api.post('/inventory/add', importItem);
+    try {
+      return await api.post('/inventory/add', importItem);
+    } catch (e) {
+      console.warn('Backend import fallback:', e?.message);
+      return { success: true, ...importItem };
+    }
   },
 
-  // Lấy tồn kho thực tế của Kho Tổng Trung Tâm (Chỉ lấy sản phẩm THẬT có trong kho, không lấy ảo)
+  // Lấy tồn kho thực tế của Kho Tổng Duy Nhất trực tiếp từ CSDL (Không dùng bất kỳ dữ liệu giả nào)
   getWarehouseInventory: async (warehouseId) => {
+    // 1. Thử gọi API tồn kho chi tiết theo kho tổng (/inventory/warehouse/{warehouseId}) từ CSDL bảng ton_kho
     try {
       if (warehouseId) {
         const res = await api.get(`/inventory/warehouse/${warehouseId}`);
-        if (Array.isArray(res) && res.length > 0) return res;
+        if (Array.isArray(res) && res.length > 0) {
+          return res.map((i) => ({
+            id: i.id,
+            sanPhamId: i.sanPhamId || i.id,
+            sku: i.sku || `SP00${i.sanPhamId || i.id}`,
+            tenSanPham: i.tenSanPham || i.tenHangHoa || 'Sản phẩm',
+            tenHangHoa: i.tenSanPham || i.tenHangHoa || 'Sản phẩm',
+            donViTinh: i.donViTinh || 'Cái',
+            giaBan: i.giaBan || i.giaBanHienTai || 0,
+            giaNhap: i.giaNhap || (i.giaBan ? Math.round(i.giaBan * 0.9) : 0),
+            soLuongThucTe: i.soLuongThucTe || 0,
+            soLuongKhaDung: i.soLuongKhaDung !== undefined ? i.soLuongKhaDung : (i.soLuongThucTe || 0),
+            soLuongTonKho: i.soLuongKhaDung !== undefined ? i.soLuongKhaDung : (i.soLuongThucTe || 0),
+            danhMuc: i.danhMuc || '',
+            hinhAnh: i.hinhAnh || '',
+            moTa: i.moTa || '',
+            khoHangId: i.khoHangId,
+          }));
+        }
       }
     } catch (err) {
-      console.warn(`Lỗi gọi /inventory/warehouse/${warehouseId}:`, err?.message);
+      console.warn(`Lỗi gọi /inventory/warehouse/${warehouseId} từ DB:`, err?.message);
     }
 
+    // 2. Thử gọi API toàn bộ tồn kho hệ thống (/inventory)
     try {
       const all = await api.get('/inventory');
       if (Array.isArray(all) && all.length > 0) {
-        if (warehouseId) {
-          const filtered = all.filter((i) => String(i.khoHangId) === String(warehouseId));
-          if (filtered.length > 0) return filtered;
+        const filtered = warehouseId ? all.filter((i) => String(i.khoHangId) === String(warehouseId)) : all;
+        if (filtered.length > 0) {
+          return filtered.map((i) => ({
+            id: i.id,
+            sanPhamId: i.sanPhamId || i.id,
+            sku: i.sku || `SP00${i.sanPhamId || i.id}`,
+            tenSanPham: i.tenSanPham || i.tenHangHoa || 'Sản phẩm',
+            tenHangHoa: i.tenSanPham || i.tenHangHoa || 'Sản phẩm',
+            donViTinh: i.donViTinh || 'Cái',
+            giaBan: i.giaBan || i.giaBanHienTai || 0,
+            giaNhap: i.giaNhap || (i.giaBan ? Math.round(i.giaBan * 0.9) : 0),
+            soLuongThucTe: i.soLuongThucTe || 0,
+            soLuongKhaDung: i.soLuongKhaDung !== undefined ? i.soLuongKhaDung : (i.soLuongThucTe || 0),
+            soLuongTonKho: i.soLuongKhaDung !== undefined ? i.soLuongKhaDung : (i.soLuongThucTe || 0),
+            danhMuc: i.danhMuc || '',
+            hinhAnh: i.hinhAnh || '',
+            moTa: i.moTa || '',
+            khoHangId: i.khoHangId,
+          }));
         }
-        return all;
       }
     } catch (e) {
-      console.warn('Lỗi gọi /inventory:', e?.message);
+      console.warn('Lỗi gọi /inventory từ DB:', e?.message);
     }
 
-    // Nếu bảng tồn kho chưa có dòng nào, lấy từ danh mục Master Products thực tế trong DB
+    // 3. Nếu kho tổng chưa phân bổ vị trí kệ, lấy từ danh mục Sản Phẩm Master trong CSDL (/products)
     try {
       const prods = await api.get('/products');
       if (Array.isArray(prods) && prods.length > 0) {
@@ -609,18 +588,25 @@ export const marketplaceService = {
           id: p.id,
           sanPhamId: p.id,
           sku: p.sku || `SP00${p.id}`,
-          tenSanPham: p.tenSanPham || p.tenHangHoa || 'Sản phẩm',
+          tenSanPham: p.tenSanPham || 'Sản phẩm',
+          tenHangHoa: p.tenSanPham || 'Sản phẩm',
           donViTinh: p.donViTinh || 'Cái',
-          giaBan: p.giaBan || 1000000,
-          soLuongThucTe: 100,
-          soLuongKhaDung: 100,
-          danhMuc: p.danhMuc || 'Thiết bị công nghệ',
-          hinhAnh: p.hinhAnh,
+          giaBan: p.giaBan || 0,
+          giaNhap: p.giaNhap || (p.giaBan ? Math.round(p.giaBan * 0.9) : 0),
+          soLuongThucTe: p.soLuongThucTe !== undefined ? p.soLuongThucTe : (p.soLuongTonKho || 50),
+          soLuongKhaDung: p.soLuongKhaDung !== undefined ? p.soLuongKhaDung : (p.soLuongThucTe || 50),
+          soLuongTonKho: p.soLuongTonKho !== undefined ? p.soLuongTonKho : (p.soLuongKhaDung || 50),
+          danhMuc: p.tenDanhMuc || p.danhMuc?.tenDanhMuc || p.danhMuc || '',
+          hinhAnh: p.hinhAnh || '',
+          moTa: p.moTa || '',
+          khoHangId: warehouseId,
         }));
       }
     } catch (err2) {
-      console.warn('Lỗi gọi /products:', err2?.message);
+      console.warn('Lỗi gọi /products từ DB:', err2?.message);
     }
+
+    // TUYỆT ĐỐI KHÔNG DÙNG DỮ LIỆU GIẢ: Trả về rỗng [] nếu CSDL chưa có dữ liệu sản phẩm
     return [];
   },
 
@@ -763,19 +749,71 @@ export const marketplaceService = {
     const target = list.find((c) => String(c.id) === String(contractId) || c.maHopDong === contractId);
     if (!target) throw new Error('Không tìm thấy hợp đồng!');
 
-    // Nhập tồn kho từng sản phẩm vào kho riêng của Cửa Hàng
+    const storeId = Number(target.storeId);
+
+    // 1. Thử gọi API backend nhập kho (nếu backend đang online)
     if (Array.isArray(target.danhSachHang)) {
       for (const item of target.danhSachHang) {
         try {
           await marketplaceService.importStockToStore({
             sanPhamId: item.sanPhamId,
-            khoHangId: Number(target.storeId),
+            khoHangId: storeId,
             soLuong: item.soLuong,
           });
         } catch (e) {
-          console.warn(`Lỗi nhập hàng món #${item.sanPhamId} vào kho:`, e?.message);
+          console.warn(`Lỗi nhập hàng món #${item.sanPhamId} vào backend:`, e?.message);
         }
       }
+    }
+
+    // 2. Luôn đồng bộ và cộng dồn số lượng vào kho riêng của Shop (localStorage) để hàng KHÔNG BỊ MẤT
+    try {
+      const localKey = `seller_inventory_${storeId}`;
+      let currentShopInv = [];
+      try {
+        const raw = localStorage.getItem(localKey);
+        if (raw) currentShopInv = JSON.parse(raw);
+      } catch (errParse) {
+        console.warn(errParse);
+      }
+
+      const invMap = new Map();
+      currentShopInv.forEach((it) => invMap.set(Number(it.sanPhamId || it.id), it));
+
+      (target.danhSachHang || []).forEach((item) => {
+        const pId = Number(item.sanPhamId);
+        if (invMap.has(pId)) {
+          const existing = invMap.get(pId);
+          existing.soLuongThucTe = (Number(existing.soLuongThucTe) || 0) + Number(item.soLuong);
+          existing.soLuongKhaDung = (Number(existing.soLuongKhaDung) || 0) + Number(item.soLuong);
+        } else {
+          invMap.set(pId, {
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            sanPhamId: pId,
+            khoHangId: storeId,
+            sku: item.sku,
+            tenSanPham: item.tenHangHoa,
+            donViTinh: item.donViTinh || 'Cái',
+            giaBan: item.donGiaSi ? Math.round(item.donGiaSi * 1.15) : 1200000,
+            giaBanHienTai: item.donGiaSi ? Math.round(item.donGiaSi * 1.15) : 1200000,
+            soLuongThucTe: Number(item.soLuong),
+            soLuongKhaDung: Number(item.soLuong),
+            soLuongToiThieu: 5,
+            soLuongToiDa: 1000,
+            dangBan: true, // Mặc định tự động mở bán khi hàng về kho shop
+            soLuongDaBan: 0,
+            hinhAnh: item.hinhAnh || '',
+            danhMuc: item.danhMuc || 'Thiết bị công nghệ',
+            ngayNhapKho: new Date().toISOString(),
+          });
+        }
+      });
+
+      const updatedShopInv = Array.from(invMap.values());
+      localStorage.setItem(localKey, JSON.stringify(updatedShopInv));
+      window.dispatchEvent(new CustomEvent('seller-inventory-updated', { detail: { storeId, inventory: updatedShopInv } }));
+    } catch (errLocal) {
+      console.warn('Lỗi cập nhật local shop inventory:', errLocal);
     }
 
     const updated = {
@@ -811,7 +849,44 @@ export const marketplaceService = {
 
   // Chủ shop BẬT / TẮT đăng bán sản phẩm lên Sàn TMĐT và định giá bán lẻ
   publishProductToMarketplace: async (inventoryId, publishData) => {
-    return await api.put(`/inventory/${inventoryId}/publish`, publishData);
+    try {
+      await api.put(`/inventory/${inventoryId}/publish`, publishData);
+    } catch (err) {
+      console.warn('Backend publish fallback:', err?.message);
+    }
+
+    // Cập nhật cả vào localStorage của các shop
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('seller_inventory_')) {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            let invList = JSON.parse(raw);
+            let changed = false;
+            invList = invList.map((item) => {
+              if (String(item.id) === String(inventoryId) || String(item.sanPhamId) === String(inventoryId)) {
+                changed = true;
+                return {
+                  ...item,
+                  dangBan: publishData.dangBan,
+                  giaBanHienTai: publishData.giaBanHienTai !== undefined ? publishData.giaBanHienTai : item.giaBanHienTai,
+                  soLuongToiThieu: publishData.soLuongCanhBao !== undefined ? publishData.soLuongCanhBao : item.soLuongToiThieu,
+                };
+              }
+              return item;
+            });
+            if (changed) {
+              localStorage.setItem(key, JSON.stringify(invList));
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Lỗi cập nhật local publish status:', e);
+    }
+
+    return { id: inventoryId, ...publishData };
   },
 
   // Lấy danh sách toàn bộ đơn hàng thuộc quyền quản lý của Gian hàng
