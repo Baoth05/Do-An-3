@@ -418,13 +418,28 @@ const InventoryStock = () => {
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       {isOutOfStock ? (
-                        <span className="status-badge badge-danger">Hết Hàng</span>
+                        <span className="status-badge badge-danger">
+                          {/* Icon cảnh báo màu đỏ kèm class hiệu ứng động */}
+                          <FiAlertTriangle size={14} className="icon-urgent" />
+                          Hết Hàng (Cần Nhập Gấp)
+                        </span>
                       ) : isUnderMin ? (
-                        <span className="status-badge badge-warning">Cạn Kho (Cần Nhập)</span>
+                        <span className="status-badge badge-warning">
+                          {/* Icon cảnh báo màu vàng */}
+                          <FiAlertTriangle size={14} />
+                          Cạn Kho (Sắp Hết)
+                        </span>
                       ) : isOverMax ? (
-                        <span className="status-badge badge-info">Quá Tải Kệ</span>
+                        <span className="status-badge badge-info">
+                          <FiBox size={14} />
+                          Quá Tải Kệ
+                        </span>
                       ) : (
-                        <span className="status-badge badge-success">Đủ Hàng</span>
+                        <span className="status-badge badge-success">
+                          {/* Icon tick màu xanh lá */}
+                          <FiCheckCircle size={14} />
+                          Đủ Hàng
+                        </span>
                       )}
                     </td>
                     <td style={{ textAlign: 'right' }}>

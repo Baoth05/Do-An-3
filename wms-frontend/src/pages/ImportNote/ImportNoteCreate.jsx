@@ -194,6 +194,7 @@ const ImportNoteCreate = () => {
       return;
     }
 
+    // Đóng gói dữ liệu để gửi lên máy chủ
     const payload = {
       nhaCungCapId: Number(headerData.nhaCungCapId),
       khoHangId: Number(headerData.khoHangId),
@@ -206,13 +207,21 @@ const ImportNoteCreate = () => {
       })),
     };
 
+    // BƯỚC 1: In dữ liệu ra Console để kiểm tra xem Frontend gửi gì
+    console.log("=== DỮ LIỆU GỬI LÊN MÁY CHỦ (PAYLOAD) ===", payload);
+
     try {
       setIsSubmitting(true);
       await wmsCoreService.createImportNote(payload);
       alert('Tạo phiếu nhập kho thành công!');
       navigate('/import-notes');
     } catch (err) {
-      alert('Lỗi khi tạo phiếu nhập kho: ' + (err.response?.data || err.message));
+      // BƯỚC 2: In chi tiết lỗi máy chủ trả về ra Console
+      console.error("=== LỖI CHI TIẾT TỪ MÁY CHỦ ===", err.response?.data);
+      
+      // Hiển thị lỗi chi tiết lên màn hình cho dễ nhìn (chuyển Object thành chuỗi)
+      const errorMsg = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+      alert('Lỗi khi tạo phiếu nhập kho: ' + errorMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -274,8 +283,21 @@ const ImportNoteCreate = () => {
             <div className="form-group">
               <label>Kho Tiếp Nhận & Lưu Trữ <span style={{ color: '#dc2626' }}>*</span></label>
               <select name="khoHangId" value={headerData.khoHangId} onChange={handleHeaderChange} required>
-                <option value="">-- Chọn Kho Tiếp Nhận --</option>
-                {warehouses.map(w => <option key={w.id} value={w.id}>{w.tenKho} ({w.maKho})</option>)}
+                
+                {/* 
+                  LỌC DỮ LIỆU CỨNG: 
+                  Chỉ lấy duy nhất kho có mã chứa chữ 'MAIN' (MAIN-WH-01).
+                  Cách này loại bỏ hoàn toàn các gian hàng (như STORE-BAOTH05).
+                */}
+                {warehouses
+                  .filter(w => w.maKho === 'MAIN-WH-01' || (w.maKho && w.maKho.includes('MAIN'))) 
+                  .map(w => (
+                    <option key={w.id} value={w.id}>
+                      Kho Tổng: {w.tenKho} ({w.maKho})
+                    </option>
+                  ))
+                }
+                
               </select>
             </div>
           </div>

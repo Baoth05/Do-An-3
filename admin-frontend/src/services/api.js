@@ -6,7 +6,7 @@ const api = axios.create({
 
   // ĐÃ SỬA: Xóa chữ '/api' ở cuối để khớp với cấu hình API Gateway
   // Địa chỉ API Gateway cấu hình trong file .env (VITE_API_GATEWAY_URL)
-  baseURL: import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080',
+  baseURL: import.meta.env.VITE_API_GATEWAY_URL || 'http://10.10.30.177:8080',
 
 
 

@@ -11,7 +11,7 @@ export default defineConfig({
     proxy: {
       // Bất kỳ API nào bắt đầu bằng '/api' sẽ được Vite chuyển tiếp sang Backend
       '/api': {
-        target: 'http://10.10.27.73:8080', // Địa chỉ Backend của bạn
+        target: 'http://10.10.30.177:8080', // Địa chỉ Backend của bạn
         changeOrigin: true,
         // Dòng này sẽ xóa chữ '/api' trước khi gửi đến Backend
         rewrite: (path) => path.replace(/^\/api/, '')
