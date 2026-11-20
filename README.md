@@ -76,18 +76,21 @@ cd wms-frontend       && npm install && npm run dev   # :5175
 
 ---
 
-## 3. Tài khoản mẫu
+## 3. Tài khoản
 
-| Tài khoản | Mật khẩu | Vai trò | Đăng nhập tại |
-|---|---|---|---|
-| `admin` | `admin` | Quản trị viên | Admin :5174 (hoặc `/seller/login`) |
-| `thukho` | `123456` | Thủ kho | WMS :5175 |
-| `nvkho` | `123456` | Nhân viên kho | WMS :5175 |
-| `seller_minhquan`, `shop_apple` | `123456` | Chủ cửa hàng | Sàn :5173 → `/seller/login` |
-| `baomap05`, `khachhang`, `hungbakkka` | `123456` | Khách hàng | Sàn :5173 → `/login` |
+Mặc định hệ thống **không tạo dữ liệu mẫu**:
+- Khi chưa có quản trị viên nào, identity-service tạo 1 tài khoản `admin` với mật khẩu lấy từ `ADMIN_DEFAULT_PASSWORD` (mặc định `admin`, hãy đổi ngay).
+- Từ tài khoản admin, tạo nhân sự kho (Thủ kho `THUKHO`, Nhân viên kho `NVKHO`) tại trang Admin → *Quản lý người dùng* → *Thêm nhân sự*.
+- Khách hàng tự đăng ký tại Sàn (`/register`); chủ shop dùng nút **"Vào Kênh Người Bán"** để nâng cấp tài khoản.
 
-- **Mã PIN ký hợp đồng cung ứng:** `123456`
-- **Voucher mẫu:** `CTUT50K`, `CTUTNEW50`, `FREESHIP`, `TECHPRO10` (toàn sàn); `SHOP1OFF10`, `SHOP2OFF10`, `SHOP3OFF10`… (theo shop).
+Muốn có dữ liệu demo nhanh, đặt biến môi trường trước khi khởi động:
+
+| Biến | Tạo ra |
+|---|---|
+| `SEED_DEMO_USERS=true` | `thukho`, `nvkho`, `seller_minhquan`, `shop_apple`, `baomap05`, `hungbakkka`, `khachhang` (mật khẩu `DEMO_USER_PASSWORD`, mặc định `123456`) |
+| `SEED_DEMO_VOUCHERS=true` | Voucher sàn `CTUT50K`, `CTUTNEW50`, `FREESHIP`, `TECHPRO10` và voucher shop `SHOP1OFF10`, `SHOP2OFF10`, `SHOP3OFF10`… |
+
+**Mã PIN ký hợp đồng cung ứng:** `CONTRACT_SIGN_PIN` (mặc định `123456`).
 
 Kịch bản demo đầy đủ: xem mục 15 của [LOGIC_HE_THONG_DO_AN_3.md](LOGIC_HE_THONG_DO_AN_3.md#15-kịch-bản-kiểm-thử--tài-khoản-mẫu).
 

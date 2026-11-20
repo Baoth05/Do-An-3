@@ -114,12 +114,23 @@ const ImportNoteCreate = () => {
         }
       }
 
-      // Khởi tạo Kho hàng
+      // Khởi tạo Kho hàng: CHỈ LỌC KHO TỔNG TRUNG TÂM (loaiHinh === 'KHO_TONG' hoặc maKho bắt đầu bằng KHO-)
       if (whRes.status === 'fulfilled' && Array.isArray(whRes.value)) {
-        setWarehouses(whRes.value);
-        if (whRes.value.length > 0) {
-          const finalWhId = initialWarehouseId || String(whRes.value[0].id);
-          setHeaderData(prev => ({ ...prev, khoHangId: finalWhId }));
+        const centralWhs = whRes.value.filter(w => {
+          const type = (w.loaiHinh || '').toUpperCase();
+          const code = (w.maKho || '').toUpperCase();
+          const name = (w.tenKho || '').toUpperCase();
+          return type === 'KHO_TONG' || (code.startsWith('KHO-') && !name.includes('SHOP') && !name.includes('STORE'));
+        });
+
+        // Chỉ đưa Kho Tổng vào danh sách tiếp nhận hàng từ Nhà Cung Cấp
+        const activeWarehouses = centralWhs.length > 0 ? centralWhs : whRes.value;
+        setWarehouses(activeWarehouses);
+
+        const centralWarehouse = centralWhs[0] || whRes.value[0];
+        if (centralWarehouse) {
+          // Bắt buộc nhập vào Kho Tổng, bất kể passedState có mang theo kho khác
+          setHeaderData(prev => ({ ...prev, khoHangId: String(centralWarehouse.id) }));
         }
       }
     } catch (e) {
@@ -273,10 +284,22 @@ const ImportNoteCreate = () => {
             </div>
             <div className="form-group">
               <label>Kho Tiếp Nhận & Lưu Trữ <span style={{ color: '#dc2626' }}>*</span></label>
-              <select name="khoHangId" value={headerData.khoHangId} onChange={handleHeaderChange} required>
-                <option value="">-- Chọn Kho Tiếp Nhận --</option>
-                {warehouses.map(w => <option key={w.id} value={w.id}>{w.tenKho} ({w.maKho})</option>)}
+              <select 
+                name="khoHangId" 
+                value={headerData.khoHangId} 
+                onChange={handleHeaderChange} 
+                required
+                style={{ backgroundColor: '#f8fafc', fontWeight: 600 }}
+              >
+                {warehouses.map(w => (
+                  <option key={w.id} value={w.id}>
+                    🏢 {w.tenKho} ({w.maKho}) [KHO TỔNG]
+                  </option>
+                ))}
               </select>
+              <small style={{ color: '#64748b', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                * Hàng nhập từ Nhà Cung Cấp gốc bắt buộc tiếp nhận vào Kho Tổng Trung Tâm.
+              </small>
             </div>
           </div>
           <div className="form-grid-3" style={{ marginTop: '20px' }}>

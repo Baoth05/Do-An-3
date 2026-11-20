@@ -37,8 +37,8 @@ public class RoleInitializer implements CommandLineRunner {
     @Value("${app.seed.demo-password:123456}")
     private String demoPassword;
 
-    // Tắt (false) để không tạo các tài khoản demo khi triển khai thật
-    @Value("${app.seed.demo-users:true}")
+    // Mặc định KHÔNG tạo tài khoản demo; bật SEED_DEMO_USERS=true khi cần dữ liệu mẫu
+    @Value("${app.seed.demo-users:false}")
     private boolean seedDemoUsers;
 
     @Override
@@ -52,8 +52,13 @@ public class RoleInitializer implements CommandLineRunner {
         initRoleIfNotExists("THUKHO", "Thủ kho");
         initRoleIfNotExists("NVKHO", "Nhân viên kho");
 
-        // 2. Tự động kiểm tra và khởi tạo tài khoản ban đầu nếu DB chưa có
-        initUserIfNotExists("admin", adminPassword, "ADMIN", "Quản Trị Viên Hệ Thống", "admin@ctutgear.vn");
+        // 2. Chỉ tạo tài khoản "admin" khởi tạo khi hệ thống CHƯA có quản trị viên nào
+        //    (tránh tự sinh lại admin/admin sau khi đã làm sạch dữ liệu và tạo admin riêng)
+        boolean hasAdmin = userRepository.findAll().stream().anyMatch(u -> "ADMIN".equalsIgnoreCase(u.getVaiTro()));
+        if (!hasAdmin) {
+            initUserIfNotExists("admin", adminPassword, "ADMIN", "Quản Trị Viên Hệ Thống", "admin@ctutgear.vn");
+            log.warn("-> Hệ thống chưa có quản trị viên: đã tạo tài khoản 'admin' khởi tạo. Hãy đổi mật khẩu ngay!");
+        }
         if (seedDemoUsers) {
             initUserIfNotExists("thukho", demoPassword, "WAREHOUSE_MANAGER", "Thủ Kho Tổng Trung Tâm", "thukho@ctutgear.vn");
             initUserIfNotExists("nvkho", demoPassword, "WAREHOUSE_STAFF", "Nhân Viên Kho Vận", "nvkho@ctutgear.vn");

@@ -13,7 +13,8 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     const savedAuth = localStorage.getItem('isAdminLoggedIn');
-    return savedAuth === 'true';
+    const token = localStorage.getItem('token');
+    return savedAuth === 'true' && !!token;
   });
 
   // Lấy dữ liệu người dùng từ bộ nhớ (nếu đã đăng nhập). Nếu không có thì trả về null (trống).

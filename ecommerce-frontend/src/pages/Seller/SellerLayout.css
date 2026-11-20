@@ -33,13 +33,15 @@
 .seller-logo-badge {
   width: 42px;
   height: 42px;
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: #0f172a;
+  /* Đổi gradient sang tông màu cam chủ đạo #ff6c05 */
+  background: linear-gradient(135deg, #ff8a3d 0%, #ff6c05 100%);
+  color: #ffffff; /* Đổi icon thành màu trắng cho nổi bật */
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
+  box-shadow: 0 4px 12px rgba(255, 108, 5, 0.3);
 }
 
 .seller-brand h3 {
@@ -119,14 +121,17 @@
   transition: all 0.2s;
 }
 
-.seller-nav-item:hover {
-  background: #1e293b;
-  color: #ffffff;
+/* Hiệu ứng lướt chuột: Nền cam nhạt, chữ cam */
+.seller-nav-item:hover:not(.active) {
+  background: rgba(255, 108, 5, 0.1);
+  color: #ff6c05;
 }
 
+/* TRẠNG THÁI ĐANG CHỌN: Dùng màu cam chủ đạo #ff6c05 */
 .seller-nav-item.active {
-  background: #2563eb;
+  background: #ff6c05;
   color: #ffffff;
+  box-shadow: 0 4px 14px rgba(255, 108, 5, 0.35); /* Đổ bóng cam cho nút nổi khối */
 }
 
 .nav-icon {
@@ -177,44 +182,66 @@
   min-width: 0;
 }
 
-.seller-top-header {
-  height: 70px;
+.seller-top-navbar {
+  height: 64px;
   background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
 }
 
-.store-header-info h2 {
-  margin: 0;
-  font-size: 18px;
+.navbar-left {
+  display: flex;
+  align-items: center;
+}
+
+.store-badge-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: #334155;
+  background: #f8fafc;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.store-badge-live strong {
   color: #0f172a;
 }
 
-.store-type-tag {
-  font-size: 11px;
-  color: #0284c7;
-  background: #e0f2fe;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: 600;
+.pulse-indicator {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulse-green 2s infinite;
 }
 
-.seller-header-right {
+@keyframes pulse-green {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.navbar-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
 }
 
 .seller-user-badge {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-.seller-avatar {
+.seller-user-avatar {
   width: 36px;
   height: 36px;
   background: #f59e0b;
@@ -224,24 +251,57 @@
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 16px;
 }
 
-.seller-details {
+.seller-user-info {
   display: flex;
   flex-direction: column;
 }
 
-.seller-details strong {
-  font-size: 13px;
+.seller-user-info strong {
+  font-size: 14px;
   color: #0f172a;
+  line-height: 1.2;
 }
 
-.seller-details small {
+.seller-user-info span {
   font-size: 11px;
   color: #64748b;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin-top: 2px;
 }
 
+/* Thêm định dạng cho nút Back Sàn mua sắm trong Sidebar */
+.seller-sidebar-footer {
+  margin-top: 20px;
+  border-top: 1px solid #1e293b;
+  padding-top: 20px;
+}
+
+.btn-back-market {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: #94a3b8;
+  border: 1px solid #334155;
+  padding: 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+/* Đổi màu viền và chữ sang cam khi hover */
+.btn-back-market:hover {
+  background: rgba(255, 108, 5, 0.05);
+  color: #ff6c05;
+  border-color: #ff6c05;
+}
 .seller-content-body {
   padding: 28px 32px;
   flex: 1;

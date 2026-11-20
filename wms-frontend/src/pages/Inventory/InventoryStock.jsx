@@ -211,15 +211,23 @@ const InventoryStock = () => {
     const isOutOfStock = item.soLuongThucTe <= 0;
     const displayStatus = isOutOfStock ? 'Hết Hàng' : 'Cạn Kho';
 
-    // Chuyển sang trang tạo phiếu nhập và mang theo dữ liệu
+    // 🌟 ĐẢM BẢO LUÔN NHẬP VÀO KHO TỔNG: Tìm Kho Tổng trong danh sách kho
+    const centralWh = warehouses.find(w => {
+      const type = (w.loaiHinh || '').toUpperCase();
+      const code = (w.maKho || '').toUpperCase();
+      const name = (w.tenKho || '').toUpperCase();
+      return type === 'KHO_TONG' || (code.startsWith('KHO-') && !name.includes('SHOP') && !name.includes('STORE'));
+    });
+
+    // Chuyển sang trang tạo phiếu nhập và mang theo dữ liệu (luôn hướng về Kho Tổng)
     navigate('/import-notes/create', {
       state: {
         requestImportItem: {
           sanPhamId: item.sanPhamId,
-          khoHangId: item.khoHangId,
+          khoHangId: centralWh ? centralWh.id : item.khoHangId,
           soLuong: qtyToImport,
-          tonThucTe: item.soLuongThucTe, // <-- Thêm số lượng tồn thực tế
-          trangThai: displayStatus      // <-- Thêm trạng thái
+          tonThucTe: item.soLuongThucTe,
+          trangThai: displayStatus
         }
       }
     });

@@ -24,6 +24,7 @@ export const wmsCoreService = {
 
   // === KHO BÃI & GIAN HÀNG SÀN (KHO_VA_CUA_HANG) ===
   getWarehouses: () => api.get('/wms/warehouses'),
+  getCentralWarehouse: () => api.get('/warehouses/central'),
   getWarehouseById: (id) => api.get(`/wms/warehouses/${id}`),
   createWarehouse: (data) => api.post('/wms/warehouses', data),
   updateWarehouse: (id, data) => api.put(`/wms/warehouses/${id}`, data),

@@ -39,6 +39,16 @@ public class WarehouseService {
         return warehouseRepository.findByLoaiHinh("KHO_CUA_HANG");
     }
 
+    public Warehouse getCentralWarehouse() {
+        List<Warehouse> all = warehouseRepository.findAll();
+        return all.stream()
+                .filter(w -> "KHO_TONG".equalsIgnoreCase(w.getLoaiHinh()))
+                .findFirst()
+                .or(() -> all.stream().filter(w -> w.getMaKho() != null && w.getMaKho().startsWith("KHO-")).findFirst())
+                .or(() -> all.stream().findFirst())
+                .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy Kho Tổng trong hệ thống!"));
+    }
+
     public Optional<Warehouse> getStoreByManager(Long quanLyId) {
         return warehouseRepository.findByQuanLyId(quanLyId);
     }

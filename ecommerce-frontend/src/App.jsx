@@ -25,6 +25,8 @@ import SellerVouchers from './pages/Seller/SellerVouchers';
 import SellerShopSettings from './pages/Seller/SellerShopSettings';
 import SellerRegister from './pages/Seller/SellerRegister';
 import SellerContracts from './pages/Seller/SellerContracts';
+import SellerContractCreate from './pages/Seller/SellerContractCreate';
+import SellerContractDetail from './pages/Seller/SellerContractDetail';
 
 import './App.css';
 
@@ -64,6 +66,8 @@ function AppContent() {
           <Route path="/seller" element={<SellerLayout />}>
             <Route index element={<SellerDashboard />} />
             <Route path="contracts" element={<SellerContracts />} />
+            <Route path="contracts/create" element={<SellerContractCreate />} />
+            <Route path="contracts/:contractId" element={<SellerContractDetail />} />
             <Route path="products" element={<SellerProducts />} />
             <Route path="orders" element={<SellerOrders />} />
             <Route path="vouchers" element={<SellerVouchers />} />

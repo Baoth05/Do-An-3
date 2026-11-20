@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -29,7 +28,6 @@ public class Warehouse {
     @Column(name = "dia_chi", columnDefinition = "TEXT")
     private String diaChi;
 
-    // 🌟 ĐÃ BỔ SUNG: Số điện thoại và Email để liên lạc với kho/cửa hàng
     @Column(name = "so_dien_thoai", length = 20)
     private String soDienThoai;
 
@@ -57,4 +55,9 @@ public class Warehouse {
     @Column(name = "ngay_tao")
     @Builder.Default
     private LocalDateTime ngayTao = LocalDateTime.now();
+
+    // THÊM MỚI: Khóa ngoại tự tham chiếu (Self-referencing) để quản lý cây Kho Tổng -> Cửa hàng
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "kho_cha_id")
+    private Warehouse khoCha;
 }

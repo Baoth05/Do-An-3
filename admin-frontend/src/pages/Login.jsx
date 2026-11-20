@@ -3,7 +3,8 @@ import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { authService } from '../services/authService';
-import { FiUser, FiLock, FiEye, FiEyeOff, FiShield, FiArrowRight, FiZap, FiExternalLink } from 'react-icons/fi';
+import { FiUser, FiLock, FiEye, FiEyeOff, FiShield, FiArrowRight, FiZap, FiExternalLink, FiCheckCircle } from 'react-icons/fi';
+import logoImage from '../assets/Glossy Red and White Gaming Logo.png';
 import './Login.css';
 
 const Login = () => {
@@ -23,7 +24,7 @@ const Login = () => {
     setUsername(u);
     setPassword(p);
     setErrorMessage('');
-    setInfoNotice(`Đã chọn tài khoản mẫu: ${u}`);
+    setInfoNotice(`Đã điền tài khoản mẫu: ${u}`);
     setTimeout(() => setInfoNotice(''), 2500);
   };
 
@@ -42,7 +43,7 @@ const Login = () => {
 
       // 🌟 KIỂM TRA PHÂN QUYỀN RBAC: Chỉ duy nhất ADMIN mới có quyền truy cập Cổng Quản Trị
       if (vaiTro && vaiTro !== 'ADMIN') {
-        setErrorMessage(`Từ chối truy cập: Tài khoản của bạn có vai trò [${vaiTro}]. Chỉ Quản trị viên (ADMIN) mới có quyền truy cập Cổng Quản Trị Hệ Thống!`);
+        setErrorMessage(`Từ chối truy cập: Tài khoản có vai trò [${vaiTro}]. Chỉ Quản trị viên (ADMIN) mới có quyền truy cập Cổng Quản Trị!`);
         return;
       }
 
@@ -58,7 +59,6 @@ const Login = () => {
     } catch (error) {
       console.error("Lỗi đăng nhập:", error);
       const backendMsg = error?.response?.data?.message || error?.response?.data;
-
       setErrorMessage(typeof backendMsg === 'string' ? backendMsg : 'Tài khoản hoặc mật khẩu không chính xác hoặc không thể kết nối tới máy chủ!');
     } finally {
       setIsLoading(false);
@@ -71,52 +71,58 @@ const Login = () => {
 
   return (
     <div className="login-wrapper">
+      {/* Badge trạng thái máy chủ */}
       <div className="server-status">
         <span className="status-dot"></span>
-        MÁY CHỦ QUẢN TRỊ HOẠT ĐỘNG • CỔNG 8080 GATEWAY
+        <span>HỆ THỐNG QUẢN TRỊ TRỰC TUYẾN • CỔNG 8080 GATEWAY</span>
       </div>
 
       <div className="login-card">
         <div className="login-header">
-          <div className="brand-logo">
-            <span className="logo-icon">🔥</span>
-            <strong>CTUT GEAR</strong>
-            <span className="logo-badge">SYSTEM ADMIN PORTAL</span>
+          {/* Logo hình ảnh chính hãng CTUT Gear */}
+          <div className="brand-logo-container">
+            <img src={logoImage} alt="CTUT Gear Logo" className="login-logo-img" />
+            <div className="brand-title-wrap">
+              <strong>CTUT GEAR</strong>
+              <span className="logo-badge">SYSTEM ADMIN</span>
+            </div>
           </div>
+
           <h1>Cổng Quản Trị Hệ Thống</h1>
-          <p>Bảng điều khiển vận hành Sàn TMĐT & Kho Hàng Trung Tâm</p>
+          <p className="login-subtitle">Bảng điều khiển giám sát & vận hành Sàn TMĐT & Kho Vận Trung Tâm</p>
+          
           <div className="module-badge">
-            <FiShield size={14} /> Phân hệ Quản trị viên Toàn quyền (ADMIN ONLY)
+            <FiShield size={14} className="badge-icon" /> Phân hệ Quản trị viên Toàn quyền (ADMIN ONLY)
           </div>
         </div>
 
-        {/* Quick fill chip */}
-        <div style={{ padding: '0 32px', marginTop: '16px' }}>
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '12px', fontWeight: '700', color: '#475569', display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <FiZap size={14} color="#f59e0b" /> Tài khoản mẫu:
+        {/* Quick fill chip tài khoản mẫu */}
+        <div className="quick-fill-box">
+          <div className="quick-fill-inner">
+            <span className="quick-fill-label">
+              <FiZap size={15} color="#eab308" /> Tài khoản mẫu:
             </span>
             <button 
               type="button" 
               onClick={() => handleQuickFill('admin', 'admin')}
-              style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', padding: '5px 12px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer' }}
+              className="quick-fill-btn"
             >
               👑 admin / admin
             </button>
           </div>
         </div>
 
-        <form className="login-form" onSubmit={handleLogin} style={{ padding: '20px 32px 32px 32px' }}>
-          {/* Hiển thị lỗi nếu có */}
+        <form className="login-form" onSubmit={handleLogin}>
+          {/* Thông báo lỗi / thông tin */}
           {errorMessage && (
-            <div className="error-message" style={{ color: '#dc2626', background: '#fee2e2', border: '1px solid #fca5a5', padding: '10px 14px', borderRadius: '8px', marginBottom: '15px', fontSize: '13px', textAlign: 'center', fontWeight: '600' }}>
+            <div className="login-alert error">
               {errorMessage}
             </div>
           )}
 
           {infoNotice && (
-            <div style={{ color: '#065f46', background: '#ecfdf5', border: '1px solid #a7f3d0', padding: '10px 14px', borderRadius: '8px', marginBottom: '15px', fontSize: '13px', textAlign: 'center', fontWeight: '600' }}>
-              {infoNotice}
+            <div className="login-alert success">
+              <FiCheckCircle size={15} /> {infoNotice}
             </div>
           )}
 
@@ -126,7 +132,7 @@ const Login = () => {
               <FiUser className="input-icon" size={18} />
               <input
                 type="text"
-                placeholder="Nhập tài khoản admin..."
+                placeholder="Nhập tên tài khoản admin..."
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -149,6 +155,7 @@ const Login = () => {
                 type="button"
                 className="toggle-password"
                 onClick={togglePasswordVisibility}
+                title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               >
                 {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
               </button>
@@ -160,32 +167,34 @@ const Login = () => {
               <input type="checkbox" defaultChecked />
               <span>Ghi nhớ phiên đăng nhập</span>
             </label>
-            <a href="#forgot" className="forgot-password" onClick={(e) => { e.preventDefault(); alert('Vui lòng liên hệ quản trị hệ thống root để khôi phục.'); }}>
+            <a href="#forgot" className="forgot-password" onClick={(e) => { e.preventDefault(); alert('Vui lòng liên hệ quản trị hệ thống root để khôi phục mật khẩu.'); }}>
               Quên mật khẩu?
             </a>
           </div>
 
           <button type="submit" className="submit-btn" disabled={isLoading}>
-            {isLoading ? 'ĐANG XỬ LÝ...' : 'ĐĂNG NHẬP HỆ THỐNG'} <FiArrowRight size={18} />
+            {isLoading ? 'ĐANG XÁC THỰC...' : 'ĐĂNG NHẬP HỆ THỐNG'} <FiArrowRight size={18} />
           </button>
         </form>
 
         <div className="security-warning">
           <FiShield size={16} className="warning-icon" />
           <p>
-            Chỉ dành cho Quản trị viên (ADMIN) được cấp quyền toàn hệ thống.<br />
-            Thủ kho, Nhân viên kho, Chủ shop và Khách hàng vui lòng truy cập đúng cổng phân hệ của mình.
+            Trang dành riêng cho Quản trị viên (ADMIN) có thẩm quyền.<br />
+            Thủ kho, Nhân viên kho và Đối tác vui lòng truy cập đúng cổng chuyên trách.
           </p>
         </div>
       </div>
 
       <div className="login-footer">
-        <p><strong>CTUT Gear Enterprise Platform v2.0</strong> <FiShield size={12} /> Bảo mật đa lớp RBAC</p>
+        <p className="footer-brand">
+          <strong>CTUT Gear Enterprise Platform v2.0</strong> • Bảo mật đa lớp RBAC
+        </p>
         <p className="footer-links">
           <a href="http://localhost:5173" target="_blank" rel="noreferrer">🏢 Cổng Kho Vận (WMS) <FiExternalLink size={11} /></a>
-          <span style={{ margin: '0 8px', color: '#94a3b8' }}>•</span>
+          <span className="dot-sep">•</span>
           <a href="http://localhost:5175/seller" target="_blank" rel="noreferrer">🏪 Kênh Người Bán <FiExternalLink size={11} /></a>
-          <span style={{ margin: '0 8px', color: '#94a3b8' }}>•</span>
+          <span className="dot-sep">•</span>
           <a href="http://localhost:5175" target="_blank" rel="noreferrer">🛒 Sàn TMĐT <FiExternalLink size={11} /></a>
         </p>
         <p className="ssl-text">HỆ THỐNG BẢO MẬT 256-BIT SSL | ĐỒ ÁN TMĐT CTUT</p>

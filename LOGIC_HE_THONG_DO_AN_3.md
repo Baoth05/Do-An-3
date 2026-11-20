@@ -265,7 +265,7 @@ flowchart TD
     K -- Hết --> L[Commit transaction]
     L --> M[Gửi lệnh tạo phiếu xuất sang WMS SAU khi commit]
     M --> N([Trả MultiShopCheckoutResponse])
-```
+```         
 
 ### 7.1. Không tin dữ liệu client (Zero Client Trust)
 Client gửi `sanPhamId`, `soLuong` theo từng shop. Với mỗi sản phẩm, order-service gọi `GET /inventory/item?sanPhamId=&khoHangId=` và **dùng dữ liệu của WMS**: giá bán `gia_ban_hien_tai`, tên, SKU. Đơn bị từ chối nếu: số lượng ≤ 0, sản phẩm không thuộc shop, chưa mở bán, chưa có giá, hoặc vượt `so_luong_kha_dung`.
@@ -363,6 +363,7 @@ CHO_DUYET ──> DA_DUYET ──> DA_NHAP_KHO   (cộng tồn kho + ghi thẻ k
      └────────────┴──────> TU_CHOI
 ```
 Phiếu mới luôn `CHO_DUYET`; số lượng > 0, giá nhập ≥ 0. `DA_NHAP_KHO` và `TU_CHOI` là trạng thái cuối nên tồn kho **không thể bị cộng 2 lần**.
+- **Quy tắc kho tiếp nhận (Kho Tổng duy nhất):** Trong mô hình chuỗi cung ứng 2 tầng B2B2C, Nhà Cung Cấp gốc (NCC) chỉ giao hàng số lượng lớn về **Kho Tổng Trung Tâm** (`loai_hinh = KHO_TONG`, mã `KHO-457` SLO). Các kho cửa hàng/shop bán lẻ đối tác (`loai_hinh = KHO_CUA_HANG`) tuyệt đối không được tiếp nhận nhập hàng trực tiếp từ NCC qua phiếu nhập kho. Backend `ImportNoteService` và `ImportNoteCreate.jsx` bắt buộc khóa cứng kho tiếp nhận về Kho Tổng. Shop chỉ nhận hàng thông qua **Hợp đồng cung ứng B2B** (`SupplyContract`).
 
 ### 11.2. Phiếu xuất kho
 ```
@@ -502,8 +503,9 @@ Giá trị mặc định dùng cho môi trường phát triển; **khi triển k
 | `JWT_SECRET` | gateway, identity | (chuỗi Base64 mẫu) | Khóa ký JWT, phải giống nhau |
 | `INTERNAL_SECRET` | gateway + 5 service | `ctut-internal-dev-secret-change-me` | Khóa nội bộ chống gọi thẳng service |
 | `DB_USERNAME` / `DB_PASSWORD` | 5 service | `postgres` / `123456` | Tài khoản PostgreSQL |
-| `ADMIN_DEFAULT_PASSWORD` | identity | `admin` | Mật khẩu tài khoản `admin` khởi tạo |
-| `DEMO_USER_PASSWORD`, `SEED_DEMO_USERS` | identity | `123456`, `true` | Tạo tài khoản demo |
+| `ADMIN_DEFAULT_PASSWORD` | identity | `admin` | Mật khẩu tài khoản `admin`, chỉ tạo khi hệ thống chưa có quản trị viên nào |
+| `DEMO_USER_PASSWORD`, `SEED_DEMO_USERS` | identity | `123456`, `false` | Tạo tài khoản demo |
+| `SEED_DEMO_VOUCHERS` | order | `false` | Nạp voucher mẫu |
 | `CONTRACT_SIGN_PIN` | wms-core | `123456` | PIN ký số hợp đồng (bản demo) |
 | `ORDER_PAYMENT_TIMEOUT_MINUTES` | order | `30` | Thời hạn thanh toán online |
 | `WMS_URL`, `ORDER_URL` | order, payment, interaction | `http://wms-core-service`, `http://order-service` | Gọi nội bộ theo **tên service trên Eureka** (RestTemplate `@LoadBalanced`, timeout kết nối 3s / đọc 5s) |
@@ -515,18 +517,15 @@ Giá trị mặc định dùng cho môi trường phát triển; **khi triển k
 
 ## 15. KỊCH BẢN KIỂM THỬ & TÀI KHOẢN MẪU
 
-### 15.1. Tài khoản khởi tạo (mật khẩu mã hóa BCrypt)
-| Tài khoản | Mật khẩu | Vai trò | Dùng tại |
-|---|---|---|---|
-| `admin` | `admin` | `ADMIN` | admin-frontend :5174, `/seller/login` |
-| `thukho` | `123456` | `WAREHOUSE_MANAGER` | wms-frontend :5175 |
-| `nvkho` | `123456` | `WAREHOUSE_STAFF` | wms-frontend :5175 |
-| `seller_minhquan` | `123456` | `STORE_OWNER` | `/seller/login` |
-| `shop_apple` | `123456` | `STORE_OWNER` | `/seller/login` |
-| `hungbakkka` | `123456` | `CUSTOMER` | `/login` → thử Fast-Switch |
-| `baomap05`, `khachhang` | `123456` | `CUSTOMER` | `/login` |
+### 15.1. Tài khoản & dữ liệu khởi tạo
+Mặc định hệ thống **không nạp dữ liệu mẫu**. Khi chưa có quản trị viên nào, identity-service tạo duy nhất tài khoản `admin` (mật khẩu `ADMIN_DEFAULT_PASSWORD`, mã hóa BCrypt). Các tài khoản khác được tạo qua nghiệp vụ thật: Admin tạo nhân sự kho, khách hàng tự đăng ký, chủ shop nâng cấp qua Fast-Switch.
 
-Voucher mẫu: toàn sàn `CTUT50K`, `CTUTNEW50`, `FREESHIP`, `TECHPRO10`; shop 1 `SHOP1OFF10`, `FREESHIP1`; shop 2 `SHOP2OFF10`, `GAMING20K`; shop 3 `SHOP3OFF10`, `ROGSALE50`.
+Dữ liệu demo có thể bật bằng biến môi trường:
+
+| Biến | Dữ liệu tạo ra |
+|---|---|
+| `SEED_DEMO_USERS=true` | `thukho` (WAREHOUSE_MANAGER), `nvkho` (WAREHOUSE_STAFF), `seller_minhquan`, `shop_apple` (STORE_OWNER), `baomap05`, `hungbakkka`, `khachhang` (CUSTOMER), mật khẩu `DEMO_USER_PASSWORD` |
+| `SEED_DEMO_VOUCHERS=true` | Voucher sàn `CTUT50K`, `CTUTNEW50`, `FREESHIP`, `TECHPRO10`; voucher shop 1 `SHOP1OFF10`, `FREESHIP1`; shop 2 `SHOP2OFF10`, `GAMING20K`; shop 3 `SHOP3OFF10`, `ROGSALE50` |
 
 ### 15.2. Kịch bản 1 — Cung ứng Kho Tổng → Shop
 1. Thủ kho nhập hàng NCC vào Kho Tổng (phiếu nhập → duyệt → nhập kho thực tế).
