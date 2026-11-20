@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080',
-  timeout: 10000,
+  timeout: 4000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -11,32 +11,15 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    // 1. Xác định ngữ cảnh: Kênh Người Bán hay Sàn Khách Hàng
+    // Phân tách token theo ngữ cảnh phân hệ: Kênh Người Bán dùng seller_token, Sàn Mua Hàng dùng customer_token
     const isSellerRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/seller');
-    const isSellerApi = 
-      config.url.includes('/supply-contracts') ||
-      config.url.includes('/orders/store/') ||
-      config.url.includes('/stores') ||
-      config.url.includes('/inventory') ||
-      config.url.includes('/warehouses') ||
-      config.url.includes('/vouchers');
+    const token = isSellerRoute 
+      ? (localStorage.getItem('seller_token') || localStorage.getItem('customer_token'))
+      : (localStorage.getItem('customer_token') || localStorage.getItem('seller_token'));
 
-    // 2. Lấy đúng token theo ngữ cảnh: Kênh Người Bán ưu tiên seller_token
-    const sellerToken = localStorage.getItem('seller_token');
-    const customerToken = localStorage.getItem('customer_token');
-
-    let token = null;
-    if (isSellerRoute || isSellerApi) {
-      token = sellerToken || customerToken;
-    } else {
-      token = customerToken || sellerToken;
-    }
-
-    // 3. Gắn thẻ xác thực Bearer Token
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
     return config;
   },
   (error) => Promise.reject(error)
