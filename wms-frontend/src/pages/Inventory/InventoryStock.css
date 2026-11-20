@@ -356,9 +356,9 @@
 }
 
 .badge-success {
-  background-color: #dcfce7;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
+  background-color: #dcfce7 !important;
+  color: #15803d !important;
+  border: 1px solid #bbf7d0 !important;
 }
 
 .badge-warning {
@@ -575,4 +575,24 @@
   background-color: #e0e7ff;
   color: #4338ca;
   border: 1px solid #c7d2fe;
+}
+/* Hiệu ứng nhấp nháy cho icon cảnh báo khẩn cấp */
+@keyframes pulse-urgent {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3); /* Phóng to nhẹ */
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Áp dụng class này vào icon của trạng thái Hết Hàng */
+.icon-urgent {
+  animation: pulse-urgent 1s infinite ease-in-out;
 }

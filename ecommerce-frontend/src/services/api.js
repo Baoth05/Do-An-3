@@ -2,8 +2,11 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080',
-  timeout: 10000,
+
+  // Sửa ở đây: Thay đổi đường dẫn mặc định thành '/api' để khớp với Vite Proxy
+  baseURL: import.meta.env.VITE_API_GATEWAY_URL || '/api',
+  timeout: 4000,
+
   headers: {
     'Content-Type': 'application/json',
   },

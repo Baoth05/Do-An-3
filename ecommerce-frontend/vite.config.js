@@ -6,7 +6,16 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173, // Sàn TMĐT & Kênh Người Bán
+    port: 5173, // Cổng chuẩn cho Sàn TMĐT & Kênh Người Bán theo quy định của team
     strictPort: true,
-  },
+    proxy: {
+      // Bất kỳ API nào bắt đầu bằng '/api' sẽ được Vite chuyển tiếp sang Backend
+      '/api': {
+        target: 'http://10.10.30.177:8080', // Địa chỉ Backend của bạn
+        changeOrigin: true,
+        // Dòng này sẽ xóa chữ '/api' trước khi gửi đến Backend
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
+  }
 })
