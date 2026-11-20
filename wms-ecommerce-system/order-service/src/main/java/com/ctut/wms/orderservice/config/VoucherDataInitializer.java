@@ -18,8 +18,15 @@ public class VoucherDataInitializer implements CommandLineRunner {
 
     private final VoucherRepository voucherRepository;
 
+    @org.springframework.beans.factory.annotation.Value("${app.seed.demo-vouchers:false}")
+    private boolean seedDemoVouchers;
+
     @Override
     public void run(String... args) {
+        // Mặc định KHÔNG nạp voucher mẫu; bật SEED_DEMO_VOUCHERS=true khi cần dữ liệu demo
+        if (!seedDemoVouchers) {
+            return;
+        }
         initDefaultVouchers();
     }
 

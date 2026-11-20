@@ -19,8 +19,8 @@ const normalize = (value) =>
 const isCustomer = (user) => {
   const role = normalize(user?.vaiTro ?? user?.role ?? user?.maVaiTro);
   return (
-    role.includes('customer') || 
-    role.includes('khachhang') || 
+    role.includes('customer') ||
+    role.includes('khachhang') ||
     role.includes('chua phan quyen')
   );
 };
@@ -72,7 +72,8 @@ export const userService = {
   // 1. Lấy toàn bộ người dùng
   getAllUsers: async () => {
     try {
-      const response = await api.get('/auth/users');
+      // Ghi đè timeout cục bộ cho request này lên 15000ms (15 giây)
+      const response = await api.get('/auth/users', { timeout: 15000 });
       let data = response.data;
 
       if (typeof data === 'string') {
@@ -96,24 +97,31 @@ export const userService = {
           userList = possibleArray;
         }
       }
-      
+
       return userList;
     } catch (error) {
-      console.error('Lỗi khi lấy danh sách toàn bộ người dùng:', error);
-      return []; 
+      console.error('[Debug] Lỗi khi lấy danh sách toàn bộ người dùng:', error);
+
+      if (error.code === 'ECONNABORTED') {
+        console.error("[Debug] Quá thời gian chờ! Có thể identity-service (Port 8084) chưa được khởi động hoặc API Gateway không tìm thấy dịch vụ.");
+      }
+
+      // Vẫn trả về mảng rỗng để không làm sập các hàm filter như getCustomers, getStaff...
+      // Nhưng bạn đã có đủ log trên Console để gỡ lỗi Backend.
+      return [];
     }
   },
 
   // 2. Thống kê số lượng
   getStats: async () => {
     try {
-      const users = await userService.getAllUsers(); 
+      const users = await userService.getAllUsers();
 
       return {
         totalUsers: users.length,
         totalCustomers: users.filter(u => isCustomer(u)).length,
         totalStaff: users.filter(u => isStaff(u)).length,
-        totalSales: users.filter(u => isSales(u)).length, 
+        totalSales: users.filter(u => isSales(u)).length,
       };
     } catch (error) {
       console.error('Lỗi khi đếm thống kê:', error);
@@ -198,7 +206,7 @@ export const userService = {
   // 10. Đổi mật khẩu
   changePassword: async (taiKhoan, newPassword) => {
     const payload = {
-      matKhauCu: "", 
+      matKhauCu: "",
       matKhauMoi: newPassword
     };
 

@@ -13,10 +13,12 @@ import SupplyContractManagement from './pages/SupplyContractManagement';
 
 import './App.css';
 
-// Component bảo vệ tuyến đường (Chỉ duy nhất ADMIN mới có quyền truy cập)
+// Component bảo vệ tuyến đường (Chỉ duy nhất ADMIN có token hợp lệ mới có quyền truy cập)
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, user } = useContext(AuthContext);
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  const token = localStorage.getItem('token');
+
+  if (!isAuthenticated || !token) return <Navigate to="/login" replace />;
   
   // Kiểm tra vai trò: Phải là ADMIN
   if (user?.role !== 'ADMIN') {

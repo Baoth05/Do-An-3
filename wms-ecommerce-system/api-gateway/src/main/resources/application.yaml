@@ -33,7 +33,7 @@ spring:
         - id: identity-service
           uri: lb://identity-service
           predicates:
-            - Path=/auth/**
+            - Path=/auth, /auth/**
 
         # 2. WMS Core Service (Có tiền tố /wms/**)
         - id: wms-core-service-prefix
@@ -47,25 +47,25 @@ spring:
         - id: wms-core-service-direct
           uri: lb://wms-core-service
           predicates:
-            - Path=/products/**, /categories/**, /inventory/**, /warehouses/**, /stores/**, /stock-cards/**, /suppliers/**, /export-notes/**, /import-notes/**, /shippers/**, /shipping-providers/**, /transfers/**, /supply-contracts/**
+            - Path=/products, /products/**, /categories, /categories/**, /inventory, /inventory/**, /warehouses, /warehouses/**, /stores, /stores/**, /stock-cards, /stock-cards/**, /suppliers, /suppliers/**, /export-notes, /export-notes/**, /import-notes, /import-notes/**, /shippers, /shippers/**, /shipping-providers, /shipping-providers/**, /transfers, /transfers/**, /supply-contracts, /supply-contracts/**
 
         # 4. Order Service
         - id: order-service
           uri: lb://order-service
           predicates:
-            - Path=/orders/**, /vouchers/**
+            - Path=/orders, /orders/**, /vouchers, /vouchers/**
 
         # 5. Payment Service
         - id: payment-service
           uri: lb://payment-service
           predicates:
-            - Path=/payments/**
+            - Path=/payments, /payments/**
 
         # 6. Interaction Service
         - id: interaction-service
           uri: lb://interaction-service
           predicates:
-            - Path=/interactions/**, /binh-luan/**, /danh-gia/**
+            - Path=/interactions, /interactions/**, /binh-luan, /binh-luan/**, /danh-gia, /danh-gia/**
 
 eureka:
   instance:

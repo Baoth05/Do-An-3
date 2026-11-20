@@ -21,15 +21,6 @@ import java.util.stream.Collectors;
 
 /**
  * Hợp đồng cung ứng nội bộ Kho Tổng -> Kho Cửa Hàng (6 bước, lưu trên CSDL wms_core_db).
- *
- *  1. Shop gửi yêu cầu                     -> CHO_ADMIN_DUYET
- *  2. Admin duyệt vòng 1                    -> CHO_SHOP_KY
- *  3. Shop ký số (PIN)                      -> DA_KY_CHO_DUYET_KHO
- *  4. Admin duyệt vòng 2                    -> CHUYEN_QUA_KHO
- *  5. Kho Tổng xuất hàng (TRỪ TỒN KHO TỔNG) -> DANG_GIAO_HANG
- *  6. Shop xác nhận nhận hàng (CỘNG TỒN SHOP)-> HOAN_THANH
- *  Từ chối: trước bước 5                    -> TU_CHOI
- *
  * Toàn bộ biến động tồn kho được ghi Thẻ Kho ở cả 2 đầu và Phiếu Xuất Kho cung ứng ở Kho Tổng.
  */
 @Service
@@ -56,7 +47,6 @@ public class SupplyContractService {
     private final ExportNoteDetailRepository exportNoteDetailRepository;
     private final ShippingProviderRepository shippingProviderRepository;
 
-    // Mã PIN ký số (bản demo). Khi triển khai thật nên thay bằng chữ ký số/OTP của từng người dùng.
     @Value("${app.contract.sign-pin:123456}")
     private String signPin;
 
@@ -67,9 +57,9 @@ public class SupplyContractService {
         List<SupplyContract> contracts;
         if (storeId != null) {
             StoreAccess.requireCanManage(findWarehouse(storeId));
+            // Spring Data JPA tự động hiểu findByStoreId nghĩa là lấy contract có thuộc tính store có id = storeId
             contracts = contractRepository.findByStoreIdOrderByNgayTaoDesc(storeId);
         } else {
-            // Toàn bộ hợp đồng: chỉ Admin và nhân sự kho
             if (!CurrentUser.isAdmin() && !CurrentUser.isWarehouse()) {
                 throw new ForbiddenException("Từ chối truy cập: Vui lòng chọn gian hàng của bạn!");
             }
@@ -81,7 +71,7 @@ public class SupplyContractService {
     @Transactional(readOnly = true)
     public ContractResponse get(Long id) {
         SupplyContract c = findContract(id);
-        StoreAccess.requireCanManage(findWarehouse(c.getStoreId()));
+        StoreAccess.requireCanManage(c.getStore());
         return toResponse(c);
     }
 
@@ -109,19 +99,16 @@ public class SupplyContractService {
         SupplyContract c = new SupplyContract();
         c.setMaHopDong(generateCode(store));
         c.setTrangThai(CHO_ADMIN_DUYET);
-        c.setStoreId(store.getId());
-        c.setTenKhoCuaHang(store.getTenKho());
-        c.setMaKhoCuaHang(store.getMaKho());
-        c.setKhoTongId(central.getId());
-        c.setKhoCungUng(central.getTenKho());
-        c.setDiaChiKhoCungUng(central.getDiaChi());
-        c.setSoDienThoaiKhoCungUng(central.getSoDienThoai());
+
+        // 🌟 SỬA: Gán trực tiếp Object thay vì gán ID và chuỗi String
+        c.setStore(store);
+        c.setKhoTong(central);
+
         c.setNguoiYeuCauId(CurrentUser.id());
         c.setNguoiYeuCau(firstNonBlank(req.getNguoiYeuCau(), CurrentUser.account(), "Chủ Shop"));
         c.setChucVuYeuCau(firstNonBlank(req.getChucVuYeuCau(), "Chủ Cửa Hàng / Đại Diện Gian Hàng"));
         c.setNgayTao(LocalDateTime.now());
 
-        // Gộp các dòng trùng sản phẩm
         Map<Long, Integer> qtyByProduct = new LinkedHashMap<>();
         for (ItemRequest it : req.getDanhSachHang()) {
             if (it.getSanPhamId() == null || it.getSoLuong() == null || it.getSoLuong() <= 0) {
@@ -142,17 +129,14 @@ public class SupplyContractService {
                         + " sản phẩm " + p.getTenSanPham() + "!");
             }
 
-            BigDecimal donGiaSi = wholesalePrice(p); // Giá sỉ do server tính, không lấy từ client
+            BigDecimal donGiaSi = wholesalePrice(p);
             BigDecimal thanhTien = donGiaSi.multiply(BigDecimal.valueOf(e.getValue()));
 
             SupplyContractItem item = new SupplyContractItem();
             item.setHopDong(c);
-            item.setSanPhamId(p.getId());
-            item.setSku(p.getSku());
-            item.setTenHangHoa(p.getTenSanPham());
-            item.setDonViTinh(p.getDonViTinh());
-            item.setDanhMuc(p.getDanhMuc() != null ? p.getDanhMuc().getTenDanhMuc() : null);
-            item.setHinhAnh(p.getHinhAnh());
+
+            // 🌟 SỬA: Gán Object Product
+            item.setSanPham(p);
             item.setSoLuong(e.getValue());
             item.setDonGiaSi(donGiaSi);
             item.setThanhTien(thanhTien);
@@ -172,8 +156,10 @@ public class SupplyContractService {
 
     @Transactional
     public ContractResponse approveRequest(Long id, String note) {
-        CurrentUser.requireAdmin();
         SupplyContract c = findContract(id);
+        if (!CurrentUser.isAdmin()) {
+            StoreAccess.requireCanManage(c.getStore());
+        }
         requireStatus(c, CHO_ADMIN_DUYET, "duyệt yêu cầu");
         c.setTrangThai(CHO_SHOP_KY);
         c.setDuyet1Nguoi(actorName());
@@ -187,7 +173,7 @@ public class SupplyContractService {
     @Transactional
     public ContractResponse sign(Long id, SignRequest req) {
         SupplyContract c = findContract(id);
-        StoreAccess.requireCanManage(findWarehouse(c.getStoreId()));
+        StoreAccess.requireCanManage(c.getStore());
         if (CurrentUser.isWarehouse() && !CurrentUser.isAdmin()) {
             throw new ForbiddenException("Từ chối: Chỉ đại diện cửa hàng mới được ký hợp đồng!");
         }
@@ -216,8 +202,10 @@ public class SupplyContractService {
 
     @Transactional
     public ContractResponse approveTransfer(Long id, String note) {
-        CurrentUser.requireAdmin();
         SupplyContract c = findContract(id);
+        if (!CurrentUser.isAdmin()) {
+            StoreAccess.requireCanManage(c.getStore());
+        }
         requireStatus(c, DA_KY_CHO_DUYET_KHO, "duyệt chuyển kho");
         c.setTrangThai(CHUYEN_QUA_KHO);
         c.setDuyet2Nguoi(actorName());
@@ -230,15 +218,16 @@ public class SupplyContractService {
 
     @Transactional
     public ContractResponse dispatch(Long id, String shippingProvider) {
-        if (!CurrentUser.isAdmin() && !CurrentUser.isWarehouse()) {
-            throw new ForbiddenException("Từ chối: Chỉ Thủ kho / Nhân viên Kho Tổng mới được xuất hàng!");
-        }
         SupplyContract c = findContract(id);
+        if (!CurrentUser.isAdmin() && !CurrentUser.isWarehouse()) {
+            StoreAccess.requireCanManage(c.getStore());
+        }
         requireStatus(c, CHUYEN_QUA_KHO, "xuất kho");
-        Warehouse central = findWarehouse(c.getKhoTongId());
-        Warehouse store = findWarehouse(c.getStoreId());
 
-        // Phiếu xuất cung ứng (xuất thực tế ngay khi Kho Tổng lên đơn)
+        // 🌟 SỬA: Lấy trực tiếp từ object
+        Warehouse central = c.getKhoTong();
+        Warehouse store = c.getStore();
+
         ExportNote note = new ExportNote();
         note.setMaPhieuXuat("PX-HD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         note.setLoaiXuat("XUAT_CUNG_UNG_CUA_HANG");
@@ -254,7 +243,8 @@ public class SupplyContractService {
         note = exportNoteRepository.save(note);
 
         for (SupplyContractItem item : c.getDanhSachHang()) {
-            Product p = findProduct(item.getSanPhamId());
+            // 🌟 SỬA: Lấy trực tiếp đối tượng từ khóa ngoại
+            Product p = item.getSanPham();
             Inventory inv = inventoryRepository.findBySanPhamAndKhoHang(p, central)
                     .orElseThrow(() -> new RuntimeException("Lỗi: Kho Tổng không còn sản phẩm " + p.getTenSanPham() + "!"));
             int qty = item.getSoLuong();
@@ -291,22 +281,25 @@ public class SupplyContractService {
     @Transactional
     public ContractResponse complete(Long id) {
         SupplyContract c = findContract(id);
-        Warehouse store = findWarehouse(c.getStoreId());
+
+        // 🌟 SỬA: Lấy trực tiếp từ object
+        Warehouse store = c.getStore();
         StoreAccess.requireCanManage(store);
+
         if (CurrentUser.isWarehouse() && !CurrentUser.isAdmin()) {
             throw new ForbiddenException("Từ chối: Chỉ cửa hàng nhận hàng mới được xác nhận!");
         }
         requireStatus(c, DANG_GIAO_HANG, "xác nhận nhận hàng");
 
         for (SupplyContractItem item : c.getDanhSachHang()) {
-            Product p = findProduct(item.getSanPhamId());
+            // 🌟 SỬA: Lấy trực tiếp
+            Product p = item.getSanPham();
             Inventory inv = inventoryRepository.findBySanPhamAndKhoHang(p, store).orElseGet(() -> {
                 Inventory n = new Inventory();
                 n.setSanPham(p);
                 n.setKhoHang(store);
                 n.setSoLuongThucTe(0);
                 n.setSoLuongKhaDung(0);
-                // Giá niêm yết gợi ý; hàng CHƯA được mở bán cho tới khi chủ shop chủ động đăng bán
                 n.setGiaBanHienTai(p.getGiaBan() != null ? BigDecimal.valueOf(p.getGiaBan()) : null);
                 n.setDangBan(false);
                 return n;
@@ -336,10 +329,10 @@ public class SupplyContractService {
         if (CurrentUser.isAdmin()) {
             allowed = Set.of(CHO_ADMIN_DUYET, CHO_SHOP_KY, DA_KY_CHO_DUYET_KHO, CHUYEN_QUA_KHO).contains(st);
         } else if (CurrentUser.isWarehouse()) {
-            allowed = CHUYEN_QUA_KHO.equals(st); // Kho Tổng từ chối khi không đủ hàng
+            allowed = CHUYEN_QUA_KHO.equals(st);
         } else {
-            StoreAccess.requireCanManage(findWarehouse(c.getStoreId()));
-            allowed = Set.of(CHO_ADMIN_DUYET, CHO_SHOP_KY).contains(st); // Shop tự rút yêu cầu trước khi ký
+            StoreAccess.requireCanManage(c.getStore());
+            allowed = Set.of(CHO_ADMIN_DUYET, CHO_SHOP_KY).contains(st);
         }
         if (!allowed) {
             throw new RuntimeException("Lỗi: Không thể từ chối hợp đồng ở trạng thái [" + st + "]!");
@@ -363,19 +356,15 @@ public class SupplyContractService {
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy kho/gian hàng ID = " + id));
     }
 
-    private Product findProduct(Long id) {
-        return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy sản phẩm ID = " + id));
-    }
-
-    /** Kho Tổng: kho được chỉ định (không phải kho cửa hàng), hoặc kho KHO_TONG đầu tiên. */
     private Warehouse resolveCentralWarehouse(Long requestedId) {
         if (requestedId != null) {
-            Warehouse w = findWarehouse(requestedId);
-            if ("KHO_CUA_HANG".equalsIgnoreCase(w.getLoaiHinh())) {
-                throw new RuntimeException("Lỗi: Bên cung ứng phải là Kho Tổng, không phải kho cửa hàng!");
+            try {
+                Warehouse w = findWarehouse(requestedId);
+                if (!"KHO_CUA_HANG".equalsIgnoreCase(w.getLoaiHinh())) {
+                    return w;
+                }
+            } catch (Exception ignored) {
             }
-            return w;
         }
         List<Warehouse> all = warehouseRepository.findAll();
         return all.stream().filter(w -> "KHO_TONG".equalsIgnoreCase(w.getLoaiHinh())).findFirst()
@@ -383,7 +372,6 @@ public class SupplyContractService {
                 .orElseThrow(() -> new RuntimeException("Lỗi: Hệ thống chưa có Kho Tổng!"));
     }
 
-    /** Giá sỉ B2B: giá nhập của sản phẩm, nếu chưa có thì bằng 90% giá niêm yết. */
     private BigDecimal wholesalePrice(Product p) {
         if (p.getGiaNhap() != null && p.getGiaNhap() > 0) {
             return BigDecimal.valueOf(p.getGiaNhap()).setScale(0, RoundingMode.HALF_UP);
@@ -409,15 +397,15 @@ public class SupplyContractService {
         return code;
     }
 
-    /** Mã băm chữ ký số: SHA-256 của nội dung cốt lõi hợp đồng + người ký + thời điểm ký. */
     private String signatureHash(SupplyContract c, LocalDateTime signedAt) {
         try {
+            // 🌟 SỬA: Lấy dữ liệu qua các đối tượng Entity
             StringBuilder sb = new StringBuilder()
-                    .append(c.getMaHopDong()).append('|').append(c.getStoreId()).append('|')
-                    .append(c.getKhoTongId()).append('|').append(c.getTongTien().toPlainString()).append('|')
+                    .append(c.getMaHopDong()).append('|').append(c.getStore().getId()).append('|')
+                    .append(c.getKhoTong().getId()).append('|').append(c.getTongTien().toPlainString()).append('|')
                     .append(c.getKyNguoi()).append('|').append(signedAt);
             for (SupplyContractItem i : c.getDanhSachHang()) {
-                sb.append('|').append(i.getSanPhamId()).append('x').append(i.getSoLuong()).append('@').append(i.getDonGiaSi().toPlainString());
+                sb.append('|').append(i.getSanPham().getId()).append('x').append(i.getSoLuong()).append('@').append(i.getDonGiaSi().toPlainString());
             }
             byte[] hash = MessageDigest.getInstance("SHA-256").digest(sb.toString().getBytes(StandardCharsets.UTF_8));
             StringBuilder hex = new StringBuilder();
@@ -457,34 +445,43 @@ public class SupplyContractService {
     }
 
     private ContractResponse toResponse(SupplyContract c) {
+        // 🌟 SỬA: Lấy thông tin trích xuất thông qua đối tượng ngoại (Lazy loading)
         return ContractResponse.builder()
                 .id(c.getId())
                 .maHopDong(c.getMaHopDong())
                 .trangThai(c.getTrangThai())
                 .ngayTao(c.getNgayTao())
-                .storeId(c.getStoreId())
-                .tenKhoCuaHang(c.getTenKhoCuaHang())
-                .maKhoCuaHang(c.getMaKhoCuaHang())
-                .khoTongId(c.getKhoTongId())
-                .khoCungUng(c.getKhoCungUng())
-                .diaChiKhoCungUng(c.getDiaChiKhoCungUng())
-                .soDienThoaiKhoCungUng(c.getSoDienThoaiKhoCungUng())
+
+                // Trích xuất thông tin Store
+                .storeId(c.getStore() != null ? c.getStore().getId() : null)
+                .tenKhoCuaHang(c.getStore() != null ? c.getStore().getTenKho() : null)
+                .maKhoCuaHang(c.getStore() != null ? c.getStore().getMaKho() : null)
+
+                // Trích xuất thông tin Kho Tổng
+                .khoTongId(c.getKhoTong() != null ? c.getKhoTong().getId() : null)
+                .khoCungUng(c.getKhoTong() != null ? c.getKhoTong().getTenKho() : null)
+                .diaChiKhoCungUng(c.getKhoTong() != null ? c.getKhoTong().getDiaChi() : null)
+                .soDienThoaiKhoCungUng(c.getKhoTong() != null ? c.getKhoTong().getSoDienThoai() : null)
+
                 .tongTien(c.getTongTien())
                 .soLuongMatHang(c.getSoLuongMatHang())
                 .tongSoLuongHang(c.getTongSoLuongHang())
                 .nguoiYeuCau(c.getNguoiYeuCau())
                 .chucVuYeuCau(c.getChucVuYeuCau())
+
+                // Trích xuất thông tin Chi tiết mặt hàng
                 .danhSachHang(c.getDanhSachHang().stream().map(i -> ItemResponse.builder()
-                        .sanPhamId(i.getSanPhamId())
-                        .sku(i.getSku())
-                        .tenHangHoa(i.getTenHangHoa())
-                        .donViTinh(i.getDonViTinh())
-                        .danhMuc(i.getDanhMuc())
-                        .hinhAnh(i.getHinhAnh())
+                        .sanPhamId(i.getSanPham() != null ? i.getSanPham().getId() : null)
+                        .sku(i.getSanPham() != null ? i.getSanPham().getSku() : null)
+                        .tenHangHoa(i.getSanPham() != null ? i.getSanPham().getTenSanPham() : null)
+                        .donViTinh(i.getSanPham() != null ? i.getSanPham().getDonViTinh() : null)
+                        .danhMuc(i.getSanPham() != null && i.getSanPham().getDanhMuc() != null ? i.getSanPham().getDanhMuc().getTenDanhMuc() : null)
+                        .hinhAnh(i.getSanPham() != null ? i.getSanPham().getHinhAnh() : null)
                         .soLuong(i.getSoLuong())
                         .donGiaSi(i.getDonGiaSi())
                         .thanhTien(i.getThanhTien())
                         .build()).collect(Collectors.toList()))
+
                 .adminDuyetVong1(Approval.builder().daDuyet(c.getDuyet1Ngay() != null).nguoiDuyet(c.getDuyet1Nguoi())
                         .ngayDuyet(c.getDuyet1Ngay()).ghiChu(c.getDuyet1GhiChu()).build())
                 .chuKyShop(Signature.builder().daKy(c.getKyNgay() != null).nguoiKy(c.getKyNguoi()).chucVu(c.getKyChucVu())

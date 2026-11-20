@@ -37,4 +37,4 @@ app:
   seed:
     admin-password: ${ADMIN_DEFAULT_PASSWORD:admin}
     demo-password: ${DEMO_USER_PASSWORD:123456}
-    demo-users: ${SEED_DEMO_USERS:true}
+    demo-users: ${SEED_DEMO_USERS:false}

@@ -34,8 +34,26 @@ public class ImportNoteService {
     public ImportNoteResponse createImportNote(ImportNoteRequest request) {
         Supplier supplier = supplierRepository.findById(request.getNhaCungCapId())
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy nhà cung cấp!"));
-        Warehouse warehouse = warehouseRepository.findById(request.getKhoHangId())
-                .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy kho hàng!"));
+
+        // 🌟 KIỂM SOÁT KHO TIẾP NHẬN: Phiếu nhập từ Nhà Cung Cấp gốc bắt buộc nhập vào KHO TỔNG TRUNG TÂM
+        Warehouse warehouse = null;
+        if (request.getKhoHangId() != null) {
+            warehouse = warehouseRepository.findById(request.getKhoHangId()).orElse(null);
+        }
+
+        // Nếu client không truyền kho hoặc kho truyền lên là kho cửa hàng (KHO_CUA_HANG), tự động chuyển về Kho Tổng
+        if (warehouse == null || "KHO_CUA_HANG".equalsIgnoreCase(warehouse.getLoaiHinh())) {
+            List<Warehouse> all = warehouseRepository.findAll();
+            warehouse = all.stream()
+                    .filter(w -> "KHO_TONG".equalsIgnoreCase(w.getLoaiHinh()))
+                    .findFirst()
+                    .or(() -> all.stream().filter(w -> w.getMaKho() != null && w.getMaKho().startsWith("KHO-")).findFirst())
+                    .orElse(warehouse);
+        }
+
+        if (warehouse == null) {
+            throw new RuntimeException("Lỗi: Không tìm thấy Kho Tổng Trung Tâm để tiếp nhận hàng!");
+        }
 
         ShippingProvider shippingProvider = null;
         if (request.getDonViVanChuyenId() != null) {

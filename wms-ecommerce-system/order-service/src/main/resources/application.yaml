@@ -52,3 +52,8 @@ services:
 order:
   payment-timeout-minutes: ${ORDER_PAYMENT_TIMEOUT_MINUTES:30}
   payment-timeout-check-ms: 300000
+
+# Voucher mẫu (CTUT50K, SHOP1OFF10...): mặc định tắt, bật SEED_DEMO_VOUCHERS=true khi cần demo
+app:
+  seed:
+    demo-vouchers: ${SEED_DEMO_VOUCHERS:false}
