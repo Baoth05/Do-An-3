@@ -1,166 +1,149 @@
 /* src/pages/Shipping/ShippingForm.css */
 
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 .shipping-form-container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  max-width: 800px; /* Căn giữa form vừa vặn, không quá bành trướng */
+  gap: 20px;
+  max-width: 1000px;
   margin: 0 auto;
-  animation: slideIn 0.4s ease-out;
 }
 
 .shipping-form-container .form-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 16px; /* Gắn kết nút quay lại và tiêu đề */
-  padding-bottom: 16px;
-  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.shipping-form-container .form-header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .shipping-form-container .btn-back {
   background-color: #ffffff;
   border: 1px solid #cbd5e1;
   color: #334155;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
 }
 
 .shipping-form-container .btn-back:hover {
-  background-color: #f8fafc;
-  color: #2563eb;
-  border-color: #93c5fd;
-  transform: translateX(-2px); /* Hiệu ứng lùi nhẹ chuyên nghiệp */
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-color: #94a3b8;
 }
 
 .shipping-form-container .form-header h2 {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 800;
   color: #0f172a;
   margin: 0;
-  letter-spacing: -0.02em;
+}
+
+.shipping-form-container .form-header p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+.shipping-form-container .form-header-actions {
+  display: flex;
+  gap: 10px;
 }
 
 .shipping-form-container .form-card {
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.shipping-form-container .form-card h3 {
-  font-size: 18px;
+.shipping-form-container .form-card-title {
+  font-size: 15px;
   font-weight: 700;
   color: #1e293b;
-  margin: 0 0 24px 0;
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 16px;
+  padding-bottom: 10px;
 }
 
-.shipping-form-container .form-card h3 svg {
-  color: #3b82f6;
+.shipping-form-container .form-card-title svg {
+  color: #2563eb;
 }
 
-.shipping-form-grid {
+.shipping-form-container .form-grid-2 {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* Chia 2 cột cho đẹp */
-  gap: 20px;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
 }
 
-/* Các trường full chiều rộng */
-.full-width {
-  grid-column: 1 / -1;
+.shipping-form-container .form-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
 }
 
 .shipping-form-container .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.shipping-form-container .form-group:last-child {
+  margin-bottom: 0;
 }
 
 .shipping-form-container .form-group label {
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
   color: #334155;
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .shipping-form-container .form-group label .required {
   color: #dc2626;
+  margin-left: 2px;
 }
 
 .shipping-form-container .form-group input,
-.shipping-form-container .form-group select {
+.shipping-form-container .form-group select,
+.shipping-form-container .form-group textarea {
   width: 100%;
-  padding: 12px 16px;
+  padding: 10px 12px;
   border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  font-size: 14px;
+  border-radius: 8px;
+  font-size: 13px;
   color: #0f172a;
-  background-color: #f8fafc;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
+  background-color: #ffffff;
+  font-family: inherit;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .shipping-form-container .form-group input:focus,
-.shipping-form-container .form-group select:focus {
+.shipping-form-container .form-group select:focus,
+.shipping-form-container .form-group textarea:focus {
   outline: none;
-  background-color: #ffffff;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-.shipping-form-container .form-actions {
-  grid-column: 1 / -1;
-  margin-top: 16px;
-  padding-top: 24px;
-  border-top: 1px solid #f1f5f9;
+.shipping-form-container .form-footer {
   display: flex;
   justify-content: flex-end;
-}
-
-.btn-submit-large {
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  padding: 14px 28px;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-}
-
-.btn-submit-large:hover {
-  background-color: #1d4ed8;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
-}
-
-.btn-submit-large:disabled {
-  background-color: #94a3b8;
-  box-shadow: none;
-  cursor: not-allowed;
-  transform: none;
+  gap: 12px;
+  padding: 16px 0 32px 0;
 }

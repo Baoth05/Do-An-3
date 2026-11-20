@@ -277,7 +277,7 @@
 
 .form-actions {
   display: flex;
-  justify-content: space-between; /* Đẩy hai phần tử sang hai mép trái/phải */
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 22px;
   font-size: 12.5px;
@@ -295,16 +295,6 @@
 .remember-me input {
   accent-color: #dc2626;
   cursor: pointer;
-  margin: 0; /* Xóa margin mặc định nếu có */
-}
-
-/* Đảm bảo checkbox hiển thị đẹp */
-.remember-me input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-  accent-color: #ef4444; /* Đổi màu checkbox khi tick (nếu trình duyệt hỗ trợ) */
-  margin: 0;
 }
 
 .forgot-password {

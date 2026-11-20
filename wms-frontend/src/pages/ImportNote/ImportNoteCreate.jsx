@@ -205,7 +205,6 @@ const ImportNoteCreate = () => {
       return;
     }
 
-    // Đóng gói dữ liệu để gửi lên máy chủ
     const payload = {
       nhaCungCapId: Number(headerData.nhaCungCapId),
       khoHangId: Number(headerData.khoHangId),
@@ -218,21 +217,13 @@ const ImportNoteCreate = () => {
       })),
     };
 
-    // BƯỚC 1: In dữ liệu ra Console để kiểm tra xem Frontend gửi gì
-    console.log("=== DỮ LIỆU GỬI LÊN MÁY CHỦ (PAYLOAD) ===", payload);
-
     try {
       setIsSubmitting(true);
       await wmsCoreService.createImportNote(payload);
       alert('Tạo phiếu nhập kho thành công!');
       navigate('/import-notes');
     } catch (err) {
-      // BƯỚC 2: In chi tiết lỗi máy chủ trả về ra Console
-      console.error("=== LỖI CHI TIẾT TỪ MÁY CHỦ ===", err.response?.data);
-      
-      // Hiển thị lỗi chi tiết lên màn hình cho dễ nhìn (chuyển Object thành chuỗi)
-      const errorMsg = err.response?.data ? JSON.stringify(err.response.data) : err.message;
-      alert('Lỗi khi tạo phiếu nhập kho: ' + errorMsg);
+      alert('Lỗi khi tạo phiếu nhập kho: ' + (err.response?.data || err.message));
     } finally {
       setIsSubmitting(false);
     }

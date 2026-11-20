@@ -30,21 +30,11 @@ const WarehouseManagement = () => {
           const code = (w.maKho || '').toUpperCase();
           const name = (w.tenKho || '').toUpperCase();
           
-          // 1. Loại bỏ Kho Tổng: ẩn nếu mã chứa chữ "MAIN" hoặc tên chứa chữ "KHO TỔNG"
-          if (code.includes('MAIN') || name.includes('KHO TỔNG') || name.includes('KHO TONG')) {
-            return false;
-          }
-          
-          // 2. Điều kiện cũ: loại bỏ các kho nội bộ (mã KHO-) nếu không phải là SHOP/STORE
           if (code.startsWith('KHO-') && !name.includes('SHOP') && !name.includes('STORE')) {
             return false;
           }
-          
-          // Giữ lại các cửa hàng hợp lệ
           return true;
         });
-        // THÊM DÒNG NÀY ĐỂ KIỂM TRA DỮ LIỆU TỪ BACKEND
-        console.log("Dữ liệu cửa hàng sau khi lọc:", onlyStores);
 
         setStores(onlyStores);
         setIsBackendConnected(true);

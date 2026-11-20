@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FiSearch, FiPlus, FiEdit2, FiTrash2, FiTruck, 
-  FiRefreshCw, FiPhone, FiGlobe 
+  FiRefreshCw, FiPhone, FiGlobe, FiCheckCircle 
 } from 'react-icons/fi';
 import { wmsCoreService } from '../../services/wmsCoreService';
 import './ShippingManagement.css';
@@ -65,23 +65,22 @@ const ShippingManagement = () => {
           <h2>Quản Lý Đơn Vị Vận Chuyển (3PL & Courier)</h2>
           <p>Danh sách các đối tác giao vận, bưu cục lấy hàng và liên kết tracking</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <button className="btn-secondary" onClick={fetchShippers} disabled={isLoading} title="Làm mới">
             <FiRefreshCw className={isLoading ? 'spin-icon' : ''} /> {isBackendConnected ? 'Backend Live' : 'Đồng bộ'}
           </button>
           <button 
             className="btn-primary" 
             onClick={() => navigate('/shipping/create')}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            <FiPlus size={18} /> Thêm Đối Tác Mới
+            <FiPlus size={16} /> Thêm Đối Tác Vận Chuyển
           </button>
         </div>
       </div>
 
       <div className="shipping-toolbar">
         <div className="search-box">
-          <FiSearch className="search-icon" size={18} />
+          <FiSearch className="search-icon" />
           <input 
             type="text" 
             placeholder="Tìm theo tên hãng vận chuyển, mã đơn vị, hotline..." 
@@ -106,18 +105,23 @@ const ShippingManagement = () => {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '60px' }}>
-                  <FiRefreshCw className="spin-icon" size={28} style={{ color: '#3b82f6' }} />
-                  <p style={{ marginTop: '12px', color: '#64748b', fontWeight: 500 }}>Đang nạp đối tác giao vận...</p>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '40px' }}>
+                  <FiRefreshCw className="spin-icon" size={24} style={{ color: '#4f46e5' }} />
+                  <p style={{ marginTop: '8px', color: '#64748b' }}>Đang nạp đối tác giao vận...</p>
                 </td>
               </tr>
             ) : filteredShippers.length === 0 ? (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>
-                  <FiTruck size={48} style={{ marginBottom: '16px', color: '#cbd5e1' }} />
-                  <h3 style={{ margin: '0 0 8px 0', color: '#334155' }}>Chưa có đối tác giao vận</h3>
-                  <p style={{ margin: 0 }}>Hệ thống chưa ghi nhận thông tin đối tác nào hoặc không tìm thấy kết quả phù hợp.</p>
-                  {/* Đã xóa nút bấm trùng lặp ở đây theo yêu cầu */}
+                <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                  <FiTruck size={36} style={{ marginBottom: '8px', opacity: 0.5 }} />
+                  <p>Chưa có đối tác giao vận nào trong hệ thống.</p>
+                  <button 
+                    className="btn-primary" 
+                    style={{ marginTop: '12px' }}
+                    onClick={() => navigate('/shipping/create')}
+                  >
+                    <FiPlus size={16} /> Thêm Đối Tác Vận Chuyển
+                  </button>
                 </td>
               </tr>
             ) : (
@@ -130,25 +134,34 @@ const ShippingManagement = () => {
 
                 return (
                   <tr key={s.id}>
-                    <td><span className="shipper-code-badge">{code}</span></td>
+                    <td>
+                      <span className="shipper-code-badge">{code}</span>
+                    </td>
                     <td>
                       <div className="shipper-name-box">
-                        <FiTruck size={18} style={{ color: '#3b82f6' }} />
+                        <FiTruck size={16} style={{ color: '#4f46e5' }} />
                         <strong>{name}</strong>
                       </div>
                     </td>
                     <td>
                       <div className="contact-phone">
-                        <FiPhone size={14} style={{ color: '#64748b' }} />
+                        <FiPhone size={13} style={{ color: '#64748b' }} />
                         <span>{phone}</span>
                       </div>
                     </td>
                     <td>
                       {website !== '---' ? (
-                        <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noreferrer" className="website-link">
-                          <FiGlobe size={14} /> {website.replace('https://', '').replace('http://', '')}
+                        <a 
+                          href={website.startsWith('http') ? website : `https://${website}`} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="website-link"
+                        >
+                          <FiGlobe size={13} /> {website.replace('https://', '').replace('http://', '')}
                         </a>
-                      ) : (<span>---</span>)}
+                      ) : (
+                        <span>---</span>
+                      )}
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <span className={`status-tag ${status === 'HOAT_DONG' ? 'active' : 'inactive'}`}>
@@ -157,11 +170,19 @@ const ShippingManagement = () => {
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <div className="action-btns">
-                        <button className="btn-icon edit" title="Chỉnh sửa" onClick={() => navigate(`/shipping/edit/${s.id}`)}>
-                          <FiEdit2 size={16} />
+                        <button 
+                          className="btn-icon edit" 
+                          title="Chỉnh sửa đơn vị"
+                          onClick={() => navigate(`/shipping/edit/${s.id}`)}
+                        >
+                          <FiEdit2 size={15} />
                         </button>
-                        <button className="btn-icon delete" title="Xóa" onClick={() => handleDelete(s.id, name)}>
-                          <FiTrash2 size={16} />
+                        <button 
+                          className="btn-icon delete" 
+                          title="Xóa đơn vị"
+                          onClick={() => handleDelete(s.id, name)}
+                        >
+                          <FiTrash2 size={15} />
                         </button>
                       </div>
                     </td>
@@ -172,6 +193,7 @@ const ShippingManagement = () => {
           </tbody>
         </table>
       </div>
+
       <div className="shipping-footer">
         <span>Tổng cộng: <strong>{filteredShippers.length}</strong> hãng vận chuyển</span>
       </div>

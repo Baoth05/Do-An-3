@@ -6,17 +6,17 @@ import { authService } from '../services/authService';
 import { FiUser, FiLock, FiEye, FiEyeOff, FiShield, FiArrowRight, FiZap, FiExternalLink, FiCheckCircle } from 'react-icons/fi';
 import logoImage from '../assets/Glossy Red and White Gaming Logo.png';
 import './Login.css';
-import logoImage from '../assets/Glossy Red and White Gaming Logo.png';
 
 const Login = () => {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Các state lưu trữ dữ liệu form
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  // Các state để lưu trữ dữ liệu form và trạng thái
+  const [username, setUsername] = useState('admin');
+  const [password, setPassword] = useState('admin');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [infoNotice, setInfoNotice] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // Quick fill helper
@@ -32,14 +32,16 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setErrorMessage('');
+    setInfoNotice('');
     setIsLoading(true);
 
     try {
+      // 1. Gọi API đăng nhập tới Backend Spring Boot
       const response = await authService.login(username.trim(), password.trim());
       const data = response.data || response;
       const { token, hoTen, vaiTro, taiKhoan } = data;
 
-      // KIỂM TRA QUYỀN: Chỉ ADMIN mới được vào
+      // 🌟 KIỂM TRA PHÂN QUYỀN RBAC: Chỉ duy nhất ADMIN mới có quyền truy cập Cổng Quản Trị
       if (vaiTro && vaiTro !== 'ADMIN') {
         setErrorMessage(`Từ chối truy cập: Tài khoản có vai trò [${vaiTro}]. Chỉ Quản trị viên (ADMIN) mới có quyền truy cập Cổng Quản Trị!`);
         return;
@@ -127,7 +129,7 @@ const Login = () => {
           <div className="input-group">
             <label>Tài khoản quản trị <span className="required">*</span></label>
             <div className="input-wrapper">
-              <LuUser className="input-icon" size={18} />
+              <FiUser className="input-icon" size={18} />
               <input
                 type="text"
                 placeholder="Nhập tên tài khoản admin..."
@@ -141,7 +143,7 @@ const Login = () => {
           <div className="input-group">
             <label>Mật khẩu xác thực <span className="required">*</span></label>
             <div className="input-wrapper">
-              <LuLock className="input-icon" size={18} />
+              <FiLock className="input-icon" size={18} />
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Nhập mật khẩu..."
@@ -155,7 +157,7 @@ const Login = () => {
                 onClick={togglePasswordVisibility}
                 title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               >
-                {showPassword ? <LuEyeOff size={18} /> : <LuEye size={18} />}
+                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
               </button>
             </div>
           </div>
@@ -163,7 +165,7 @@ const Login = () => {
           <div className="form-actions">
             <label className="remember-me">
               <input type="checkbox" defaultChecked />
-              <span>Ghi nhớ đăng nhập</span>
+              <span>Ghi nhớ phiên đăng nhập</span>
             </label>
             <a href="#forgot" className="forgot-password" onClick={(e) => { e.preventDefault(); alert('Vui lòng liên hệ quản trị hệ thống root để khôi phục mật khẩu.'); }}>
               Quên mật khẩu?
@@ -176,7 +178,7 @@ const Login = () => {
         </form>
 
         <div className="security-warning">
-          <LuShieldCheck size={18} className="warning-icon" />
+          <FiShield size={16} className="warning-icon" />
           <p>
             Trang dành riêng cho Quản trị viên (ADMIN) có thẩm quyền.<br />
             Thủ kho, Nhân viên kho và Đối tác vui lòng truy cập đúng cổng chuyên trách.

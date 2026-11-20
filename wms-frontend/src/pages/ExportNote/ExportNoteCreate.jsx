@@ -260,21 +260,9 @@ const ExportNoteCreate = () => {
               <label>Kho Xuất Hàng *</label>
               <select name="khoHangId" value={headerData.khoHangId} onChange={handleHeaderChange} required>
                 <option value="">-- Chọn Kho Xuất --</option>
-                
-                {/* 
-                  LỌC DỮ LIỆU CỨNG: 
-                  Loại bỏ Kho Tổng (có mã chứa chữ MAIN).
-                  Chỉ giữ lại các kho của cửa hàng / gian hàng.
-                */}
-                {warehouses
-                  .filter(w => w.maKho !== 'MAIN-WH-01' && !(w.maKho || '').includes('MAIN'))
-                  .map((w, idx) => (
-                    <option key={`wh-${w.id || idx}`} value={w.id}>
-                      {w.tenKho} ({w.maKho})
-                    </option>
-                  ))
-                }
-
+                {warehouses.map((w, idx) => (
+                  <option key={`wh-${w.id || idx}`} value={w.id}>{w.tenKho} ({w.maKho})</option>
+                ))}
               </select>
             </div>
 

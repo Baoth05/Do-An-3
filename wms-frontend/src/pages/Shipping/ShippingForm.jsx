@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   FiArrowLeft, FiSave, FiTruck, FiPhone, 
-  FiGlobe, FiHash, FiActivity
+  FiGlobe, FiCheckCircle 
 } from 'react-icons/fi';
 import { wmsCoreService } from '../../services/wmsCoreService';
 import './ShippingForm.css';
@@ -90,29 +90,32 @@ const ShippingForm = () => {
 
   return (
     <div className="shipping-form-container">
-      {/* Sửa lại cụm header cho thẳng hàng, không bị đẩy ra xa nữa */}
       <div className="form-header">
-        <button type="button" className="btn-back" onClick={() => navigate('/shipping')} title="Quay lại">
-          <FiArrowLeft size={20} />
+        <button 
+          type="button" 
+          className="btn-back" 
+          onClick={() => navigate('/shipping')}
+        >
+          <FiArrowLeft size={18} /> Quay lại
         </button>
-        <h2>{isEditMode ? 'Chỉnh Sửa Đối Tác Vận Chuyển' : 'Thêm Mới Đối Tác Vận Chuyển'}</h2>
+        <h2>{isEditMode ? 'Chỉnh Sửa Hãng Vận Chuyển' : 'Thêm Mới Hãng Vận Chuyển'}</h2>
       </div>
 
       {errorMsg && (
-        <div style={{ background: '#fef2f2', color: '#b91c1c', padding: '16px', borderRadius: '10px', border: '1px solid #fecaca', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <strong>Cảnh báo:</strong> {errorMsg}
+        <div style={{ background: '#fff5f5', color: '#c53030', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px' }}>
+          {errorMsg}
         </div>
       )}
 
       {isLoading ? (
-        <div style={{ padding: '60px', textAlign: 'center', color: '#64748b' }}>Đang nạp dữ liệu hãng giao vận...</div>
+        <div style={{ padding: '40px', textAlign: 'center' }}>Đang nạp dữ liệu hãng giao vận...</div>
       ) : (
-        <form onSubmit={handleSubmit} className="form-card">
-          <h3><FiTruck size={22} /> Thông Tin Hệ Thống Đối Tác</h3>
-          
-          <div className="shipping-form-grid">
+        <form onSubmit={handleSubmit} className="shipping-form-grid" style={{ maxWidth: '640px' }}>
+          <div className="form-card">
+            <h3><FiTruck /> Thông Tin Đơn Vị Giao Vận</h3>
+            
             <div className="form-group">
-              <label><FiHash size={14}/> Mã Đơn Vị <span className="required">*</span></label>
+              <label>Mã Đơn Vị (*):</label>
               <input 
                 type="text" 
                 name="maDonVi" 
@@ -124,19 +127,19 @@ const ShippingForm = () => {
             </div>
 
             <div className="form-group">
-              <label><FiTruck size={14}/> Tên Đơn Vị Giao Vận <span className="required">*</span></label>
+              <label>Tên Đơn Vị Giao Vận (*):</label>
               <input 
                 type="text" 
                 name="tenDonVi" 
                 value={formData.tenDonVi} 
                 onChange={handleChange} 
                 required 
-                placeholder="VD: Giao Hàng Tiết Kiệm" 
+                placeholder="VD: Giao Hàng Tiết Kiệm (GHTK)" 
               />
             </div>
 
-            <div className="form-group full-width">
-              <label><FiPhone size={14}/> Hotline / Điện Thoại Tổng Đài</label>
+            <div className="form-group">
+              <label>Hotline / Điện Thoại Liên Hệ:</label>
               <input 
                 type="text" 
                 name="thongTinLienHe" 
@@ -146,10 +149,10 @@ const ShippingForm = () => {
               />
             </div>
 
-            <div className="form-group full-width">
-              <label><FiGlobe size={14}/> Website / Link Tra Cứu Vận Đơn</label>
+            <div className="form-group">
+              <label>Trang Web / Tra Cứu Vận Đơn (URL):</label>
               <input 
-                type="url" 
+                type="text" 
                 name="website" 
                 value={formData.website} 
                 onChange={handleChange} 
@@ -157,17 +160,22 @@ const ShippingForm = () => {
               />
             </div>
 
-            <div className="form-group full-width">
-              <label><FiActivity size={14}/> Trạng Thái Tích Hợp API</label>
+            <div className="form-group">
+              <label>Trạng Thái Kết Nối:</label>
               <select name="trangThai" value={formData.trangThai} onChange={handleChange}>
                 <option value="HOAT_DONG">Đang hoạt động / Kết nối</option>
                 <option value="TAM_DUNG">Tạm dừng kết nối</option>
               </select>
             </div>
 
-            <div className="form-actions">
-              <button type="submit" className="btn-submit-large" disabled={isSubmitting}>
-                <FiSave size={18} /> {isSubmitting ? 'Đang xử lý...' : (isEditMode ? 'Lưu Thay Đổi' : 'Xác Nhận Thêm Mới')}
+            <div className="form-actions" style={{ marginTop: '24px' }}>
+              <button 
+                type="submit" 
+                className="btn-primary" 
+                disabled={isSubmitting}
+                style={{ width: '100%', justifyContent: 'center' }}
+              >
+                <FiSave size={16} /> {isSubmitting ? 'Đang lưu...' : (isEditMode ? 'Cập Nhật' : 'Lưu Đơn Vị Giao Vận')}
               </button>
             </div>
           </div>
