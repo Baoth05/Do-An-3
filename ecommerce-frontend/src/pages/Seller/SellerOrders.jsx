@@ -160,7 +160,9 @@ const SellerOrders = () => {
         </div>
       ) : filteredOrders.length === 0 ? (
         <div className="seller-empty-state">
-          <FiShoppingBag size={48} className="empty-icon" />
+          <div className="empty-icon-wrap">
+            <FiShoppingBag size={36} />
+          </div>
           <h3>Không có đơn hàng nào trong mục này</h3>
           <p>Các đơn hàng mới của khách sẽ hiển thị ngay tại đây khi có người mua.</p>
         </div>

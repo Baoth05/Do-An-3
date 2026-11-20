@@ -141,6 +141,7 @@ public final class SupplyContractDtos {
         private Approval adminDuyetVong1;
         private Signature chuKyShop;
         private Approval adminDuyetVong2;
+        private Approval thuKhoDuyet;
         private Dispatch thongTinXuatKho;
 
         private LocalDateTime ngayHoanThanh;

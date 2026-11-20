@@ -73,10 +73,18 @@ const SupplyContractManagement = () => {
     `🏢 Đã duyệt hợp đồng ${c.maHopDong} và chuyển lệnh xuất sang Kho Tổng!`
   );
 
-  // 3. Kho Tổng lên đơn xuất kho (backend trừ tồn Kho Tổng, lập phiếu xuất, ghi thẻ kho)
+  // 3. Thủ kho duyệt lệnh xuất kho chuyển xuống cho nhân viên lên đơn
+  const handleWarehouseManagerApprove = (c) => runAction(
+    () => api.put(`/supply-contracts/${c.id}/warehouse-approve`, {
+      note: 'Thủ kho đã duyệt đối chiếu tồn kho, chuyển giao cho nhân viên kho lên đơn xuất kho.',
+    }),
+    `🏢 Thủ kho đã duyệt lệnh xuất cho hợp đồng ${c.maHopDong}! Chuyển nhân viên lên đơn.`
+  );
+
+  // 4. Nhân viên kho lên đơn và xuất kho (backend trừ tồn Kho Tổng, lập phiếu xuất, ghi thẻ kho)
   const handleDispatchOrder = (c) => runAction(
     () => api.put(`/supply-contracts/${c.id}/dispatch`, { shippingProvider: 'CTUT Express Logistics' }),
-    `📦 Đã xuất kho cho hợp đồng ${c.maHopDong}! Hàng đang vận chuyển sang shop.`
+    `📦 Đã lên đơn & xuất kho cho hợp đồng ${c.maHopDong}! Hàng đang vận chuyển sang shop.`
   );
 
   // 4. Từ chối yêu cầu
@@ -117,11 +125,13 @@ const SupplyContractManagement = () => {
       case 'DA_KY_CHO_DUYET_KHO':
         return <span className="admin-contract-badge pending-round2"><FiCheckCircle /> 3. Đã Ký - Chờ Duyệt Chuyển Kho</span>;
       case 'CHUYEN_QUA_KHO':
-        return <span className="admin-contract-badge warehouse"><FiBox /> 4. Đã Chuyển Kho - Chờ Lên Đơn</span>;
+        return <span className="admin-contract-badge warehouse"><FiBox /> 4. Đã Chuyển Kho - Chờ Thủ Kho Duyệt</span>;
+      case 'THU_KHO_DA_DUYET':
+        return <span className="admin-contract-badge warehouse" style={{ background: '#ecfdf5', color: '#059669', borderColor: '#a7f3d0' }}><FiCheckCircle /> 5. Thủ Kho Đã Duyệt • Chờ Lên Đơn</span>;
       case 'DANG_GIAO_HANG':
-        return <span className="admin-contract-badge shipping"><FiTruck /> 5. Đang Giao Sang Shop</span>;
+        return <span className="admin-contract-badge shipping"><FiTruck /> 6. Đang Giao Sang Shop</span>;
       case 'HOAN_THANH':
-        return <span className="admin-contract-badge completed"><FiCheck /> Hoàn Thành & Đã Nhập Kho</span>;
+        return <span className="admin-contract-badge completed"><FiCheck /> 7. Hoàn Thành & Đã Nhập Kho</span>;
       case 'TU_CHOI':
         return <span className="admin-contract-badge rejected"><FiX /> Bị Từ Chối</span>;
       default:
@@ -352,14 +362,25 @@ const SupplyContractManagement = () => {
                         </>
                       )}
 
-                      {/* Kho lên đơn */}
+                      {/* Thủ kho duyệt */}
                       {c.trangThai === 'CHUYEN_QUA_KHO' && (
+                        <button
+                          type="button"
+                          className="btn-admin-action approve"
+                          onClick={() => handleWarehouseManagerApprove(c)}
+                        >
+                          <FiCheckCircle /> Thủ Kho Duyệt Lệnh Xuất
+                        </button>
+                      )}
+
+                      {/* Nhân viên lên đơn & xuất kho */}
+                      {c.trangThai === 'THU_KHO_DA_DUYET' && (
                         <button
                           type="button"
                           className="btn-admin-action dispatch"
                           onClick={() => handleDispatchOrder(c)}
                         >
-                          <FiTruck /> Xác Nhận Kho Đã Lên Đơn
+                          <FiTruck /> NV Lên Đơn & Xuất Kho
                         </button>
                       )}
 

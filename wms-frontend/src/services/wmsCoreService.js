@@ -81,4 +81,14 @@ export const wmsCoreService = {
   createShipper: (data) => api.post('/wms/shippers', data),
   updateShipper: (id, data) => api.put(`/wms/shippers/${id}`, data),
   deleteShipper: (id) => api.delete(`/wms/shippers/${id}`),
+
+  // === HỢP ĐỒNG CUNG ỨNG NỘI BỘ (KHO TỔNG -> GIAN HÀNG) ===
+  getSupplyContracts: () => api.get('/wms/supply-contracts'),
+  getSupplyContractById: (id) => api.get(`/wms/supply-contracts/${id}`),
+  warehouseManagerApproveSupplyContract: (id, note) =>
+    api.put(`/wms/supply-contracts/${id}/warehouse-approve`, { note }),
+  warehouseStaffDispatchSupplyContract: (id, shippingProvider) =>
+    api.put(`/wms/supply-contracts/${id}/dispatch`, { shippingProvider }),
+  rejectSupplyContract: (id, reason) =>
+    api.put(`/wms/supply-contracts/${id}/reject`, { reason }),
 };

@@ -23,6 +23,7 @@ import ExportNoteCreate from './pages/ExportNote/ExportNoteCreate';
 import ExportNoteDetail from './pages/ExportNote/ExportNoteDetail';
 import ActualExportNote from './pages/ExportNote/ActualExportNote'; 
 import ExportApprovalList from './pages/ExportNote/ExportApprovalList';
+import SupplyContractList from './pages/SupplyContract/SupplyContractList';
 
 // Import các trang Danh mục Master
 import ProductManagement from './pages/Product/ProductManagement';
@@ -86,6 +87,7 @@ const AppRoutes = () => {
         <Route path="export-notes/:id" element={<ExportNoteDetail />} />
         <Route path="actual-exports" element={<ActualExportNote />} />
         <Route path="export-approve" element={<ExportApprovalList />} />
+        <Route path="supply-contracts" element={<SupplyContractList />} />
         
         {/* Danh mục Master */}
         <Route path="products" element={<ProductManagement />} />

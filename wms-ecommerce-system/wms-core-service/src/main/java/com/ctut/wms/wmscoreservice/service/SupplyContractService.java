@@ -31,6 +31,7 @@ public class SupplyContractService {
     public static final String CHO_SHOP_KY = "CHO_SHOP_KY";
     public static final String DA_KY_CHO_DUYET_KHO = "DA_KY_CHO_DUYET_KHO";
     public static final String CHUYEN_QUA_KHO = "CHUYEN_QUA_KHO";
+    public static final String THU_KHO_DA_DUYET = "THU_KHO_DA_DUYET";
     public static final String DANG_GIAO_HANG = "DANG_GIAO_HANG";
     public static final String HOAN_THANH = "HOAN_THANH";
     public static final String TU_CHOI = "TU_CHOI";
@@ -214,7 +215,23 @@ public class SupplyContractService {
         return toResponse(c);
     }
 
-    // ===================== BƯỚC 5: KHO TỔNG XUẤT HÀNG =====================
+    // ===================== BƯỚC 5: THỦ KHO DUYỆT LỆNH XUẤT =====================
+
+    @Transactional
+    public ContractResponse warehouseManagerApprove(Long id, String note) {
+        SupplyContract c = findContract(id);
+        if (!CurrentUser.isAdmin() && !CurrentUser.isWarehouse()) {
+            StoreAccess.requireCanManage(c.getStore());
+        }
+        requireStatus(c, CHUYEN_QUA_KHO, "thủ kho duyệt xuất kho");
+        c.setTrangThai(THU_KHO_DA_DUYET);
+        c.setThuKhoDuyetNguoi(actorName());
+        c.setThuKhoDuyetNgay(LocalDateTime.now());
+        c.setThuKhoDuyetGhiChu(firstNonBlank(note, "Thủ kho đã duyệt yêu cầu xuất kho. Chuyển nhân viên soạn hàng và lên đơn xuất kho."));
+        return toResponse(c);
+    }
+
+    // ===================== BƯỚC 6: NHÂN VIÊN LÊN ĐƠN & KHO TỔNG XUẤT HÀNG =====================
 
     @Transactional
     public ContractResponse dispatch(Long id, String shippingProvider) {
@@ -222,7 +239,7 @@ public class SupplyContractService {
         if (!CurrentUser.isAdmin() && !CurrentUser.isWarehouse()) {
             StoreAccess.requireCanManage(c.getStore());
         }
-        requireStatus(c, CHUYEN_QUA_KHO, "xuất kho");
+        requireStatusAny(c, Set.of(THU_KHO_DA_DUYET, CHUYEN_QUA_KHO), "lên đơn và xuất kho");
 
         // 🌟 SỬA: Lấy trực tiếp từ object
         Warehouse central = c.getKhoTong();
@@ -327,9 +344,9 @@ public class SupplyContractService {
         String st = c.getTrangThai();
         boolean allowed;
         if (CurrentUser.isAdmin()) {
-            allowed = Set.of(CHO_ADMIN_DUYET, CHO_SHOP_KY, DA_KY_CHO_DUYET_KHO, CHUYEN_QUA_KHO).contains(st);
+            allowed = Set.of(CHO_ADMIN_DUYET, CHO_SHOP_KY, DA_KY_CHO_DUYET_KHO, CHUYEN_QUA_KHO, THU_KHO_DA_DUYET).contains(st);
         } else if (CurrentUser.isWarehouse()) {
-            allowed = CHUYEN_QUA_KHO.equals(st);
+            allowed = Set.of(CHUYEN_QUA_KHO, THU_KHO_DA_DUYET).contains(st);
         } else {
             StoreAccess.requireCanManage(c.getStore());
             allowed = Set.of(CHO_ADMIN_DUYET, CHO_SHOP_KY).contains(st);
@@ -384,6 +401,12 @@ public class SupplyContractService {
 
     private void requireStatus(SupplyContract c, String expected, String action) {
         if (!expected.equals(c.getTrangThai())) {
+            throw new RuntimeException("Lỗi: Không thể " + action + " khi hợp đồng đang ở trạng thái [" + c.getTrangThai() + "]!");
+        }
+    }
+
+    private void requireStatusAny(SupplyContract c, Set<String> expected, String action) {
+        if (!expected.contains(c.getTrangThai())) {
             throw new RuntimeException("Lỗi: Không thể " + action + " khi hợp đồng đang ở trạng thái [" + c.getTrangThai() + "]!");
         }
     }
@@ -488,6 +511,8 @@ public class SupplyContractService {
                         .maChuKySo(c.getKyMaChuKySo()).ngayKy(c.getKyNgay()).build())
                 .adminDuyetVong2(Approval.builder().daDuyet(c.getDuyet2Ngay() != null).nguoiDuyet(c.getDuyet2Nguoi())
                         .ngayDuyet(c.getDuyet2Ngay()).ghiChu(c.getDuyet2GhiChu()).build())
+                .thuKhoDuyet(Approval.builder().daDuyet(c.getThuKhoDuyetNgay() != null).nguoiDuyet(c.getThuKhoDuyetNguoi())
+                        .ngayDuyet(c.getThuKhoDuyetNgay()).ghiChu(c.getThuKhoDuyetGhiChu()).build())
                 .thongTinXuatKho(Dispatch.builder().daLenDon(c.getXuatNgay() != null).phieuXuatId(c.getXuatPhieuId())
                         .maPhieuXuat(c.getXuatMaPhieu()).nguoiXuat(c.getXuatNguoi()).ngayXuat(c.getXuatNgay())
                         .donViVanChuyen(c.getXuatDonViVanChuyen()).build())

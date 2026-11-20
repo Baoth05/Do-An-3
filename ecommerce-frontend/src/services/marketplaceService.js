@@ -534,7 +534,19 @@ export const marketplaceService = {
     }
   },
 
-  // Bước 5: Kho Tổng xuất hàng (backend trừ tồn Kho Tổng + lập phiếu xuất + ghi thẻ kho)
+  // Bước 5: Thủ kho duyệt xuất kho chuyển xuống cho nhân viên lên đơn
+  warehouseManagerApproveContract: async (contractId, warehouseManagerInfo = {}) => {
+    try {
+      const res = await api.put(`/supply-contracts/${contractId}/warehouse-approve`, {
+        note: warehouseManagerInfo.note || 'Thủ kho đã duyệt yêu cầu xuất kho. Chuyển nhân viên soạn hàng và lên đơn.',
+      });
+      return notifyContractsUpdated(res);
+    } catch (err) {
+      throw new Error(readApiError(err, 'Thủ kho duyệt thất bại!'), { cause: err });
+    }
+  },
+
+  // Bước 6: Nhân viên lên đơn và xuất hàng (backend trừ tồn Kho Tổng + lập phiếu xuất + ghi thẻ kho)
   warehouseDispatchContractOrder: async (contractId, warehouseStaffInfo = {}) => {
     try {
       const res = await api.put(`/supply-contracts/${contractId}/dispatch`, {
@@ -546,7 +558,7 @@ export const marketplaceService = {
     }
   },
 
-  // Bước 6: Shop xác nhận nhận hàng (backend cộng tồn kho shop + ghi thẻ kho)
+  // Bước 7: Shop xác nhận nhận hàng (backend cộng tồn kho shop + ghi thẻ kho)
   completeContractDelivery: async (contractId) => {
     try {
       const res = await api.put(`/supply-contracts/${contractId}/complete`);

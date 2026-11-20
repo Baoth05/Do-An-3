@@ -77,6 +77,14 @@ public class SupplyContract {
     @Column(name = "duyet2_ghi_chu", columnDefinition = "TEXT")
     private String duyet2GhiChu;
 
+    // Thủ kho phê duyệt lệnh xuất kho chuyển xuống cho nhân viên lên đơn
+    @Column(name = "thu_kho_duyet_nguoi")
+    private String thuKhoDuyetNguoi;
+    @Column(name = "thu_kho_duyet_ngay")
+    private LocalDateTime thuKhoDuyetNgay;
+    @Column(name = "thu_kho_duyet_ghi_chu", columnDefinition = "TEXT")
+    private String thuKhoDuyetGhiChu;
+
     @Column(name = "xuat_phieu_id")
     private Long xuatPhieuId;
     @Column(name = "xuat_ma_phieu", length = 50)

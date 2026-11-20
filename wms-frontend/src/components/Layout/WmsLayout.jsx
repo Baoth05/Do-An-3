@@ -54,6 +54,12 @@ const WmsLayout = () => {
             <span>Duyệt Yêu Cầu Xuất</span>
           </Link>
 
+          {/* DUYỆT CUNG ỨNG NỘI BỘ (HỢP ĐỒNG SÀN B2B) */}
+          <Link to="/supply-contracts" className={`wms-menu-item ${isActive('supply-contracts') ? 'active' : ''}`}>
+            <FiBox size={18} />
+            <span>Duyệt Cung Ứng Gian Hàng</span>
+          </Link>
+
           <Link to="/purchase-orders/create" className={`wms-menu-item ${isActive('purchase-orders') ? 'active' : ''}`}>
             <FiShoppingCart size={18} />
             <span>Lập Đơn Đặt Hàng (PO)</span>
