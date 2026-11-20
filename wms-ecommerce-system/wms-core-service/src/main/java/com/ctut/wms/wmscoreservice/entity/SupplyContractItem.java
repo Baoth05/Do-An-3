@@ -4,10 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.math.BigDecimal;
 
-/** Một dòng hàng trong hợp đồng cung ứng (giá sỉ & tên được chụp lại tại thời điểm lập hợp đồng). */
 @Entity
 @Table(name = "chi_tiet_hop_dong_cung_ung")
 @Getter
@@ -23,23 +21,11 @@ public class SupplyContractItem {
     @JoinColumn(name = "hop_dong_id", nullable = false)
     private SupplyContract hopDong;
 
-    @Column(name = "san_pham_id", nullable = false)
-    private Long sanPhamId;
-
-    @Column(name = "sku", length = 100)
-    private String sku;
-
-    @Column(name = "ten_hang_hoa")
-    private String tenHangHoa;
-
-    @Column(name = "don_vi_tinh", length = 50)
-    private String donViTinh;
-
-    @Column(name = "danh_muc")
-    private String danhMuc;
-
-    @Column(name = "hinh_anh", columnDefinition = "TEXT")
-    private String hinhAnh;
+    // SỬA: Thay thế Long sanPhamId bằng khóa ngoại trỏ về bảng Sản Phẩm gốc
+    // Giả sử class Sản phẩm của bạn tên là Product. Hãy Import nó vào nếu cần.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "san_pham_id", nullable = false)
+    private Product sanPham;
 
     @Column(name = "so_luong", nullable = false)
     private Integer soLuong;

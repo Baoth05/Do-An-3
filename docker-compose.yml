@@ -77,7 +77,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/identity_db
       ADMIN_DEFAULT_PASSWORD: ${ADMIN_DEFAULT_PASSWORD:-admin}
       DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:-123456}
-      SEED_DEMO_USERS: ${SEED_DEMO_USERS:-true}
+      SEED_DEMO_USERS: ${SEED_DEMO_USERS:-false}
 
   wms-core-service:
     <<: *backend-common
@@ -100,6 +100,7 @@ services:
       <<: *backend-env
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/order_db
       ORDER_PAYMENT_TIMEOUT_MINUTES: ${ORDER_PAYMENT_TIMEOUT_MINUTES:-30}
+      SEED_DEMO_VOUCHERS: ${SEED_DEMO_VOUCHERS:-false}
 
   payment-service:
     <<: *backend-common

@@ -1,6 +1,7 @@
 package com.ctut.wms.wmscoreservice.controller;
 
 import com.ctut.wms.wmscoreservice.entity.Warehouse;
+import com.ctut.wms.wmscoreservice.security.CurrentUser;
 import com.ctut.wms.wmscoreservice.service.WarehouseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,9 @@ public class WarehouseController {
     @PostMapping
     public ResponseEntity<?> createWarehouse(@RequestBody Warehouse warehouse) {
         try {
+            if (warehouse.getQuanLyId() == null && CurrentUser.isAuthenticated()) {
+                warehouse.setQuanLyId(CurrentUser.id());
+            }
             return ResponseEntity.ok(warehouseService.createWarehouse(warehouse));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -29,6 +33,12 @@ public class WarehouseController {
     @GetMapping
     public ResponseEntity<List<Warehouse>> getAllWarehouses() {
         return ResponseEntity.ok(warehouseService.getAllWarehouses());
+    }
+
+    // API lấy thông tin Kho Tổng Trung Tâm
+    @GetMapping("/central")
+    public ResponseEntity<Warehouse> getCentralWarehouse() {
+        return ResponseEntity.ok(warehouseService.getCentralWarehouse());
     }
 
     // API lấy thông tin chi tiết một kho hàng theo ID

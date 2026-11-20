@@ -325,6 +325,14 @@ export const marketplaceService = {
   // Lấy Kho Tổng Trung Tâm duy nhất từ Cơ sở dữ liệu (Bên A)
   getSingleCentralWarehouse: async () => {
     try {
+      // 1. Thử gọi trực tiếp endpoint /warehouses/central
+      try {
+        const directCentral = await api.get('/warehouses/central');
+        if (directCentral && directCentral.id) return directCentral;
+      } catch (e) {
+        // Fallback tiếp tục lấy qua /warehouses
+      }
+
       const res = await api.get('/warehouses');
       if (Array.isArray(res) && res.length > 0) {
         // Tìm kho tổng duy nhất: Loại hình KHO_TONG hoặc mã KHO- và không phải Shop/Cửa hàng
@@ -467,6 +475,16 @@ export const marketplaceService = {
       return Array.isArray(res) ? res : [];
     } catch (err) {
       throw new Error(readApiError(err, 'Không tải được danh sách hợp đồng!'), { cause: err });
+    }
+  },
+
+  // Lấy chi tiết một hợp đồng cung ứng theo ID
+  getSupplyContractById: async (contractId) => {
+    try {
+      const res = await api.get(`/supply-contracts/${contractId}`);
+      return res;
+    } catch (err) {
+      throw new Error(readApiError(err, 'Không tải được chi tiết hợp đồng!'), { cause: err });
     }
   },
 
