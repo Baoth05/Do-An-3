@@ -4,9 +4,17 @@ import axios from 'axios';
 
 // 1. Tạo axios instance kết nối tới API Gateway
 const api = axios.create({
-  // Địa chỉ API Gateway cấu hình trong file .env
-  baseURL: import.meta.env.VITE_API_GATEWAY_URL || 'http://10.10.30.177:8080',
-  timeout: 10000,
+
+
+  // ĐÃ SỬA: Xóa chữ '/api' ở cuối để khớp với cấu hình API Gateway
+  // Địa chỉ API Gateway cấu hình trong file .env (VITE_API_GATEWAY_URL)
+  baseURL: import.meta.env.VITE_API_GATEWAY_URL || 'http://10.10.41.19:8080',
+
+
+
+  timeout: 10000, // Nếu quá 10 giây không có phản hồi thì báo lỗi
+
+
   headers: {
     'Content-Type': 'application/json',
   },
