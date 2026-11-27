@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -242,37 +243,62 @@ public class AuthService {
         return "Đổi mật khẩu thành công!";
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<UserProfileResponse> getAllUsers() {
         CurrentUser.requireAdmin();
-        List<User> users = userRepository.findAll();
+        return userRepository.findAll().stream()
+                .map(this::toUserProfileResponse)
+                .collect(Collectors.toList());
+    }
 
-        return users.stream().map(u -> {
-            UserInfo userInfo = userInfoRepository.findByUser(u).orElse(new UserInfo());
+    /** Lấy danh sách tài khoản cửa hàng cho Admin và Bộ phận Kho (không yêu cầu quyền Admin như /auth/users). */
+    @Transactional(readOnly = true)
+    public List<UserProfileResponse> getStoreUsers() {
+        if (!CurrentUser.isAdmin() && !CurrentUser.isWarehouse()) {
+            throw new ForbiddenException("Từ chối truy cập: Chỉ Quản trị viên hoặc nhân sự Kho mới được xem danh sách tài khoản cửa hàng!");
+        }
+        return userRepository.findAll().stream()
+                .map(this::toUserProfileResponse)
+                .filter(this::isStoreAccount)
+                .collect(Collectors.toList());
+    }
 
-            String maVaiTro = "CUSTOMER";
-            if (u.getRoles() != null && !u.getRoles().isEmpty()) {
-                maVaiTro = u.getRoles().iterator().next().getMaVaiTro();
-            } else if (u.getVaiTro() != null) {
-                maVaiTro = u.getVaiTro();
-            }
+    private UserProfileResponse toUserProfileResponse(User u) {
+        UserInfo userInfo = userInfoRepository.findByUser(u).orElse(new UserInfo());
+        return new UserProfileResponse(
+                u.getId(),
+                u.getTaiKhoan(),
+                u.getEmail(),
+                currentRole(u),
+                userInfo.getHoTen() != null ? userInfo.getHoTen() : u.getTaiKhoan(),
+                userInfo.getSoDienThoai(),
+                userInfo.getDiaChi(),
+                userInfo.getNgaySinh(),
+                userInfo.getGioiTinh(),
+                userInfo.getAnhDaiDien(),
+                u.getTrangThai(),
+                u.getIsApproved()
+        );
+    }
 
-            // MỚI THÊM: Truyền thêm trạng thái và isApproved vào hàm tạo
-            return new UserProfileResponse(
-                    u.getId(),
-                    u.getTaiKhoan(),
-                    u.getEmail(),
-                    maVaiTro,
-                    userInfo.getHoTen() != null ? userInfo.getHoTen() : u.getTaiKhoan(),
-                    userInfo.getSoDienThoai(),
-                    userInfo.getDiaChi(),
-                    userInfo.getNgaySinh(),
-                    userInfo.getGioiTinh(),
-                    userInfo.getAnhDaiDien(),
-                    u.getTrangThai(),
-                    u.getIsApproved()
-            );
-        }).collect(Collectors.toList());
+    private boolean isStoreAccount(UserProfileResponse user) {
+        if (user == null || user.getVaiTro() == null) {
+            return false;
+        }
+        String normalizedRole = Normalizer.normalize(user.getVaiTro(), Normalizer.Form.NFD)
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
+                .replace("đ", "d")
+                .replace("Đ", "D")
+                .toLowerCase()
+                .trim();
+
+        return normalizedRole.contains("store_owner")
+                || normalizedRole.contains("chu cua hang")
+                || normalizedRole.contains("chu_cua_hang")
+                || normalizedRole.contains("seller")
+                || normalizedRole.contains("sales")
+                || normalizedRole.contains("banhang")
+                || normalizedRole.contains("ban hang");
     }
 
     @Transactional

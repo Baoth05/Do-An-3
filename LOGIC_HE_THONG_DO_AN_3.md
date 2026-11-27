@@ -421,6 +421,7 @@ Tất cả gọi qua Gateway `:8080`. Các API của wms-core cũng gọi đư�
 | PUT | `/auth/users/{id}` | Sửa thông tin (đổi vai trò: chỉ Admin) | Chính chủ / Admin |
 | PUT | `/auth/change-password/{taiKhoan}` | Đổi mật khẩu (cần mật khẩu cũ) | Chính chủ / Admin |
 | GET | `/auth/users` | Danh sách người dùng | Admin |
+| GET | `/auth/stores` | Danh sách tài khoản cửa hàng | Admin / Kho |
 | PUT | `/auth/users/{id}/toggle-status` | Khóa / mở khóa | Admin |
 | PUT | `/auth/users/{id}/approve` | Duyệt tài khoản (không bao giờ khóa nhầm) | Admin |
 | DELETE | `/auth/delete/{taiKhoan}` | Xóa tài khoản | Admin |
