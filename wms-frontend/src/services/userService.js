@@ -33,8 +33,9 @@ export const userService = {
   getAllUsers: async () => {
     try {
       // Đổi từ '/auth/users' sang '/auth/stores' để khớp với API mới mở cho bộ phận Kho
+      // api.js response interceptor đã trả thẳng response.data, fallback phòng trường hợp nhận nguyên response
       const response = await api.get('/auth/stores', { timeout: 15000 });
-      let data = response.data;
+      let data = response?.data ?? response;
 
       // Xử lý trường hợp Backend trả về chuỗi JSON thay vì Object
       if (typeof data === 'string') {
@@ -57,10 +58,10 @@ export const userService = {
 
       return [];
     } catch (error) {
-      console.error('[userService] Lỗi khi gọi /auth/users:', error);
+      console.error('[userService] Lỗi khi gọi /auth/stores:', error);
 
       if (error.response?.status === 403) {
-        console.warn('[userService] Tài khoản Kho hiện chưa có quyền gọi API /auth/users (403 Forbidden).');
+        console.warn('[userService] Tài khoản hiện tại không có quyền gọi API /auth/stores (403 Forbidden).');
       } else if (error.code === 'ECONNABORTED') {
         console.warn('[userService] Quá thời gian chờ — kiểm tra lại Identity Service (Port 8084) hoặc API Gateway.');
       }

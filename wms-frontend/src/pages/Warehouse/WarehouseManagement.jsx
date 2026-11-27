@@ -77,7 +77,7 @@ const WarehouseManagement = () => {
       }
 
       // CÁCH 2 (Dự phòng): Nếu Cách 1 trả về rỗng, lấy từ bảng Kho của WMS Core
-      console.warn('[WarehouseManagement] Không có dữ liệu từ /auth/users, chuyển sang wmsCoreService...');
+      console.warn('[WarehouseManagement] Không có dữ liệu từ /auth/stores, chuyển sang wmsCoreService...');
       const data = await wmsCoreService.getWarehouses();
 
       if (Array.isArray(data)) {
