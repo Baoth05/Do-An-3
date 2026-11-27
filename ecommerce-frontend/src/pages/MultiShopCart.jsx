@@ -3,6 +3,7 @@ import { useContext, useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 import { marketplaceService } from '../services/marketplaceService';
+import { authService } from '../services/authService';
 import { 
   FiTrash2, FiShoppingBag, FiArrowRight, FiCheckSquare, 
   FiSquare, FiTag, FiCheck, FiX, FiTruck, FiShield, FiGift, FiAlertCircle 
@@ -208,6 +209,15 @@ const MultiShopCart = () => {
   }
 
   const handleProceedCheckout = () => {
+    if (!authService.isCustomerAuthenticated()) {
+      navigate('/login', {
+        state: {
+          from: location,
+          message: 'Vui lòng đăng nhập tài khoản khách hàng trước khi tiến hành mua hàng!',
+        },
+      });
+      return;
+    }
     if (selectedItems.length === 0) {
       alert('Vui lòng chọn ít nhất 1 sản phẩm để tiến hành thanh toán!');
       return;

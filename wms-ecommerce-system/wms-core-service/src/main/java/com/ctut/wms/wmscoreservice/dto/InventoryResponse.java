@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
@@ -32,7 +33,13 @@ public class InventoryResponse {
     private Integer soLuongDaBan;
     private Boolean dangBan;
     private String hinhAnh;
+    private String hinhAnhRieng;
+    private String hinhAnhGoc;
+    private List<String> danhSachHinhAnh;
     private String moTa;
+    private String moTaSanPham;
+    private String moTaGoc;
+    private String thongSoKyThuat;
     private String danhMuc;
 }
 

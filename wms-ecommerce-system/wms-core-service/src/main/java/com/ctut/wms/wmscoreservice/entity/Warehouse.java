@@ -46,6 +46,24 @@ public class Warehouse {
     @Column(name = "anh_dai_dien_shop", columnDefinition = "TEXT")
     private String anhDaiDienShop;
 
+    @Column(name = "anh_bia_shop", columnDefinition = "TEXT")
+    private String anhBiaShop;
+
+    @Column(name = "gio_mo_cua", length = 120)
+    private String gioMoCua;
+
+    @Column(name = "lien_ket_mang_xa_hoi", columnDefinition = "TEXT")
+    private String websiteHoacMangXaHoi;
+
+    @Column(name = "chinh_sach_bao_hanh", columnDefinition = "TEXT")
+    private String chinhSachBaoHanh;
+
+    @Column(name = "chinh_sach_giao_hang", columnDefinition = "TEXT")
+    private String chinhSachGiaoHang;
+
+    @Column(name = "hinh_anh_cua_hang", columnDefinition = "TEXT")
+    private String hinhAnhCuaHang;
+
     @Column(name = "quan_ly_id")
     private Long quanLyId;
 

@@ -8,6 +8,7 @@
  * ==============================================================================
  */
 import { createContext, useState, useEffect, useMemo } from 'react';
+import { authService } from '../services/authService';
 
 export const CartContext = createContext();
 
@@ -31,7 +32,12 @@ export const CartProvider = ({ children }) => {
   }, [cartItems]);
 
   // Thêm vào giỏ hàng (Cart CRUD - Create / Update)
+  // Bắt buộc đăng nhập khách hàng mới cho phép thêm vào giỏ và mua hàng
   const addToCart = (product, quantity = 1) => {
+    if (!authService.isCustomerAuthenticated()) {
+      return false;
+    }
+
     const maxStock = product.soLuongThucTe || 999;
 
     setCartItems((prevItems) => {
@@ -69,6 +75,7 @@ export const CartProvider = ({ children }) => {
         },
       ];
     });
+    return true;
   };
 
   // Cập nhật số lượng (+ / -)

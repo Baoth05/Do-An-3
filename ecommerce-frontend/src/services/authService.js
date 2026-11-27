@@ -90,6 +90,11 @@ export const authService = {
     }
   },
 
+  // Kiểm tra khách hàng đã đăng nhập hợp lệ (có cả token lẫn phiên người dùng)
+  isCustomerAuthenticated: () => {
+    return Boolean(localStorage.getItem('customer_token') && authService.getCurrentCustomer());
+  },
+
   // Đăng xuất tài khoản Khách Hàng (Chỉ xóa phiên Khách Hàng)
   logoutCustomer: () => {
     localStorage.removeItem('customer_token');

@@ -20,7 +20,10 @@ const Login = () => {
 
     const navigate = useNavigate();
     const location = useLocation();
-    const from = location.state?.from?.pathname || '/';
+    const from = location.state?.from
+        ? `${location.state.from.pathname || '/'}${location.state.from.search || ''}`
+        : '/';
+    const redirectMessage = location.state?.message || '';
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -166,10 +169,10 @@ const Login = () => {
                         <p>Đăng nhập tài khoản mua sắm để theo dõi đơn hàng & voucher ưu đãi cá nhân.</p>
                     </div>
 
-                    {errorMsg && (
+                    {(errorMsg || redirectMessage) && (
                         <div className="auth-alert-box error">
                             <FiAlertCircle size={16} />
-                            <span>{errorMsg}</span>
+                            <span>{errorMsg || redirectMessage}</span>
                         </div>
                     )}
 

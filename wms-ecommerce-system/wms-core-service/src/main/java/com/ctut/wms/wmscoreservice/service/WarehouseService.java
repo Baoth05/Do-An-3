@@ -67,6 +67,12 @@ public class WarehouseService {
         if (warehouse.getDiaChi() != null) {
             existing.setDiaChi(warehouse.getDiaChi());
         }
+        if (warehouse.getSoDienThoai() != null) {
+            existing.setSoDienThoai(warehouse.getSoDienThoai());
+        }
+        if (warehouse.getEmail() != null) {
+            existing.setEmail(warehouse.getEmail());
+        }
         if (warehouse.getSucChuaToiDa() != null) {
             existing.setSucChuaToiDa(warehouse.getSucChuaToiDa());
         }
@@ -78,6 +84,24 @@ public class WarehouseService {
         }
         if (warehouse.getAnhDaiDienShop() != null) {
             existing.setAnhDaiDienShop(warehouse.getAnhDaiDienShop());
+        }
+        if (warehouse.getAnhBiaShop() != null) {
+            existing.setAnhBiaShop(warehouse.getAnhBiaShop());
+        }
+        if (warehouse.getGioMoCua() != null) {
+            existing.setGioMoCua(warehouse.getGioMoCua());
+        }
+        if (warehouse.getWebsiteHoacMangXaHoi() != null) {
+            existing.setWebsiteHoacMangXaHoi(warehouse.getWebsiteHoacMangXaHoi());
+        }
+        if (warehouse.getChinhSachBaoHanh() != null) {
+            existing.setChinhSachBaoHanh(warehouse.getChinhSachBaoHanh());
+        }
+        if (warehouse.getChinhSachGiaoHang() != null) {
+            existing.setChinhSachGiaoHang(warehouse.getChinhSachGiaoHang());
+        }
+        if (warehouse.getHinhAnhCuaHang() != null) {
+            existing.setHinhAnhCuaHang(warehouse.getHinhAnhCuaHang());
         }
         if (warehouse.getLoaiHinh() != null) {
             existing.setLoaiHinh(warehouse.getLoaiHinh());

@@ -1,30 +1,20 @@
 // src/pages/Seller/SellerProducts.jsx
 import { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { marketplaceService } from '../../services/marketplaceService';
 import { 
-  FiBox, FiCheckCircle, FiEyeOff, FiEdit2, FiSearch, 
-  FiFilter, FiAlertTriangle, FiDollarSign, FiPlusCircle, FiX 
+  FiBox, FiCheckCircle, FiEyeOff, FiEdit2, FiSearch, FiImage 
 } from 'react-icons/fi';
 import './SellerProducts.css';
 
 const SellerProducts = () => {
-  const { storeId, currentStore } = useOutletContext();
+  const navigate = useNavigate();
+  const { storeId } = useOutletContext();
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('ALL'); // ALL, PUBLISHED, UNPUBLISHED
   const [searchKey, setSearchKey] = useState('');
   const [alertNotice, setAlertNotice] = useState('');
-
-  // Modal Đăng bán / Cập nhật giá bán
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [publishForm, setPublishForm] = useState({
-    dangBan: true,
-    giaBanHienTai: '',
-    soLuongCanhBao: 5,
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchInventory = async () => {
     setLoading(true);
@@ -53,15 +43,9 @@ const SellerProducts = () => {
     };
   }, [storeId]);
 
-  // Mở modal đăng bán / sửa thông tin bán
-  const handleOpenPublishModal = (item) => {
-    setSelectedItem(item);
-    setPublishForm({
-      dangBan: item.dangBan !== undefined ? item.dangBan : true,
-      giaBanHienTai: item.giaBanHienTai || item.giaBan || 0,
-      soLuongCanhBao: item.soLuongToiThieu || 5,
-    });
-    setModalOpen(true);
+  // Mở trang chỉnh sửa chi tiết sản phẩm, nhiều hình ảnh và giá bán
+  const handleOpenEditPage = (item) => {
+    navigate(`/seller/products/${item.id}/edit`);
   };
 
   // Nhanh: Bật/Tắt đăng bán ngay trên dòng
@@ -83,31 +67,6 @@ const SellerProducts = () => {
       await fetchInventory();
     } catch (err) {
       alert('Lỗi cập nhật trạng thái bán: ' + (err.response?.data || err.message));
-    }
-  };
-
-  // Lưu cấu hình đăng bán từ Modal
-  const handleSavePublish = async (e) => {
-    e.preventDefault();
-    if (!selectedItem) return;
-
-    setIsSubmitting(true);
-    try {
-      await marketplaceService.publishProductToMarketplace(selectedItem.id, {
-        dangBan: publishForm.dangBan,
-        giaBanHienTai: Number(publishForm.giaBanHienTai),
-        soLuongCanhBao: Number(publishForm.soLuongCanhBao),
-      });
-
-      setAlertNotice(`Cập nhật đăng bán sản phẩm "${selectedItem.tenSanPham}" thành công!`);
-      setModalOpen(false);
-      setSelectedItem(null);
-      await fetchInventory();
-    } catch (err) {
-      alert('Lỗi lưu đăng bán: ' + (err.response?.data || err.message));
-    } finally {
-      setIsSubmitting(false);
-      setTimeout(() => setAlertNotice(''), 3000);
     }
   };
 
@@ -252,7 +211,12 @@ const SellerProducts = () => {
                       />
                       <div>
                         <strong>{item.tenSanPham}</strong>
-                        <small className="prod-cat">{item.danhMuc || 'Thiết bị'}</small>
+                        <small className="prod-cat">
+                          {item.danhMuc || 'Thiết bị'}
+                          {Array.isArray(item.danhSachHinhAnh) && item.danhSachHinhAnh.length > 1 && (
+                            <> • <FiImage size={11} style={{ verticalAlign: 'middle' }} /> {item.danhSachHinhAnh.length} ảnh</>
+                          )}
+                        </small>
                       </div>
                     </td>
 
@@ -304,10 +268,10 @@ const SellerProducts = () => {
 
                         <button 
                           className="btn-edit-pricing"
-                          onClick={() => handleOpenPublishModal(item)}
-                          title="Chỉnh sửa giá bán lẻ và thông số bán"
+                          onClick={() => handleOpenEditPage(item)}
+                          title="Mở trang chỉnh sửa chi tiết giá bán, nhiều hình ảnh và mô tả"
                         >
-                          <FiEdit2 size={14} /> Chỉnh Giá
+                          <FiEdit2 size={14} /> Chỉnh Sửa & Ảnh
                         </button>
                       </div>
                     </td>
@@ -318,102 +282,6 @@ const SellerProducts = () => {
           </table>
         )}
       </div>
-
-      {/* Modal Chỉnh Sửa Thông Tin Đăng Bán Lên Sàn */}
-      {modalOpen && selectedItem && (
-        <div className="modal-backdrop-overlay" onClick={() => setModalOpen(false)}>
-          <div className="publish-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>⚙️ Thiết Lập Đăng Bán Lên Sàn TMĐT</h3>
-              <FiX className="btn-close-modal" onClick={() => setModalOpen(false)} />
-            </div>
-
-            <form onSubmit={handleSavePublish}>
-              <div className="modal-prod-summary">
-                <img 
-                  src={selectedItem.hinhAnh || 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=100'} 
-                  alt={selectedItem.tenSanPham} 
-                />
-                <div>
-                  <h4>{selectedItem.tenSanPham}</h4>
-                  <p>Mã SKU: <strong>{selectedItem.sku}</strong> • Tồn kho: <strong>{selectedItem.soLuongThucTe} {selectedItem.donViTinh || 'Cái'}</strong></p>
-                </div>
-              </div>
-
-              <div className="form-group-seller">
-                <label>Trạng Thái Mở Bán Khách Hàng:</label>
-                <div className="radio-options-group">
-                  <label className={`radio-card ${publishForm.dangBan ? 'active' : ''}`}>
-                    <input
-                      type="radio"
-                      name="dangBan"
-                      checked={publishForm.dangBan === true}
-                      onChange={() => setPublishForm({ ...publishForm, dangBan: true })}
-                    />
-                    <div>
-                      <strong>Đang Mở Bán Công Khai</strong>
-                      <small>Sản phẩm xuất hiện trên trang chủ sàn & trang gian hàng</small>
-                    </div>
-                  </label>
-
-                  <label className={`radio-card ${!publishForm.dangBan ? 'active' : ''}`}>
-                    <input
-                      type="radio"
-                      name="dangBan"
-                      checked={publishForm.dangBan === false}
-                      onChange={() => setPublishForm({ ...publishForm, dangBan: false })}
-                    />
-                    <div>
-                      <strong>Tạm Ẩn / Giữ Trong Kho</strong>
-                      <small>Khách hàng trên sàn sẽ không tìm thấy sản phẩm này</small>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <div className="form-group-seller">
-                <label>Giá Bán Lẻ Trên Sàn (VNĐ) *</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="1000"
-                  required
-                  value={publishForm.giaBanHienTai}
-                  onChange={(e) => setPublishForm({ ...publishForm, giaBanHienTai: e.target.value })}
-                />
-              </div>
-
-              <div className="form-group-seller">
-                <label>Ngưỡng Cảnh Báo Tồn Kho Thấp (Cái)</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={publishForm.soLuongCanhBao}
-                  onChange={(e) => setPublishForm({ ...publishForm, soLuongCanhBao: e.target.value })}
-                />
-                <small className="help-text">Hệ thống sẽ cảnh báo khi số lượng hàng trong kho chạm ngưỡng này.</small>
-              </div>
-
-              <div className="modal-actions-footer">
-                <button 
-                  type="button" 
-                  className="btn-cancel" 
-                  onClick={() => setModalOpen(false)}
-                >
-                  Hủy Bỏ
-                </button>
-                <button 
-                  type="submit" 
-                  className="btn-save-publish"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Đang Lưu...' : 'Lưu Thay Đổi'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

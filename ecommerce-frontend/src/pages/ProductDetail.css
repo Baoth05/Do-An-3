@@ -596,3 +596,460 @@
   line-height: 1.5;
   margin: 0;
 }
+
+/* Gallery Thumbnails & Arrows */
+.gallery-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(15, 23, 42, 0.55);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.gallery-nav-btn.prev { left: 10px; }
+.gallery-nav-btn.next { right: 10px; }
+
+.gallery-thumbnails-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.gallery-thumb-btn {
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
+  background: #f8fafc;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.gallery-thumb-btn.active {
+  border-color: #2563eb;
+}
+
+.gallery-thumb-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ==================== SHOPEE-STYLE SECTIONS ==================== */
+.detail-page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.product-detail-page .product-main-grid {
+  margin-bottom: 0;
+}
+
+.product-detail-page .detail-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.shopee-accent {
+  color: #ee4d2d !important;
+  border-bottom: 1px solid #ee4d2d;
+}
+
+/* Shop Banner Card */
+.shopee-shop-strip-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 22px 26px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+.shop-strip-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-right: 28px;
+  border-right: 1px solid #f1f5f9;
+  min-width: 310px;
+}
+
+.shop-strip-avatar {
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.shop-strip-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.shop-strip-name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.shop-strip-online {
+  font-size: 13px;
+  color: #757575;
+}
+
+.shop-strip-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.btn-shopee-chat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid #ee4d2d;
+  background: rgba(255, 87, 34, 0.1);
+  color: #ee4d2d;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.btn-shopee-chat:hover {
+  background: rgba(255, 87, 34, 0.16);
+}
+
+.btn-shopee-view-shop {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 3px;
+  text-decoration: none;
+}
+
+.btn-shopee-view-shop:hover {
+  background: #f8fafc;
+}
+
+.shop-strip-stats-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 28px;
+}
+
+.shop-metric-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.metric-label {
+  color: #757575;
+  white-space: nowrap;
+}
+
+.metric-value {
+  color: #334155;
+  font-weight: 500;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metric-value.accent {
+  color: #ee4d2d;
+}
+
+/* White Sections: Chi Tiết & Mô Tả & Đánh Giá */
+.shopee-white-section {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 24px 26px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+.shopee-section-block + .shopee-section-block {
+  margin-top: 28px;
+}
+
+.shopee-section-title {
+  background: #fafafa;
+  padding: 13px 16px;
+  margin: 0 0 18px 0;
+  font-size: 17px;
+  font-weight: 500;
+  color: #222222;
+  letter-spacing: 0.2px;
+}
+
+.shopee-plain-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: #222222;
+}
+
+.shopee-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 16px;
+}
+
+.shopee-detail-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.detail-key {
+  width: 145px;
+  flex-shrink: 0;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.detail-val {
+  color: #222222;
+  line-height: 1.5;
+}
+
+.detail-cat-link {
+  color: #0055aa;
+  text-decoration: none;
+}
+
+.shopee-description-body {
+  padding: 0 16px;
+}
+
+.desc-paragraph {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.75;
+  color: #333333;
+  white-space: pre-line;
+}
+
+.shop-policy-inline-notes {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed #e2e8f0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.shop-policy-inline-notes strong {
+  display: block;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.shop-policy-inline-notes p {
+  margin: 0;
+  white-space: pre-line;
+  line-height: 1.6;
+}
+
+/* Đánh Giá Sản Phẩm Kiểu Shopee */
+.shopee-reviews-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.btn-toggle-write-review {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 4px;
+  border: 1px solid #ee4d2d;
+  background: #ffffff;
+  color: #ee4d2d;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-toggle-write-review:hover {
+  background: #fff5f1;
+}
+
+.shopee-rating-overview-box {
+  background: #fffbf8;
+  border: 1px solid #f9ede5;
+  border-radius: 3px;
+  padding: 26px 30px;
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  margin-bottom: 20px;
+}
+
+.rating-score-col {
+  text-align: center;
+  min-width: 140px;
+}
+
+.score-big-row {
+  color: #ee4d2d;
+  font-size: 18px;
+}
+
+.score-big-row strong {
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.score-stars-row {
+  color: #ee4d2d;
+  font-size: 20px;
+  letter-spacing: 2px;
+  margin-top: 4px;
+}
+
+.rating-filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.shopee-filter-btn {
+  min-width: 96px;
+  height: 34px;
+  padding: 0 14px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 2px;
+  color: #222222;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.shopee-filter-btn.active {
+  border-color: #ee4d2d;
+  color: #ee4d2d;
+  font-weight: 600;
+}
+
+.shopee-reviews-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.shopee-review-item {
+  display: flex;
+  gap: 14px;
+  padding: 18px 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.shopee-review-item:last-child {
+  border-bottom: none;
+}
+
+.shopee-review-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.shopee-review-body {
+  flex: 1;
+}
+
+.shopee-review-user-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.shopee-review-stars {
+  color: #ee4d2d;
+  font-size: 13px;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.shopee-review-meta {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.5);
+  margin-bottom: 10px;
+}
+
+.shopee-review-text {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.87);
+  line-height: 1.55;
+}
+
+@media (max-width: 960px) {
+  .shopee-shop-strip-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .shop-strip-left {
+    border-right: none;
+    border-bottom: 1px solid #f1f5f9;
+    padding-right: 0;
+    padding-bottom: 16px;
+    width: 100%;
+  }
+  .shop-strip-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+  .shopee-rating-overview-box {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}

@@ -47,6 +47,18 @@ public class Inventory {
     @Column(name = "dang_ban")
     private Boolean dangBan = false; // Bật/tắt mở bán trên sàn TMĐT
 
+    @Column(name = "hinh_anh_rieng", columnDefinition = "TEXT")
+    private String hinhAnhRieng; // Ảnh đại diện riêng của Shop (ưu tiên hiển thị)
+
+    @Column(name = "danh_sach_hinh_anh", columnDefinition = "TEXT")
+    private String danhSachHinhAnh; // Danh sách nhiều ảnh sản phẩm (JSON array)
+
+    @Column(name = "mo_ta_san_pham", columnDefinition = "TEXT")
+    private String moTaSanPham; // Mô tả & ưu đãi riêng của Shop cho sản phẩm
+
+    @Column(name = "thong_so_ky_thuat", columnDefinition = "TEXT")
+    private String thongSoKyThuat; // Thông số / điểm nổi bật bổ sung của Shop
+
     @Version
     private Integer version; // Khóa lạc quan chống race condition khi tranh mua
 

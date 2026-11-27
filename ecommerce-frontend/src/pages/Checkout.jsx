@@ -6,7 +6,7 @@
  *            thực thi giải thuật Order Splitting qua API /orders/checkout-multishop.
  * ==============================================================================
  */
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 import { marketplaceService } from '../services/marketplaceService';
@@ -32,6 +32,19 @@ const Checkout = () => {
     : Object.values(shopVouchers).reduce((s, v) => s + (v?.discount || (typeof v === 'number' ? v : 0)), 0);
 
   const loggedCustomer = authService.getCurrentCustomer();
+  const isAuthenticated = authService.isCustomerAuthenticated();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login', {
+        replace: true,
+        state: {
+          from: location,
+          message: 'Vui lòng đăng nhập tài khoản khách hàng để tiến hành mua hàng!',
+        },
+      });
+    }
+  }, [isAuthenticated, location, navigate]);
 
   // Danh sách các địa chỉ cũ đã giao trước đó
   const [savedAddresses, setSavedAddresses] = useState(() => {

@@ -254,6 +254,17 @@ export const marketplaceService = {
     }
   },
 
+  // Lấy tất cả đánh giá của một Gian hàng
+  getStoreReviews: async (cuaHangId) => {
+    try {
+      const res = await api.get(`/interactions/danh-gia/shop/${cuaHangId}`);
+      return Array.isArray(res) ? res : [];
+    } catch (err) {
+      console.warn(`Lỗi gọi /interactions/danh-gia/shop/${cuaHangId}:`, err?.message);
+      return [];
+    }
+  },
+
   // Gửi đánh giá mới thật
   createReview: async (reviewData) => {
     return await api.post('/interactions/danh-gia', reviewData);
@@ -310,6 +321,11 @@ export const marketplaceService = {
       console.warn(`Lỗi gọi /inventory/store/${storeId}:`, err?.message);
       return [];
     }
+  },
+
+  // Lấy chi tiết 1 bản ghi tồn kho theo ID (dùng cho trang chỉnh sửa SP của Shop)
+  getSellerInventoryItem: async (inventoryId) => {
+    return await api.get(`/inventory/${inventoryId}`);
   },
 
   // Lấy Master Catalog danh mục sản phẩm chuẩn hệ thống từ DB
@@ -639,6 +655,8 @@ export const marketplaceService = {
 
   // Cập nhật thông tin Gian hàng
   updateStoreProfile: async (storeId, storeData) => {
-    return await api.put(`/stores/${storeId}`, storeData);
+    const res = await api.put(`/stores/${storeId}`, storeData);
+    window.dispatchEvent(new CustomEvent('seller-store-updated', { detail: res }));
+    return res;
   },
 };

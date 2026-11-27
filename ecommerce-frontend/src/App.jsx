@@ -21,6 +21,7 @@ import SellerLayout from './pages/Seller/SellerLayout';
 import SellerLogin from './pages/Seller/SellerLogin';
 import SellerDashboard from './pages/Seller/SellerDashboard';
 import SellerProducts from './pages/Seller/SellerProducts';
+import SellerProductEdit from './pages/Seller/SellerProductEdit';
 import SellerOrders from './pages/Seller/SellerOrders';
 import SellerVouchers from './pages/Seller/SellerVouchers';
 import SellerShopSettings from './pages/Seller/SellerShopSettings';
@@ -73,6 +74,7 @@ function AppContent() {
             <Route path="contracts/create" element={<SellerContractCreate />} />
             <Route path="contracts/:contractId" element={<SellerContractDetail />} />
             <Route path="products" element={<SellerProducts />} />
+            <Route path="products/:inventoryId/edit" element={<SellerProductEdit />} />
             <Route path="orders" element={<SellerOrders />} />
             <Route path="vouchers" element={<SellerVouchers />} />
             <Route path="settings" element={<SellerShopSettings />} />

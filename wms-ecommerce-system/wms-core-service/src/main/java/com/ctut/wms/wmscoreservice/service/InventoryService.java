@@ -1,5 +1,7 @@
 package com.ctut.wms.wmscoreservice.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ctut.wms.wmscoreservice.dto.InventoryRequest;
 import com.ctut.wms.wmscoreservice.dto.InventoryResponse;
 import com.ctut.wms.wmscoreservice.entity.Inventory;
@@ -17,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -29,6 +33,7 @@ public class InventoryService {
     public static final String ADJ_KIEM_KE_THUA = "KIEM_KE_THUA";
     public static final String ADJ_HOAN_TRA_NGUYEN_VEN = "HOAN_TRA_NGUYEN_VEN";
     private static final Set<String> VALID_ADJUSTMENT_TYPES = Set.of(ADJ_KIEM_KE_THUA, ADJ_HOAN_TRA_NGUYEN_VEN);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final InventoryRepository inventoryRepository; // Quản lý dữ liệu bảng tồn kho
     private final ProductRepository productRepository;     // Quản lý dữ liệu sản phẩm
@@ -132,6 +137,13 @@ public class InventoryService {
                 .collect(Collectors.toList());
     }
 
+    // Tra cứu chi tiết 1 bản ghi tồn kho theo ID
+    public InventoryResponse getInventoryById(Long id) {
+        Inventory inv = inventoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy bản ghi tồn kho có ID = " + id));
+        return mapToResponse(inv);
+    }
+
     // Tra cứu 1 mặt hàng của 1 gian hàng (order-service dùng để lấy GIÁ BÁN THẬT khi đặt hàng)
     public InventoryResponse getItem(Long sanPhamId, Long khoHangId) {
         Inventory inv = inventoryRepository.findBySanPhamIdAndKhoHangId(sanPhamId, khoHangId)
@@ -153,6 +165,21 @@ public class InventoryService {
     // Hàm cho phép Seller bật/tắt bán lên sàn và định giá bán lẻ
     @Transactional
     public InventoryResponse publishToMarketplace(Long id, Boolean dangBan, BigDecimal giaBanHienTai, Integer soLuongCanhBao) {
+        return publishToMarketplace(id, dangBan, giaBanHienTai, soLuongCanhBao, null, null, null, null);
+    }
+
+    // Hàm đầy đủ cho phép Seller cấu hình giá, mở bán, nhiều hình ảnh và mô tả riêng trên trang chỉnh sửa SP
+    @Transactional
+    public InventoryResponse publishToMarketplace(
+            Long id,
+            Boolean dangBan,
+            BigDecimal giaBanHienTai,
+            Integer soLuongCanhBao,
+            String hinhAnhRieng,
+            List<String> danhSachHinhAnh,
+            String moTaSanPham,
+            String thongSoKyThuat
+    ) {
         Inventory inv = inventoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy bản ghi tồn kho có ID = " + id));
         StoreAccess.requireCanManage(inv.getKhoHang());
@@ -168,6 +195,22 @@ public class InventoryService {
         if (soLuongCanhBao != null) {
             inv.setSoLuongToiThieu(soLuongCanhBao);
         }
+        if (danhSachHinhAnh != null) {
+            List<String> cleaned = cleanImages(danhSachHinhAnh);
+            inv.setDanhSachHinhAnh(serializeImages(cleaned));
+            if (hinhAnhRieng == null) {
+                inv.setHinhAnhRieng(cleaned.isEmpty() ? null : cleaned.get(0));
+            }
+        }
+        if (hinhAnhRieng != null) {
+            inv.setHinhAnhRieng(blankToNull(hinhAnhRieng));
+        }
+        if (moTaSanPham != null) {
+            inv.setMoTaSanPham(blankToNull(moTaSanPham));
+        }
+        if (thongSoKyThuat != null) {
+            inv.setThongSoKyThuat(blankToNull(thongSoKyThuat));
+        }
         return mapToResponse(inventoryRepository.save(inv));
     }
 
@@ -175,6 +218,23 @@ public class InventoryService {
     private InventoryResponse mapToResponse(Inventory inv) {
         Product p = inv.getSanPham();
         Warehouse w = inv.getKhoHang();
+        String masterImage = p != null ? p.getHinhAnh() : "";
+        String masterDesc = p != null ? p.getMoTa() : "";
+        List<String> gallery = parseImages(inv.getDanhSachHinhAnh());
+        String coverImage = firstNonBlank(inv.getHinhAnhRieng(), gallery.isEmpty() ? null : gallery.get(0), masterImage);
+
+        List<String> resolvedGallery = new ArrayList<>();
+        if (coverImage != null && !coverImage.isBlank()) {
+            resolvedGallery.add(coverImage);
+        }
+        for (String img : gallery) {
+            if (!resolvedGallery.contains(img)) {
+                resolvedGallery.add(img);
+            }
+        }
+        if (resolvedGallery.isEmpty() && masterImage != null && !masterImage.isBlank()) {
+            resolvedGallery.add(masterImage);
+        }
 
         return InventoryResponse.builder()
                 .id(inv.getId())
@@ -196,9 +256,56 @@ public class InventoryService {
                 .giaBanHienTai(inv.getGiaBanHienTai() != null ? inv.getGiaBanHienTai() : (p != null && p.getGiaBan() != null ? BigDecimal.valueOf(p.getGiaBan()) : BigDecimal.ZERO))
                 .soLuongDaBan(inv.getSoLuongDaBan() != null ? inv.getSoLuongDaBan() : 0)
                 .dangBan(Boolean.TRUE.equals(inv.getDangBan()))
-                .hinhAnh(p != null ? p.getHinhAnh() : "")
-                .moTa(p != null ? p.getMoTa() : "")
+                .hinhAnh(coverImage != null ? coverImage : "")
+                .hinhAnhRieng(inv.getHinhAnhRieng())
+                .hinhAnhGoc(masterImage)
+                .danhSachHinhAnh(resolvedGallery)
+                .moTa(firstNonBlank(inv.getMoTaSanPham(), masterDesc))
+                .moTaSanPham(inv.getMoTaSanPham())
+                .moTaGoc(masterDesc)
+                .thongSoKyThuat(inv.getThongSoKyThuat())
                 .danhMuc(p != null && p.getDanhMuc() != null ? p.getDanhMuc().getTenDanhMuc() : "")
                 .build();
+    }
+
+    private static List<String> cleanImages(List<String> images) {
+        if (images == null) return List.of();
+        Set<String> unique = new LinkedHashSet<>();
+        for (String img : images) {
+            if (img != null && !img.isBlank()) {
+                unique.add(img.trim());
+            }
+        }
+        return new ArrayList<>(unique);
+    }
+
+    private static String serializeImages(List<String> images) {
+        if (images == null || images.isEmpty()) return null;
+        try {
+            return OBJECT_MAPPER.writeValueAsString(images);
+        } catch (Exception e) {
+            throw new RuntimeException("Không thể lưu danh sách hình ảnh sản phẩm!", e);
+        }
+    }
+
+    private static List<String> parseImages(String raw) {
+        if (raw == null || raw.isBlank()) return List.of();
+        try {
+            List<String> parsed = OBJECT_MAPPER.readValue(raw, new TypeReference<List<String>>() {});
+            return cleanImages(parsed);
+        } catch (Exception ignored) {
+            return List.of();
+        }
+    }
+
+    private static String blankToNull(String value) {
+        return (value == null || value.isBlank()) ? null : value.trim();
+    }
+
+    private static String firstNonBlank(String... candidates) {
+        for (String c : candidates) {
+            if (c != null && !c.isBlank()) return c;
+        }
+        return "";
     }
 }

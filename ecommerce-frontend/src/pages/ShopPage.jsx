@@ -1,17 +1,21 @@
 // src/pages/ShopPage.jsx
 import { useState, useEffect, useContext } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { marketplaceService } from '../services/marketplaceService';
+import { authService } from '../services/authService';
 import { CartContext } from '../context/CartContext';
 import { 
   FiCheck, FiShoppingCart, FiStar, FiMapPin, FiTag, 
-  FiBox, FiMessageSquare, FiCopy, FiArrowRight 
+  FiBox, FiMessageSquare, FiCopy, FiArrowRight,
+  FiPhone, FiMail, FiClock, FiGlobe, FiShield, FiTruck, FiImage
 } from 'react-icons/fi';
+import { parseImageGallery } from '../utils/imageHelpers';
 import './ShopPage.css';
 
 const ShopPage = () => {
   const { storeId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [store, setStore] = useState(null);
   const [products, setProducts] = useState([]);
   const [vouchers, setVouchers] = useState([]);
@@ -23,7 +27,15 @@ const ShopPage = () => {
   const { addToCart } = useContext(CartContext);
 
   const handleAddToCart = (product) => {
-    addToCart(product, 1);
+    if (!authService.isCustomerAuthenticated() || !addToCart(product, 1)) {
+      navigate('/login', {
+        state: {
+          from: location,
+          message: 'Vui lòng đăng nhập tài khoản khách hàng để thêm sản phẩm vào giỏ hàng và mua sắm!',
+        },
+      });
+      return;
+    }
     setAddedNotice(`Đã thêm "${product.tenSanPham}" vào giỏ hàng!`);
     setTimeout(() => setAddedNotice(''), 2500);
   };
@@ -97,7 +109,18 @@ const ShopPage = () => {
       )}
 
       {/* Header Hồ Sơ Gian Hàng */}
-      <section className="shop-banner-header">
+      <section
+        className="shop-banner-header"
+        style={
+          store?.anhBiaShop
+            ? {
+                backgroundImage: `linear-gradient(120deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.78)), url("${store.anhBiaShop}")`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }
+            : undefined
+        }
+      >
         <div className="container shop-header-inner">
           <div className="shop-profile-card">
             <div className="shop-avatar">
@@ -112,6 +135,22 @@ const ShopPage = () => {
               <p className="shop-desc">{store?.moTaGianHang || 'Chào mừng bạn đến với gian hàng chính thức trên Sàn CTUT Gear.'}</p>
               <div className="shop-quick-stats">
                 <span><FiMapPin /> {store?.diaChi || 'Chưa cập nhật địa chỉ'}</span>
+                {store?.soDienThoai && <span><FiPhone /> {store.soDienThoai}</span>}
+                {store?.email && <span><FiMail /> {store.email}</span>}
+                {store?.gioMoCua && <span><FiClock /> {store.gioMoCua}</span>}
+                {store?.websiteHoacMangXaHoi && (
+                  <span>
+                    <FiGlobe />{' '}
+                    <a
+                      href={store.websiteHoacMangXaHoi.startsWith('http') ? store.websiteHoacMangXaHoi : `https://${store.websiteHoacMangXaHoi}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: '#93c5fd', textDecoration: 'underline' }}
+                    >
+                      Liên kết Shop
+                    </a>
+                  </span>
+                )}
                 <span><FiStar className="star-icon" /> Đánh giá: 4.9/5.0</span>
                 <span><FiBox /> {products.length} Sản phẩm mở bán</span>
               </div>
@@ -124,6 +163,39 @@ const ShopPage = () => {
           </div>
         </div>
       </section>
+
+      {/* Chính sách & Album Hình Ảnh Cửa Hàng (nếu Shop đã thiết lập) */}
+      {(store?.chinhSachBaoHanh || store?.chinhSachGiaoHang || parseImageGallery(store?.hinhAnhCuaHang).length > 0) && (
+        <section className="container shop-extra-info-section">
+          {(store?.chinhSachBaoHanh || store?.chinhSachGiaoHang) && (
+            <div className="shop-policies-grid">
+              {store?.chinhSachBaoHanh && (
+                <div className="shop-policy-card">
+                  <h4><FiShield /> Chính Sách Bảo Hành & Đổi Trả</h4>
+                  <p>{store.chinhSachBaoHanh}</p>
+                </div>
+              )}
+              {store?.chinhSachGiaoHang && (
+                <div className="shop-policy-card">
+                  <h4><FiTruck /> Chính Sách Giao Hàng & Đóng Gói</h4>
+                  <p>{store.chinhSachGiaoHang}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {parseImageGallery(store?.hinhAnhCuaHang).length > 0 && (
+            <div className="shop-album-showcase">
+              <h4><FiImage /> Hình Ảnh Thực Tế Cửa Hàng & Kho Hàng</h4>
+              <div className="shop-album-strip">
+                {parseImageGallery(store?.hinhAnhCuaHang).map((photo, idx) => (
+                  <img key={idx} src={photo} alt={`${store?.tenKho} ${idx + 1}`} />
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Danh sách Voucher độc quyền của Shop */}
       <section className="container shop-vouchers-section">

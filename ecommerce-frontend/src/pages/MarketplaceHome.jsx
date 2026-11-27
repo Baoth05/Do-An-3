@@ -12,8 +12,9 @@
  * ==============================================================================
  */
 import { useState, useEffect, useContext, useMemo } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { marketplaceService } from '../services/marketplaceService';
+import { authService } from '../services/authService';
 import { CartContext } from '../context/CartContext';
 import { 
   FiCheck, FiShoppingCart, FiStar, 
@@ -32,6 +33,8 @@ const MarketplaceHome = () => {
   const [loading, setLoading] = useState(true);
   const [addedNotice, setAddedNotice] = useState('');
 
+  const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryParam = searchParams.get('q') || '';
 
@@ -59,7 +62,15 @@ const MarketplaceHome = () => {
   const handleAddToCart = (product, e) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product, 1);
+    if (!authService.isCustomerAuthenticated() || !addToCart(product, 1)) {
+      navigate('/login', {
+        state: {
+          from: location,
+          message: 'Vui lòng đăng nhập tài khoản khách hàng để thêm sản phẩm vào giỏ hàng và mua sắm!',
+        },
+      });
+      return;
+    }
     setAddedNotice(`Đã thêm "${product.tenSanPham}" vào giỏ hàng!`);
     setTimeout(() => setAddedNotice(''), 2500);
   };

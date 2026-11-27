@@ -93,6 +93,20 @@ const SellerLayout = () => {
     };
 
     resolveSellerStore();
+
+    const handleStoreUpdated = (e) => {
+      if (e?.detail?.id) {
+        setCurrentStore(e.detail);
+        setCurrentStoreId(String(e.detail.id));
+        if (currentSeller?.taiKhoan) {
+          localStorage.setItem(`seller_store_${currentSeller.taiKhoan}`, JSON.stringify(e.detail));
+        }
+      } else {
+        resolveSellerStore();
+      }
+    };
+    window.addEventListener('seller-store-updated', handleStoreUpdated);
+    return () => window.removeEventListener('seller-store-updated', handleStoreUpdated);
   }, [currentSeller]);
 
   const handleAdminStoreChange = (newId) => {

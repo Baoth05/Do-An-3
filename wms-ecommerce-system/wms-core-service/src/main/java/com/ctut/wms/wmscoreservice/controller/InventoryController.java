@@ -60,6 +60,16 @@ public class InventoryController {
         }
     }
 
+    // API tra cứu chi tiết 1 bản ghi tồn kho theo ID (dùng cho trang chỉnh sửa SP của Shop)
+    @GetMapping("/{id:\\d+}")
+    public ResponseEntity<?> getInventoryById(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(inventoryService.getInventoryById(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
+    }
+
     // API lấy tồn kho của một Kho Bãi vật lý
     @GetMapping("/warehouse/{warehouseId}")
     public ResponseEntity<List<InventoryResponse>> getInventoryByWarehouse(@PathVariable Long warehouseId) {
@@ -85,9 +95,13 @@ public class InventoryController {
         private Boolean dangBan;
         private BigDecimal giaBanHienTai;
         private Integer soLuongCanhBao;
+        private String hinhAnhRieng;
+        private List<String> danhSachHinhAnh;
+        private String moTaSanPham;
+        private String thongSoKyThuat;
     }
 
-    // API đăng bán sản phẩm lên sàn TMĐT và thiết lập giá bán lẻ
+    // API đăng bán sản phẩm lên sàn TMĐT và thiết lập giá bán lẻ, hình ảnh, mô tả
     @PutMapping("/{id}/publish")
     public ResponseEntity<?> publishToMarketplace(
             @PathVariable Long id,
@@ -98,7 +112,11 @@ public class InventoryController {
                     id,
                     request.getDangBan(),
                     request.getGiaBanHienTai(),
-                    request.getSoLuongCanhBao()
+                    request.getSoLuongCanhBao(),
+                    request.getHinhAnhRieng(),
+                    request.getDanhSachHinhAnh(),
+                    request.getMoTaSanPham(),
+                    request.getThongSoKyThuat()
             ));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

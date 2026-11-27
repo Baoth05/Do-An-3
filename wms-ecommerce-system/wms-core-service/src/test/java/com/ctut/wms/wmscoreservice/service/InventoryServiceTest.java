@@ -2,6 +2,7 @@ package com.ctut.wms.wmscoreservice.service;
 
 import com.ctut.wms.wmscoreservice.dto.InventoryRequest;
 import com.ctut.wms.wmscoreservice.dto.InventoryResponse;
+import com.ctut.wms.wmscoreservice.entity.Inventory;
 import com.ctut.wms.wmscoreservice.entity.Product;
 import com.ctut.wms.wmscoreservice.entity.Warehouse;
 import com.ctut.wms.wmscoreservice.repository.InventoryRepository;
@@ -137,5 +138,34 @@ class InventoryServiceTest {
                         && tk.getMaChungTu().startsWith("KK-")
                         && tk.getSoLuongSauBienDong() == 17
         ));
+    }
+
+    @Test
+    @DisplayName("Chủ shop cập nhật nhiều hình ảnh, ảnh đại diện và mô tả riêng khi thiết lập đăng bán")
+    void sellerCanPublishWithMultipleImagesAndCustomDescription() {
+        Inventory inv = fx.stock(laptop, store, 8, 8);
+        org.mockito.Mockito.when(inventoryRepository.findById(inv.getId())).thenReturn(java.util.Optional.of(inv));
+        TestFixtures.as("STORE_OWNER", OWNER);
+
+        InventoryResponse res = service.publishToMarketplace(
+                inv.getId(),
+                true,
+                java.math.BigDecimal.valueOf(21_500_000),
+                3,
+                "https://cdn.example.com/cover.jpg",
+                java.util.List.of("https://cdn.example.com/cover.jpg", "https://cdn.example.com/angle2.jpg", "https://cdn.example.com/cover.jpg"),
+                "Tặng kèm balo & chuột không dây",
+                "CPU: Intel Core Ultra 7\nRAM: 16GB"
+        );
+
+        assertThat(res.getDangBan()).isTrue();
+        assertThat(res.getGiaBanHienTai()).isEqualByComparingTo("21500000");
+        assertThat(res.getHinhAnh()).isEqualTo("https://cdn.example.com/cover.jpg");
+        assertThat(res.getDanhSachHinhAnh()).containsExactly(
+                "https://cdn.example.com/cover.jpg",
+                "https://cdn.example.com/angle2.jpg"
+        );
+        assertThat(res.getMoTa()).isEqualTo("Tặng kèm balo & chuột không dây");
+        assertThat(res.getThongSoKyThuat()).contains("Intel Core Ultra 7");
     }
 }
