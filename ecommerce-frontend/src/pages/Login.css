@@ -1,173 +1,429 @@
 /* src/pages/Login.css */
-body {
-    margin: 0;
-    background-color: #f1f5f9;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
 
+/* =========================================
+   1. BẢNG MÀU CAM SÁNG (DỄ TÙY CHỈNH)
+   ========================================= */
 .login-page-wrapper {
+    /* Tông cam sáng chủ đạo đồng bộ Header Trang Chủ */
+    --brand-orange: #ff5e1a;
+    --brand-orange-bright: #ff7a18;
+    --brand-orange-light: #ff9436;
+    --brand-orange-deep: #ea4810;
+    --brand-orange-dark: #c93706;
+    --brand-orange-soft: #fff4ed;
+    --brand-orange-border: #fed7aa;
+
+    /* Màu phụ cho nút/banner Kênh Người Bán và điểm nhấn chữ vàng */
+    --brand-dark: #0f172a;
+    --brand-dark-elevated: #1e293b;
+    --brand-yellow: #fde047;
+    --brand-gold: #f59e0b;
+
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #6b7280;
+    --border-light: #e5e7eb;
+    --bg-canvas: #f8f9fb;
+
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+    background-color: var(--bg-canvas);
+    background-image:
+        radial-gradient(circle at 12% 20%, rgba(255, 110, 26, 0.1) 0%, transparent 42%),
+        radial-gradient(circle at 88% 82%, rgba(255, 160, 64, 0.1) 0%, transparent 45%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text-primary);
 }
 
-/* --- Top Navigation --- */
-.login-top-nav {
+/* =========================================
+   2. CÁC HIỆU ỨNG ĐỘNG (ANIMATIONS)
+   ========================================= */
+
+/* Hiệu ứng khung chính trồi lên mượt mà khi tải trang */
+@keyframes cardEntrance {
+    0% {
+        opacity: 0;
+        transform: translateY(24px) scale(0.985);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Hiệu ứng từng thẻ tính năng trượt ngang nhẹ vào vị trí */
+@keyframes slideInFeature {
+    0% {
+        opacity: 0;
+        transform: translateX(-18px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Hiệu ứng quầng sáng cam bồng bềnh ở cột trái */
+@keyframes floatGlow {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    50% {
+        transform: translate(-18px, 16px) scale(1.1);
+    }
+}
+
+/* Hiệu ứng chấm trạng thái xanh tỏa sóng radar */
+@keyframes pulseRing {
+    0% {
+        box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.75);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(74, 222, 128, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+    }
+}
+
+/* Hiệu ứng tia sáng lướt qua nút Đăng Nhập */
+@keyframes shimmerSweep {
+    0% {
+        transform: translateX(-120%) skewX(-22deg);
+    }
+    45%, 100% {
+        transform: translateX(260%) skewX(-22deg);
+    }
+}
+
+/* Hiệu ứng nền lưới công nghệ trượt nhẹ */
+@keyframes gridDrift {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 36px 36px;
+    }
+}
+
+/* =========================================
+   3. HEADER 2 TẦNG ĐỒNG BỘ MÀU CAM SÁNG
+   ========================================= */
+.login-header-group {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    /* Đưa nền gradient cam ra thẻ bọc ngoài để cả 2 tầng đồng bộ liền mạch */
+    background: linear-gradient(90deg, #ee4d2d 0%, var(--brand-orange) 52%, var(--brand-orange-bright) 100%);
+    box-shadow: 0 6px 22px rgba(234, 72, 16, 0.22);
+}
+
+/* Tầng 1: Thanh tiện ích đồng bộ màu cam (phủ cam trầm rất nhẹ để tạo ranh giới tinh tế) */
+.login-top-utility {
+    background: rgba(154, 42, 0, 0.16);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.utility-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 7px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 36px;
-    background: #ffffff;
-    border-bottom: 1px solid #e2e8f0;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.utility-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.utility-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.utility-item.highlight {
+    color: #ffffff;
+}
+
+/* Đổi số Hotline sang màu vàng sáng để nổi bật rõ trên nền cam */
+.utility-item.highlight strong {
+    color: var(--brand-yellow);
+}
+
+.utility-sep {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.utility-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.18s ease;
+}
+
+.utility-link:hover {
+    color: var(--brand-yellow);
+}
+
+/* Tầng 2: Thanh điều hướng chính dùng chung nền cam từ .login-header-group */
+.login-top-nav {
+    background: transparent;
+    color: #ffffff;
+}
+
+.nav-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
 }
 
 .nav-left {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 16px;
 }
 
 .nav-logo-link {
     text-decoration: none;
     color: inherit;
+    display: inline-flex;
+    align-items: center;
+    transition: transform 0.22s ease;
 }
 
-.nav-logo {
+.nav-logo-link:hover {
+    transform: translateY(-1px);
+}
+
+/* Logo ảnh CTUT GEAR */
+.nav-brand-logo {
     display: flex;
     align-items: center;
-    gap: 8px;
-    color: #2563eb;
+    gap: 11px;
 }
 
-.logo-icon {
-    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-    color: white;
-    padding: 3px 8px;
-    border-radius: 6px;
+.brand-logo-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
+    background: #ffffff;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(124, 30, 0, 0.28);
+    overflow: hidden;
+    flex-shrink: 0;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.nav-logo-link:hover .brand-logo-badge {
+    transform: scale(1.06) rotate(-2deg);
+    box-shadow: 0 6px 18px rgba(124, 30, 0, 0.36);
+}
+
+.brand-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    display: block;
+}
+
+.brand-logo-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.08;
+}
+
+.brand-name {
+    font-size: 21px;
     font-weight: 900;
-    font-size: 14px;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+    letter-spacing: 0.4px;
+    color: #ffffff;
+    text-shadow: 0 2px 6px rgba(154, 42, 0, 0.22);
 }
 
-.nav-logo strong {
-    font-size: 19px;
-    font-weight: 800;
-    letter-spacing: -0.3px;
-    color: #0f172a;
+.brand-name-accent {
+    color: var(--brand-yellow);
+    margin-left: 3px;
+}
+
+.brand-tagline {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 1.1px;
+    color: rgba(255, 255, 255, 0.92);
+    margin-top: 2px;
 }
 
 .nav-divider {
-    color: #cbd5e1;
-    font-size: 18px;
+    width: 1px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.38);
 }
 
 .nav-portal-title {
-    font-size: 14px;
+    font-size: 15.5px;
     font-weight: 700;
-    color: #475569;
+    color: #ffffff;
+    letter-spacing: 0.1px;
 }
 
 .nav-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .seller-portal-cta {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #fffbeb;
-    color: #b45309;
-    border: 1px solid #fde68a;
-    padding: 7px 14px;
-    border-radius: 8px;
+    background: var(--brand-dark);
+    color: var(--brand-yellow);
+    border: 1px solid rgba(253, 224, 71, 0.4);
+    padding: 8px 14px;
+    border-radius: 9px;
     font-size: 12.5px;
     font-weight: 700;
     text-decoration: none;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
 
 .seller-portal-cta:hover {
-    background: #fef3c7;
-    color: #92400e;
-    transform: translateY(-1px);
+    background: var(--brand-dark-elevated);
+    border-color: var(--brand-yellow);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.26);
 }
 
-.wms-portal-cta {
+.nav-home-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #f1f5f9;
-    color: #334155;
-    border: 1px solid #cbd5e1;
-    padding: 7px 14px;
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    padding: 8px 14px;
+    border-radius: 9px;
     font-size: 12.5px;
     font-weight: 700;
     text-decoration: none;
-    transition: all 0.2s;
+    backdrop-filter: blur(6px);
+    transition: all 0.2s ease;
 }
 
-.wms-portal-cta:hover {
-    background: #e2e8f0;
-    color: #0f172a;
-    transform: translateY(-1px);
+.nav-home-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
 }
 
-.nav-right .nav-help {
-    color: #64748b;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 13px;
-    padding: 6px 10px;
-    border-radius: 6px;
-    transition: background 0.15s;
+/* =========================================
+   4. KHUNG CHÍNH 2 CỘT
+   ========================================= */
+.login-main-section {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 34px 20px;
 }
 
-.nav-right .nav-help:hover {
-    color: #0f172a;
-    background: #f1f5f9;
-}
-
-/* --- Main Container --- */
 .login-main-container {
     display: flex;
-    max-width: 1080px;
-    width: 94%;
-    margin: 36px auto;
+    max-width: 1100px;
+    width: 100%;
     background: #ffffff;
     border-radius: 24px;
-    box-shadow: 0 20px 60px -15px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    box-shadow:
+        0 26px 65px -16px rgba(234, 72, 16, 0.16),
+        0 0 0 1px rgba(255, 110, 26, 0.1);
     overflow: hidden;
-    flex: 1;
+    animation: cardEntrance 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* --- Left Promo Side --- */
+/* --- Cột trái: Promo Nâng Tầm Không Gian (Màu Cam Sáng + Hiệu ứng động) --- */
 .login-promo-side {
     flex: 1.05;
-    background-color: #0f172a;
+    background-color: var(--brand-orange);
     background-image: url('https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80');
     background-size: cover;
     background-position: center;
     position: relative;
-    padding: 44px;
-    color: white;
+    padding: 44px 40px;
+    color: #ffffff;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    overflow: hidden;
 }
 
+/* Lớp phủ cam sáng rực rỡ giữ độ tương phản cao cho chữ trắng */
 .promo-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 58, 138, 0.88) 100%);
+    inset: 0;
+    background: linear-gradient(
+        140deg,
+        rgba(255, 128, 24, 0.94) 0%,
+        rgba(255, 92, 22, 0.93) 48%,
+        rgba(217, 56, 8, 0.96) 100%
+    );
     z-index: 1;
+}
+
+/* Lưới kỹ thuật mờ di chuyển chậm tạo chiều sâu Gaming */
+.promo-grid-pattern {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: 0.12;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.6) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.6) 1px, transparent 1px);
+    background-size: 36px 36px;
+    animation: gridDrift 16s linear infinite;
+    pointer-events: none;
+}
+
+/* Quầng sáng động bồng bềnh */
+.promo-glow {
+    position: absolute;
+    border-radius: 50%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.promo-glow-primary {
+    width: 340px;
+    height: 340px;
+    background: radial-gradient(circle, rgba(255, 232, 130, 0.42) 0%, transparent 70%);
+    top: -100px;
+    right: -90px;
+    animation: floatGlow 7s ease-in-out infinite;
+}
+
+.promo-glow-secondary {
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.24) 0%, transparent 70%);
+    bottom: -90px;
+    left: -70px;
+    animation: floatGlow 9s ease-in-out infinite reverse;
 }
 
 .promo-content {
@@ -179,102 +435,139 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
     margin-bottom: 24px;
 }
 
 .badge-official {
-    background: rgba(37, 99, 235, 0.95);
-    padding: 5px 12px;
-    border-radius: 6px;
+    background: #ffffff;
+    color: var(--brand-orange-deep);
+    padding: 6px 13px;
+    border-radius: 8px;
     font-size: 11px;
-    font-weight: 800;
-    display: flex;
+    font-weight: 900;
+    display: inline-flex;
     align-items: center;
     gap: 5px;
     letter-spacing: 0.5px;
+    box-shadow: 0 6px 16px rgba(154, 42, 0, 0.22);
 }
 
 .badge-flash {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(15, 23, 42, 0.26);
+    border: 1px solid rgba(255, 255, 255, 0.28);
     padding: 5px 12px;
     border-radius: 999px;
     font-size: 11px;
-    font-weight: 600;
-    display: flex;
+    font-weight: 700;
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
-    backdrop-filter: blur(6px);
+    gap: 7px;
+    backdrop-filter: blur(8px);
 }
 
-.badge-flash .dot {
-    width: 7px;
-    height: 7px;
-    background: #10b981;
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: #4ade80;
     border-radius: 50%;
-    box-shadow: 0 0 6px #10b981;
+    animation: pulseRing 2s infinite;
 }
 
 .promo-title {
-    font-size: 28px;
-    font-weight: 800;
-    margin: 0 0 10px 0;
-    line-height: 1.25;
+    font-size: 29px;
+    font-weight: 900;
+    margin: 0 0 12px 0;
+    line-height: 1.24;
     letter-spacing: -0.4px;
+    color: #ffffff;
+    text-shadow: 0 2px 10px rgba(154, 42, 0, 0.22);
+}
+
+.promo-highlight {
+    color: #fef08a;
 }
 
 .promo-subtitle {
     font-size: 13.5px;
-    color: #cbd5e1;
-    margin: 0 0 28px 0;
-    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.92);
+    margin: 0 0 26px 0;
+    line-height: 1.55;
 }
 
 .promo-features {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    margin-bottom: 32px;
+    gap: 12px;
+    margin-bottom: 28px;
 }
 
 .feat-box {
     display: flex;
+    align-items: flex-start;
     gap: 14px;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.14);
     padding: 14px 16px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(8px);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    backdrop-filter: blur(10px);
+    transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+    animation: slideInFeature 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.feat-delay-1 { animation-delay: 0.12s; }
+.feat-delay-2 { animation-delay: 0.24s; }
+.feat-delay-3 { animation-delay: 0.36s; }
+
+.feat-box:hover {
+    background: rgba(255, 255, 255, 0.22);
+    transform: translateX(6px) translateY(-2px);
+    box-shadow: 0 10px 24px rgba(154, 42, 0, 0.22);
 }
 
 .feat-icon {
-    color: #60a5fa;
-    font-size: 20px;
-    margin-top: 2px;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #ffffff;
+    color: var(--brand-orange);
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(154, 42, 0, 0.18);
+    transition: transform 0.25s ease;
+}
+
+.feat-box:hover .feat-icon {
+    transform: scale(1.1) rotate(-6deg);
 }
 
 .feat-text strong {
     display: block;
-    font-size: 13px;
+    font-size: 13.2px;
     margin-bottom: 3px;
     color: #ffffff;
 }
 
 .feat-text p {
     margin: 0;
-    font-size: 11.5px;
-    color: #94a3b8;
-    line-height: 1.4;
+    font-size: 11.8px;
+    color: rgba(255, 255, 255, 0.88);
+    line-height: 1.45;
 }
 
 .promo-trust-badge {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(15, 23, 42, 0.3);
     padding: 12px 16px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(8px);
 }
 
 .trust-avatars {
@@ -282,130 +575,114 @@ body {
 }
 
 .trust-avatars .av {
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    background: #f59e0b;
+    background: #fde047;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10.5px;
-    font-weight: bold;
-    border: 2px solid #0f172a;
+    font-size: 11px;
+    font-weight: 800;
+    border: 2px solid #ffffff;
     margin-left: -8px;
-    color: #ffffff;
+    color: #111827;
 }
 
 .trust-avatars .av:first-child {
     margin-left: 0;
-    background: #2563eb;
+    background: #0f172a;
+    color: #ffffff;
 }
 
 .trust-avatars .av:last-child {
     background: #10b981;
+    color: #ffffff;
 }
 
 .trust-text .stars {
     font-size: 12px;
-    color: #fbbf24;
-    font-weight: bold;
+    color: #fef08a;
+    font-weight: 800;
 }
 
 .trust-text .desc {
     font-size: 11px;
-    color: #cbd5e1;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .authentic-tag {
     margin-left: auto;
     font-size: 10px;
-    font-weight: 800;
-    color: #93c5fd;
-    background: rgba(59, 130, 246, 0.25);
-    padding: 4px 8px;
-    border-radius: 6px;
-    border: 1px solid rgba(147, 197, 253, 0.3);
+    font-weight: 900;
+    color: var(--brand-orange-deep);
+    background: #fef08a;
+    padding: 5px 10px;
+    border-radius: 7px;
+    white-space: nowrap;
 }
 
-/* --- Right Form Side --- */
+/* =========================================
+   5. CỘT PHẢI: FORM ĐĂNG NHẬP TÔNG CAM SÁNG
+   ========================================= */
 .login-form-side {
-    flex: 1.1;
+    flex: 1.05;
     padding: 40px 44px;
-    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: center;
-}
-
-.form-tabs {
-    display: flex;
-    gap: 24px;
-    border-bottom: 2px solid #f1f5f9;
-    margin-bottom: 24px;
-}
-
-.tab-btn {
-    background: none;
-    border: none;
-    font-size: 15px;
-    font-weight: 700;
-    color: #64748b;
-    padding: 0 0 12px 0;
-    cursor: pointer;
-    position: relative;
-    transition: color 0.15s;
-}
-
-.tab-btn:hover {
-    color: #0f172a;
-}
-
-.tab-btn.active {
-    color: #2563eb;
-}
-
-.tab-btn.active::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    right: 0;
-    height: 2.5px;
-    background: #2563eb;
-    border-radius: 2px;
+    background: #ffffff;
 }
 
 .form-header {
-    margin-bottom: 20px;
+    margin-bottom: 22px;
+}
+
+.customer-role-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--brand-orange-soft);
+    color: var(--brand-orange-deep);
+    border: 1px solid var(--brand-orange-border);
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.35px;
+    margin-bottom: 10px;
 }
 
 .form-header h2 {
-    font-size: 22px;
+    font-size: 25px;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--text-primary);
     margin: 0 0 6px 0;
     letter-spacing: -0.3px;
 }
 
 .form-header p {
-    font-size: 13px;
-    color: #64748b;
+    font-size: 13.5px;
+    color: var(--text-muted);
     margin: 0;
+    line-height: 1.5;
 }
 
-
-
-/* Alerts */
+/* Hộp thông báo lỗi / thành công */
 .auth-alert-box {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 11px 15px;
+    padding: 12px 14px;
     border-radius: 10px;
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 600;
     margin-bottom: 18px;
     line-height: 1.4;
+}
+
+.auth-alert-box .alert-icon {
+    flex-shrink: 0;
 }
 
 .auth-alert-box.error {
@@ -420,7 +697,7 @@ body {
     color: #065f46;
 }
 
-/* Input Fields */
+/* Trường nhập liệu */
 .auth-form {
     display: flex;
     flex-direction: column;
@@ -430,36 +707,23 @@ body {
 .input-group {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    text-align: left;
+    gap: 7px;
 }
 
 .input-group label {
     font-size: 13px;
     font-weight: 700;
-    color: #1e293b;
+    color: #1f2937;
 }
 
 .input-group label .req {
-    color: #ef4444;
-}
-
-.input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background: #f8fafc;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
-    overflow: hidden;
-    transition: all 0.2s ease;
+    color: var(--brand-orange);
 }
 
 .input-wrapper {
     position: relative;
     width: 100%;
     display: block;
-    /* Bỏ flex, dùng block để chứa input 100% */
 }
 
 .input-icon {
@@ -467,118 +731,162 @@ body {
     left: 14px;
     top: 50%;
     transform: translateY(-50%);
-    /* Căn giữa icon theo chiều dọc */
-    color: #94a3b8;
+    color: #9ca3af;
     display: flex;
     align-items: center;
-    font-size: 18px;
+    font-size: 17px;
     pointer-events: none;
-    /* Rất quan trọng: cho phép click "xuyên" qua icon vào input */
+    transition: color 0.2s ease, transform 0.2s ease;
 }
 
 .input-wrapper input {
     width: 100%;
     box-sizing: border-box;
-    /* Đảm bảo padding không làm tràn chiều rộng */
-    background: #f8fafc;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
-    /* Căn lề: trên 12px, phải 40px (để nút hiện/ẩn pass), dưới 12px, TRÁI 40px (chừa chỗ cho icon) */
-    padding: 12px 40px 12px 42px;
+    background: #f9fafb;
+    border: 1.5px solid var(--border-light);
+    border-radius: 11px;
+    padding: 12px 42px 12px 42px;
     font-size: 14px;
+    color: var(--text-primary);
     outline: none;
-    color: #0f172a;
-    transition: all 0.2s ease;
+    transition: all 0.22s ease;
+}
+
+.input-wrapper input::placeholder {
+    color: #9ca3af;
+}
+
+.input-wrapper input:hover {
+    border-color: #fdba74;
 }
 
 .input-wrapper input:focus {
     background: #ffffff;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    border-color: var(--brand-orange);
+    box-shadow: 0 0 0 4px rgba(255, 94, 26, 0.14);
 }
 
-.input-wrapper input::placeholder {
-    color: #94a3b8;
+.input-wrapper:focus-within .input-icon {
+    color: var(--brand-orange);
+    transform: translateY(-50%) scale(1.08);
 }
 
 .btn-toggle-pass {
     position: absolute;
-    right: 14px;
+    right: 12px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
-    padding: 0;
-    color: #94a3b8;
+    padding: 4px;
+    color: #9ca3af;
     cursor: pointer;
     display: flex;
     align-items: center;
-    font-size: 18px;
-    transition: color 0.15s;
+    font-size: 17px;
+    transition: color 0.15s ease;
 }
 
 .btn-toggle-pass:hover {
-    color: #0f172a;
+    color: var(--brand-orange);
 }
 
+/* Ghi nhớ đăng nhập & Quên mật khẩu */
 .form-actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 12.5px;
+    font-size: 13px;
     margin-top: 2px;
 }
 
 .remember-checkbox {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: #475569;
+    color: var(--text-secondary);
     font-weight: 600;
     cursor: pointer;
     user-select: none;
 }
 
 .remember-checkbox input {
-    accent-color: #2563eb;
+    accent-color: var(--brand-orange);
     width: 15px;
     height: 15px;
     cursor: pointer;
 }
 
 .forgot-link {
-    color: #2563eb;
+    color: var(--brand-orange);
     text-decoration: none;
     font-weight: 700;
+    transition: color 0.18s ease;
 }
 
 .forgot-link:hover {
     text-decoration: underline;
+    color: var(--brand-orange-dark);
 }
 
+/* Nút đăng nhập chính màu cam sáng + hiệu ứng ánh sáng lướt (Shimmer) */
 .btn-primary-login {
+    position: relative;
+    overflow: hidden;
     width: 100%;
-    height: 48px;
-    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-    color: white;
+    height: 50px;
+    background: linear-gradient(135deg, var(--brand-orange-bright) 0%, var(--brand-orange) 52%, #ee4d2d 100%);
+    color: #ffffff;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 14.5px;
-    font-weight: 700;
+    font-weight: 800;
+    letter-spacing: 0.45px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
-    transition: all 0.2s ease;
+    box-shadow: 0 8px 22px rgba(255, 94, 26, 0.36);
+    transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
     margin-top: 4px;
 }
 
+.btn-shimmer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 45%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.35) 50%,
+        transparent 100%
+    );
+    animation: shimmerSweep 3.8s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.btn-label,
+.btn-arrow {
+    position: relative;
+    z-index: 1;
+    transition: transform 0.22s ease;
+}
+
 .btn-primary-login:hover:not(:disabled) {
-    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(255, 94, 26, 0.46);
+    filter: brightness(1.04);
+}
+
+.btn-primary-login:hover:not(:disabled) .btn-arrow {
+    transform: translateX(4px);
+}
+
+.btn-primary-login:active:not(:disabled) {
+    transform: translateY(0);
 }
 
 .btn-primary-login:disabled {
@@ -593,39 +901,47 @@ body {
 }
 
 .register-prompt p {
-    font-size: 13px;
-    color: #64748b;
+    font-size: 13.5px;
+    color: var(--text-muted);
     margin: 0;
 }
 
 .highlight-link {
-    color: #2563eb !important;
+    color: var(--brand-orange);
     text-decoration: none;
     font-weight: 700;
 }
 
 .highlight-link:hover {
     text-decoration: underline;
+    color: var(--brand-orange-dark);
 }
 
-/* Seller switch banner */
+/* Banner chuyển sang Kênh Người Bán */
 .seller-switch-banner {
     margin-top: 22px;
     padding: 14px 16px;
-    background: #f8fafc;
-    border: 1px dashed #cbd5e1;
-    border-radius: 12px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border: 1px solid rgba(255, 122, 24, 0.32);
+    border-radius: 13px;
     display: flex;
     align-items: center;
     gap: 12px;
+    color: #ffffff;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.seller-switch-banner:hover {
+    transform: translateY(-2px);
+    border-color: var(--brand-orange-bright);
 }
 
 .seller-banner-icon {
     width: 38px;
     height: 38px;
     border-radius: 10px;
-    background: #fef3c7;
-    color: #d97706;
+    background: rgba(255, 122, 24, 0.18);
+    color: var(--brand-orange-light);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -639,13 +955,13 @@ body {
 .seller-banner-text strong {
     display: block;
     font-size: 12.5px;
-    color: #0f172a;
+    color: #ffffff;
     margin-bottom: 2px;
 }
 
 .seller-banner-text p {
     font-size: 11px;
-    color: #64748b;
+    color: #cbd5e1;
     margin: 0;
     line-height: 1.35;
 }
@@ -654,71 +970,127 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    background: #f59e0b;
+    background: linear-gradient(135deg, var(--brand-orange-bright), var(--brand-orange));
     color: #ffffff;
-    padding: 7px 12px;
+    padding: 8px 13px;
     border-radius: 8px;
     font-size: 11.5px;
-    font-weight: 700;
+    font-weight: 800;
     text-decoration: none;
     white-space: nowrap;
-    transition: background 0.2s;
+    box-shadow: 0 4px 12px rgba(255, 94, 26, 0.3);
+    transition: transform 0.2s ease, filter 0.2s ease;
 }
 
 .btn-go-seller:hover {
-    background: #d97706;
+    filter: brightness(1.08);
+    transform: translateY(-1px);
 }
 
-/* --- Footer --- */
+/* =========================================
+   6. FOOTER
+   ========================================= */
 .login-footer {
     text-align: center;
-    padding: 24px;
-    color: #64748b;
+    padding: 20px 24px 28px;
+    color: var(--text-muted);
     font-size: 12px;
+    border-top: 1px solid var(--border-light);
+    background: #ffffff;
 }
 
 .footer-links {
     display: flex;
     justify-content: center;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
     margin-bottom: 8px;
+    color: var(--text-secondary);
 }
 
-.dot {
-    color: #cbd5e1;
+.footer-dot {
+    color: #d1d5db;
 }
 
 .footer-policy {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
     margin-bottom: 8px;
 }
 
 .footer-policy a {
-    color: #64748b;
+    color: var(--text-muted);
     text-decoration: none;
-    margin: 0 8px;
+    transition: color 0.15s ease;
 }
 
 .footer-policy a:hover {
-    color: #0f172a;
+    color: var(--brand-orange);
 }
 
 .footer-copyright {
-    color: #94a3b8;
+    color: #9ca3af;
     font-size: 11.5px;
 }
 
-/* Responsive */
-@media (max-width: 860px) {
+/* =========================================
+   7. RESPONSIVE & HỖ TRỢ GIẢM CHUYỂN ĐỘNG
+   ========================================= */
+@media (max-width: 920px) {
     .login-main-container {
         flex-direction: column;
-        margin: 20px auto;
     }
 
-    .login-promo-side {
-        padding: 32px 24px;
-    }
-
+    .login-promo-side,
     .login-form-side {
-        padding: 32px 24px;
+        padding: 32px 26px;
+    }
+}
+
+@media (max-width: 640px) {
+    .hide-mobile {
+        display: none;
+    }
+
+    .nav-inner {
+        padding: 12px 16px;
+    }
+
+    .nav-divider,
+    .nav-portal-title {
+        display: none;
+    }
+
+    .seller-portal-cta span,
+    .nav-home-btn span {
+        display: none;
+    }
+
+    .login-main-section {
+        padding: 18px 12px;
+    }
+
+    .seller-switch-banner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .btn-go-seller {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Tự động tắt hiệu ứng nếu người dùng bật chế độ giảm chuyển động trên hệ điều hành */
+@media (prefers-reduced-motion: reduce) {
+    .login-main-container,
+    .feat-box,
+    .promo-glow,
+    .promo-grid-pattern,
+    .status-dot,
+    .btn-shimmer {
+        animation: none !important;
     }
 }

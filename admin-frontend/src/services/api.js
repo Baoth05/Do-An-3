@@ -4,7 +4,7 @@ import axios from 'axios';
 // 1. Tạo một bản sao của axios với đường dẫn mặc định tới Backend (Gateway)
 const api = axios.create({
   // Địa chỉ API Gateway cấu hình trong file .env (VITE_API_GATEWAY_URL), mặc định localhost:8080
-  baseURL: import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080',
+  baseURL: import.meta.env.VITE_API_GATEWAY_URL || 'http://10.10.62.112:8080',
   timeout: 10000, // Nếu quá 10 giây không có phản hồi thì báo lỗi
   headers: {
     'Content-Type': 'application/json',

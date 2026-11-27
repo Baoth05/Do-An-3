@@ -1,60 +1,82 @@
 /* src/pages/MarketplaceHome.css */
 .marketplace-home {
-  padding-bottom: 60px;
+  background-color: #f5f5f5;
+  padding-bottom: 64px;
+  min-height: 100vh;
 }
 
 .toast-notification {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background: #10b981;
+  background: #ee4d2d;
   color: #ffffff;
   padding: 12px 20px;
-  border-radius: 10px;
+  border-radius: 6px;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 10px 25px rgba(238, 77, 45, 0.35);
   z-index: 1000;
   animation: slideIn 0.3s ease-out;
 }
 
 @keyframes slideIn {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
-/* Stores Section */
+/* ==========================================================================
+   KHỐI GIAN HÀNG (STORES SECTION)
+   ========================================================================== */
 .stores-section {
-  margin-bottom: 40px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.shopee-white-box {
+  background: #ffffff;
+  border-radius: 4px;
+  padding: 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 20px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .section-title {
-  font-size: 22px;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 6px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ee4d2d;
+  margin: 0 0 4px 0;
+  letter-spacing: 0.3px;
 }
 
 .section-subtitle {
   font-size: 13px;
-  color: #64748b;
+  color: #757575;
   margin: 0;
 }
 
 .store-pill {
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  padding: 8px 16px;
-  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #d9d9d9;
+  color: #333333;
+  padding: 8px 14px;
+  border-radius: 4px;
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
@@ -64,43 +86,43 @@
   transition: all 0.2s;
 }
 
-.store-pill.active {
-  background: #2563eb;
+.store-pill.active,
+.store-pill:hover {
+  background: #ee4d2d;
   color: #ffffff;
-  border-color: #2563eb;
+  border-color: #ee4d2d;
 }
 
 .stores-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
 }
 
 .store-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 16px;
+  border: 1px solid #eeeeee;
+  border-radius: 6px;
+  padding: 14px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.store-card:hover, .store-card.selected {
-  border-color: #2563eb;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.1);
+.store-card:hover,
+.store-card.selected {
+  border-color: #ee4d2d;
+  box-shadow: 0 4px 12px rgba(238, 77, 45, 0.1);
 }
 
 .store-avatar-wrap img {
-  width: 60px;
-  height: 60px;
-  border-radius: 12px;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
   object-fit: cover;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #eeeeee;
 }
 
 .store-info {
@@ -108,16 +130,16 @@
 }
 
 .store-info h4 {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
-  color: #0f172a;
+  color: #222222;
   margin: 0 0 4px 0;
 }
 
 .store-address {
   font-size: 12px;
-  color: #64748b;
-  margin: 0 0 8px 0;
+  color: #757575;
+  margin: 0 0 6px 0;
 }
 
 .store-meta {
@@ -138,83 +160,279 @@
 
 .btn-visit-store {
   font-size: 12px;
-  font-weight: 700;
-  color: #2563eb;
+  font-weight: 600;
+  color: #ee4d2d;
   text-decoration: none;
-  background: #eff6ff;
-  padding: 8px 12px;
-  border-radius: 8px;
+  background: #fff5f2;
+  border: 1px solid #ffcabf;
+  padding: 7px 12px;
+  border-radius: 4px;
   white-space: nowrap;
+  transition: all 0.2s;
 }
 
 .btn-visit-store:hover {
-  background: #dbeafe;
+  background: #ee4d2d;
+  color: #ffffff;
+  border-color: #ee4d2d;
 }
 
-/* Catalog Toolbar */
-.catalog-toolbar {
+/* ==========================================================================
+   KHỐI DANH MỤC PHONG CÁCH SHOPEE + ICON CÔNG NGHỆ
+   ========================================================================== */
+.shopee-category-section {
+  margin-bottom: 20px;
+}
+
+.shopee-category-card {
+  background: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.shopee-category-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.category-pills {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.cat-pill {
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #475569;
+.shopee-category-title {
+  margin: 0;
+  font-size: 16px;
   font-weight: 600;
+  color: rgba(0, 0, 0, 0.54);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.btn-category-reset {
+  background: transparent;
+  border: none;
+  color: #ee4d2d;
   font-size: 13px;
-  padding: 8px 16px;
-  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.btn-category-reset:hover {
+  background: #fff5f2;
+}
+
+/* Lưới 8 cột x 2 hàng giống Shopee */
+.shopee-category-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+}
+
+.shopee-cat-item {
+  background: #ffffff;
+  border: none;
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 16px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  text-align: center;
+}
+
+.shopee-cat-item:hover {
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
+  z-index: 2;
+}
+
+.shopee-cat-icon-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #f5f5f5;
+  color: #222222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.shopee-cat-item:hover .shopee-cat-icon-circle {
+  background: #fff0ec;
+  color: #ee4d2d;
+  transform: translateY(-2px);
+}
+
+.shopee-cat-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.8);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Trạng thái danh mục đang được chọn */
+.shopee-cat-item.active {
+  background: #fff5f2;
+  box-shadow: inset 0 0 0 1.5px #ee4d2d;
+  z-index: 3;
+}
+
+.shopee-cat-item.active .shopee-cat-icon-circle {
+  background: #ee4d2d;
+  color: #ffffff;
+}
+
+.shopee-cat-item.active .shopee-cat-label {
+  color: #ee4d2d;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   THANH TIÊU ĐỀ & BỘ LỌC SẢN PHẨM (SHOPEE STYLE)
+   ========================================================================== */
+.shopee-section-bar {
+  background: #ffffff;
+  border-radius: 4px 4px 0 0;
+  border-bottom: 1px solid #eeeeee;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.shopee-section-tab {
+  color: #ee4d2d;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 16px 4px;
+  border-bottom: 3px solid #ee4d2d;
+  letter-spacing: 0.3px;
+}
+
+.filter-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 10px 0;
+}
+
+.sort-select-wrap,
+.price-filter-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #555555;
+}
+
+.sort-select-wrap select,
+.price-filter-wrap select {
+  padding: 7px 10px;
+  border: 1px solid #dcdcdc;
+  border-radius: 3px;
+  background: #ffffff;
+  color: #222222;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+}
+
+.sort-select-wrap select:focus,
+.price-filter-wrap select:focus {
+  border-color: #ee4d2d;
+}
+
+.btn-reset-filters {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fff0ec;
+  color: #ee4d2d;
+  border: 1px solid #ffcabf;
+  padding: 6px 12px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.cat-pill.active, .cat-pill:hover {
-  background: #2563eb;
+.btn-reset-filters:hover {
+  background: #ee4d2d;
   color: #ffffff;
-  border-color: #2563eb;
 }
 
-.product-count {
+.product-summary-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 14px;
   font-size: 13px;
-  color: #64748b;
+  color: #666666;
 }
 
-/* Products Grid */
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 24px;
-}
-
-.product-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+.active-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff0ec;
+  color: #ee4d2d;
+  border: 1px solid #ffcabf;
+  padding: 3px 10px;
   border-radius: 14px;
-  overflow: hidden;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.active-filter-badge svg {
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   LƯỚI & THẺ SẢN PHẨM PHONG CÁCH SHOPEE
+   ========================================================================== */
+.shopee-products-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.shopee-product-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 2px;
   display: flex;
   flex-direction: column;
-  transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
-  border-color: #cbd5e1;
+.shopee-product-card:hover {
+  transform: translateY(-2px);
+  border-color: #ee4d2d;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  z-index: 2;
 }
 
-.product-card-link {
+.shopee-card-link {
   text-decoration: none;
   color: inherit;
   flex: 1;
@@ -222,185 +440,314 @@
   flex-direction: column;
 }
 
-.product-img-wrap {
+/* Ảnh vuông 1:1 */
+.shopee-img-wrap {
   position: relative;
   width: 100%;
-  height: 220px;
-  background: #f8fafc;
-  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  background: #fafafa;
+  overflow: visible;
 }
 
-.product-img-wrap img {
+.shopee-img-wrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s;
+  display: block;
 }
 
-.product-card:hover .product-img-wrap img {
-  transform: scale(1.05);
-}
-
-.discount-tag {
+/* Nhãn "Yêu thích" đặc trưng Shopee bên góc trái */
+.shopee-badge-like {
   position: absolute;
   top: 10px;
-  left: 10px;
-  background: #ef4444;
-  color: #ffffff;
-  font-size: 10px;
-  font-weight: 800;
-  padding: 3px 8px;
-  border-radius: 4px;
-}
-
-.store-tag {
-  position: absolute;
-  bottom: 8px;
-  left: 8px;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(4px);
+  left: -4px;
+  background: #ee4d2d;
   color: #ffffff;
   font-size: 11px;
   font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 6px;
+  padding: 2px 6px;
+  border-radius: 0 2px 2px 0;
+  line-height: 1.3;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
-.product-content {
-  padding: 16px;
+.shopee-badge-like::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  border-top: 4px solid #9e2a14;
+  border-left: 4px solid transparent;
+}
+
+/* Nhãn giảm giá % nền cam nhạt góc phải */
+.shopee-badge-discount {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #feeeea;
+  color: #ee4d2d;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 2px 5px;
+  border-bottom-left-radius: 2px;
+}
+
+.shopee-card-body {
+  padding: 8px 10px 10px;
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-.product-sku {
-  font-size: 11px;
-  font-weight: 700;
-  color: #94a3b8;
-  margin-bottom: 4px;
-}
-
-.product-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: #0f172a;
-  line-height: 1.4;
-  margin: 0 0 10px 0;
+.shopee-product-name {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.87);
+  line-height: 1.38;
+  margin: 0 0 6px 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  height: 40px;
+  min-height: 36px;
 }
 
-.product-pricing {
+/* Nhãn phụ dưới tên sản phẩm */
+.shopee-tags-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.shopee-tag-outline {
+  font-size: 10px;
+  color: #ee4d2d;
+  border: 1px solid #ee4d2d;
+  padding: 1px 4px;
+  border-radius: 1px;
+  line-height: 1.2;
+}
+
+.shopee-tag-deal {
+  font-size: 10px;
+  color: #ffffff;
+  background: #f69113;
+  padding: 1px 4px;
+  border-radius: 1px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+/* Giá bán màu cam đỏ chuẩn Shopee */
+.shopee-price-row {
   display: flex;
   align-items: baseline;
-  gap: 8px;
-  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+  margin-bottom: 6px;
 }
 
-.sale-price {
-  font-size: 18px;
-  font-weight: 800;
-  color: #dc2626;
+.shopee-price-current {
+  color: #ee4d2d;
+  display: inline-flex;
+  align-items: baseline;
 }
 
-.orig-price {
+.shopee-currency {
   font-size: 12px;
-  color: #94a3b8;
+  font-weight: 500;
+  text-decoration: underline;
+  margin-right: 1px;
+}
+
+.shopee-sale-price {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.shopee-orig-price {
+  font-size: 11.5px;
+  color: #9e9e9e;
   text-decoration: line-through;
 }
 
-.product-footer-meta {
+/* Hàng sao vàng + lượt đã bán */
+.shopee-meta-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  font-size: 11px;
-  color: #64748b;
-  margin-top: auto;
-  padding-top: 8px;
-  border-top: 1px solid #f1f5f9;
+  font-size: 11.5px;
+  color: rgba(0, 0, 0, 0.72);
+  margin-bottom: 5px;
 }
 
-.sold-count {
-  font-weight: 600;
-  color: #059669;
+.shopee-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 500;
 }
 
-.product-action-bar {
-  padding: 0 16px 16px 16px;
-}
-
-.btn-add-cart {
-  width: 100%;
-  background: #2563eb;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  padding: 10px;
-  font-weight: 700;
+.shopee-star {
+  color: #ffce3d;
   font-size: 13px;
+}
+
+.shopee-sold {
+  color: rgba(0, 0, 0, 0.65);
+}
+
+/* Dòng vị trí / tên shop */
+.shopee-shop-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #888888;
+}
+
+.shopee-shop-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Nút thêm giỏ hàng phía đáy thẻ */
+.shopee-btn-cart {
+  width: 100%;
+  border: none;
+  border-top: 1px solid #f2f2f2;
+  background: #ffffff;
+  color: #ee4d2d;
+  padding: 9px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
-.btn-add-cart:hover {
-  background: #1d4ed8;
+.shopee-product-card:hover .shopee-btn-cart,
+.shopee-btn-cart:hover {
+  background: #ee4d2d;
+  color: #ffffff;
+  border-top-color: #ee4d2d;
 }
 
-.loading-state, .empty-state {
+/* ==========================================================================
+   TRẠNG THÁI ĐANG TẢI & KHÔNG CÓ DỮ LIỆU SẢN PHẨM
+   ========================================================================== */
+.loading-state {
+  background: #ffffff;
   text-align: center;
-  padding: 60px 0;
-  color: #64748b;
+  padding: 60px 20px;
+  color: #757575;
+  border-radius: 4px;
+}
+
+.empty-state-box {
+  background: #ffffff;
+  border: 1px dashed #e0e0e0;
+  border-radius: 6px;
+  text-align: center;
+  padding: 56px 20px;
+}
+
+.empty-state-icon {
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: #fff5f2;
+  color: #ee4d2d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-state-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #222222;
+  margin: 0 0 8px 0;
+}
+
+.empty-state-desc {
+  font-size: 14px;
+  color: #757575;
+  max-width: 460px;
+  margin: 0 auto 20px;
+  line-height: 1.5;
+}
+
+.btn-reset-filters-large {
+  padding: 10px 24px;
+  background: #ee4d2d;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-reset-filters-large:hover {
+  background: #d73211;
 }
 
 .spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid #e2e8f0;
-  border-top-color: #2563eb;
+  border: 3px solid #f0f0f0;
+  border-top-color: #ee4d2d;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin: 0 auto 16px auto;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
-
 
 /* Search Result Banner */
 .search-result-banner {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  background: #fff5f2;
+  border: 1px solid #ffcabf;
   padding: 14px 20px;
-  border-radius: 10px;
-  margin-bottom: 20px;
+  border-radius: 4px;
+  margin-bottom: 16px;
 }
 
 .search-tag-label {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #1e40af;
+  color: #ee4d2d;
   font-size: 14px;
 }
 
 .search-query-text {
-  color: #1d4ed8;
-  font-size: 16px;
+  color: #d73211;
+  font-size: 15px;
   margin-left: 6px;
 }
 
 .search-count-pill {
-  color: #64748b;
+  color: #757575;
   font-size: 13px;
   margin-left: 8px;
 }
@@ -410,102 +757,46 @@
   align-items: center;
   gap: 6px;
   background: #ffffff;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #dcdcdc;
   padding: 6px 12px;
-  border-radius: 6px;
-  color: #475569;
+  border-radius: 4px;
+  color: #555555;
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .btn-clear-query:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  border-color: #ee4d2d;
+  color: #ee4d2d;
 }
 
-/* Filter Controls Row */
-.filter-controls-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
+/* ==========================================================================
+   RESPONSIVE (TỰ ĐỘNG CO GIÃN TRÊN TABLET & ĐIỆN THOẠI)
+   ========================================================================== */
+@media (max-width: 1120px) {
+  .shopee-category-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .shopee-products-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
-.sort-select-wrap, .price-filter-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: #475569;
+@media (max-width: 860px) {
+  .shopee-products-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
-.sort-select-wrap select, .price-filter-wrap select {
-  padding: 8px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #0f172a;
-  font-size: 13px;
-  cursor: pointer;
-  outline: none;
-}
-
-.sort-select-wrap select:focus, .price-filter-wrap select:focus {
-  border-color: #2563eb;
-}
-
-.btn-reset-filters {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #fee2e2;
-  color: #dc2626;
-  border: 1px solid #fca5a5;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-reset-filters:hover {
-  background: #fecaca;
-}
-
-.product-summary-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 14px 0 20px;
-  font-size: 13px;
-  color: #64748b;
-}
-
-.active-filter-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #e0f2fe;
-  color: #0369a1;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.active-filter-badge svg {
-  cursor: pointer;
-}
-
-.btn-reset-filters-large {
-  margin-top: 16px;
-  padding: 10px 20px;
-  background: #2563eb;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
+@media (max-width: 580px) {
+  .shopee-category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .shopee-products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .stores-grid {
+    grid-template-columns: 1fr;
+  }
 }
