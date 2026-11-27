@@ -1,198 +1,130 @@
 // src/components/PromoSlider.jsx
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { 
-  FiChevronLeft, FiChevronRight, FiZap, 
-  FiShoppingBag, FiShield, FiTruck, FiArrowRight 
+  FiChevronLeft, FiChevronRight, 
+  FiShield, FiTruck, FiTag, FiAward, FiHeadphones 
 } from 'react-icons/fi';
 import './PromoSlider.css';
 
-export const PromoSlider = ({ products = [], stores = [] }) => {
+// Import đủ 12 hình ảnh
+import img1 from '../assets/01_Laptop_AI.png';
+import img2 from '../assets/02_NVIDIA_GeForce_RTX.png';
+import img3 from '../assets/03_Gaming_PC.png';
+import img4 from '../assets/04_Intel_AMD_CPU.png';
+import img5 from '../assets/05_Linh_kien_PC.png';
+import img6 from '../assets/06_Laptop_Deal.png';
+import img7 from '../assets/07_NVIDIA_RTX_50.png';
+import img8 from '../assets/08_AMD_Ryzen.png';
+import img9 from '../assets/09_Intel_Core_Ultra.png';
+import img10 from '../assets/10_Phu_kien_PC.png';
+import img11 from '../assets/11_Man_hinh_Gaming.png';
+import img12 from '../assets/12_SSD_Luu_tru.png';
+
+export const PromoSlider = () => {
+  // 10 ảnh có hiệu ứng trượt tự động (Bên trái - chiếm 2/3)
+  const sliderImages = [
+    { src: img1, alt: 'Banner 1' },
+    { src: img2, alt: 'Banner 2' },
+    { src: img3, alt: 'Banner 3' },
+    { src: img4, alt: 'Banner 4' },
+    { src: img5, alt: 'Banner 5' },
+    { src: img6, alt: 'Banner 6' },
+    { src: img7, alt: 'Banner 7' },
+    { src: img8, alt: 'Banner 8' },
+    { src: img9, alt: 'Banner 9' },
+    { src: img10, alt: 'Banner 10' },
+  ];
+
+  // 2 ảnh phụ cố định xếp chồng (Bên phải - chiếm 1/3)
+  const sideImages = [
+    { src: img11, alt: 'Banner Phụ 1' },
+    { src: img12, alt: 'Banner Phụ 2' },
+  ];
+
+  const marketingBadges = [
+    { icon: <FiShield size={20} />, title: '100% Chính Hãng' },
+    { icon: <FiTruck size={20} />, title: 'Giao Hỏa Tốc 2H' },
+    { icon: <FiTag size={20} />, title: 'Deal Sốc Mỗi Ngày' },
+    { icon: <FiAward size={20} />, title: 'Bảo Hành 1 Đổi 1' },
+    { icon: <FiHeadphones size={20} />, title: 'Tư Vấn 24/7' },
+  ];
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const timerRef = useRef(null);
 
-  // Tuyển chọn sản phẩm Mới lên sàn và Bán chạy nhất từ CSDL để quảng bá
-  const promoSlides = useMemo(() => {
-    if (!products || products.length === 0) {
-      return [];
-    }
-
-    const slides = [];
-
-    // 1. Tuyển chọn các sản phẩm Bán chạy nhất (Sắp xếp theo soLuongDaBan giảm dần)
-    const sortedBySold = [...products].sort((a, b) => (b.soLuongDaBan || 0) - (a.soLuongDaBan || 0));
-    const topSeller = sortedBySold[0];
-    if (topSeller) {
-      const price = topSeller.giaBanHienTai || topSeller.giaBan || 15000000;
-      slides.push({
-        id: `best-${topSeller.sanPhamId || topSeller.id}`,
-        productId: topSeller.sanPhamId || topSeller.id,
-        badgeType: 'BEST_SELLER',
-        badgeText: '🔥 SẢN PHẨM BÁN CHẠY NHẤT TOÀN SÀN',
-        tenSanPham: topSeller.tenSanPham,
-        tenShop: topSeller.tenShop || topSeller.tenKho || 'CTUT Official Mall',
-        giaBan: price,
-        giaGoc: Math.round(price * 1.15),
-        phanTramGiam: 15,
-        hinhAnh: topSeller.hinhAnh || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800',
-        moTa: topSeller.moTa || 'Sản phẩm công nghệ cao cấp chính hãng, bán chạy số 1 tại hệ thống kho bãi liên kết.',
-        highlight: `Đã bán ${topSeller.soLuongDaBan || 250}+ chiếc • Sẵn hàng giao hỏa tốc`
-      });
-    }
-
-    // 2. Tuyển chọn các sản phẩm Mới nhất đưa lên sàn (ID cao nhất hoặc ngày tạo mới nhất)
-    const sortedByNew = [...products].sort((a, b) => (b.id || b.sanPhamId || 0) - (a.id || a.sanPhamId || 0));
-    const topNew = sortedByNew.find((p) => (p.sanPhamId || p.id) !== (topSeller?.sanPhamId || topSeller?.id)) || sortedByNew[0];
-    if (topNew) {
-      const price = topNew.giaBanHienTai || topNew.giaBan || 20000000;
-      slides.push({
-        id: `new-${topNew.sanPhamId || topNew.id}`,
-        productId: topNew.sanPhamId || topNew.id,
-        badgeType: 'NEW_ARRIVAL',
-        badgeText: '🚀 SIÊU PHẨM MỚI LÊN KỆ HÔM NAY',
-        tenSanPham: topNew.tenSanPham,
-        tenShop: topNew.tenShop || topNew.tenKho || 'Gian Hàng Chính Hãng',
-        giaBan: price,
-        giaGoc: Math.round(price * 1.12),
-        phanTramGiam: 12,
-        hinhAnh: topNew.hinhAnh || 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=800',
-        moTa: topNew.moTa || 'Linh kiện công nghệ thế hệ mới nhất vừa được nhập từ Kho Tổng và kích hoạt mở bán.',
-        highlight: 'Công Nghệ Đột Phá • Bảo Hành 1 Đổi 1 Tại Kho Tổng'
-      });
-    }
-
-    // 3. Thêm một sản phẩm Deal Hot giá tốt
-    if (products.length > 2) {
-      const hotDeal = products[2];
-      const price = hotDeal.giaBanHienTai || hotDeal.giaBan || 8000000;
-      slides.push({
-        id: `hot-${hotDeal.sanPhamId || hotDeal.id}`,
-        productId: hotDeal.sanPhamId || hotDeal.id,
-        badgeType: 'HOT_DEAL',
-        badgeText: '⚡ DEAL CÔNG NGHỆ GIÁ SỐC HÔM NAY',
-        tenSanPham: hotDeal.tenSanPham,
-        tenShop: hotDeal.tenShop || hotDeal.tenKho || 'CTUT Gear Hub',
-        giaBan: price,
-        giaGoc: Math.round(price * 1.2),
-        phanTramGiam: 20,
-        hinhAnh: hotDeal.hinhAnh || 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=800',
-        moTa: hotDeal.moTa || 'Ưu đãi số lượng có hạn do gian hàng đối tác tài trợ độc quyền.',
-        highlight: 'Giảm Ngay 20% • Tặng Kèm Voucher Toàn Sàn'
-      });
-    }
-
-    return slides;
-  }, [products]);
-
-  // Tự động chuyển slide sau mỗi 4.5 giây
   useEffect(() => {
-    if (isPaused || promoSlides.length <= 1) return;
+    if (isPaused) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev === sliderImages.length - 1 ? 0 : prev + 1));
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [isPaused, sliderImages.length]);
 
-    timerRef.current = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % promoSlides.length);
-    }, 4500);
-
-    return () => clearInterval(timerRef.current);
-  }, [isPaused, promoSlides.length]);
-
-  const handlePrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + promoSlides.length) % promoSlides.length);
-  };
-
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % promoSlides.length);
-  };
-
-  if (promoSlides.length === 0) return null;
-
-  const currentSlide = promoSlides[currentIndex];
+  const nextSlide = () => setCurrentIndex((prev) => (prev === sliderImages.length - 1 ? 0 : prev + 1));
+  const prevSlide = () => setCurrentIndex((prev) => (prev === 0 ? sliderImages.length - 1 : prev - 1));
 
   return (
-    <div 
-      className="promo-slider-wrapper"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-    >
-      <div className="promo-slider-container">
-        {/* Nội dung Slide */}
-        <div className="promo-slide-item">
-          <div className="slide-content-left">
-            <div className={`promo-badge-tag ${currentSlide.badgeType}`}>
-              {currentSlide.badgeText}
-            </div>
-
-            <div className="slide-shop-name">
-              <FiShoppingBag size={14} /> {currentSlide.tenShop}
-            </div>
-
-            <h2 className="slide-title">{currentSlide.tenSanPham}</h2>
-            
-            <p className="slide-desc">{currentSlide.moTa}</p>
-
-            <div className="slide-highlight-pill">
-              <FiZap size={13} color="#f59e0b" /> {currentSlide.highlight}
-            </div>
-
-            <div className="slide-pricing-row">
-              <span className="slide-current-price">
-                {Number(currentSlide.giaBan).toLocaleString('vi-VN')} đ
-              </span>
-              {currentSlide.giaGoc && (
-                <span className="slide-original-price">
-                  {Number(currentSlide.giaGoc).toLocaleString('vi-VN')} đ
-                </span>
-              )}
-              {currentSlide.phanTramGiam && (
-                <span className="slide-discount-badge">
-                  -{currentSlide.phanTramGiam}%
-                </span>
-              )}
-            </div>
-
-            <div className="slide-actions-row">
-              <Link to={`/products/${currentSlide.productId}`} className="btn-slide-cta">
-                XEM CHI TIẾT SẢN PHẨM <FiArrowRight size={16} />
-              </Link>
-              <div className="slide-trust-tags">
-                <span><FiShield size={13} /> 100% Chính Hãng</span>
-                <span><FiTruck size={13} /> Giao Hỏa Tốc 2H</span>
+    <div className="promo-wrapper">
+      
+      {/* KHỐI BANNER THEO BỐ CỤC 2/3 & 1/3 */}
+      <div className="banners-layout">
+        
+        {/* 1. SLIDER TRÁI */}
+        <div 
+          className="main-slider-box"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          <div 
+            className="slider-track" 
+            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+          >
+            {sliderImages.map((item, index) => (
+              <div className="slide-image" key={index}>
+                <img src={item.src} alt={item.alt} />
               </div>
-            </div>
+            ))}
           </div>
 
-          <div className="slide-content-right">
-            <Link to={`/products/${currentSlide.productId}`} className="slide-img-link">
-              <div className="slide-img-glow"></div>
-              <img 
-                src={currentSlide.hinhAnh} 
-                alt={currentSlide.tenSanPham} 
-                className="slide-product-img"
+          <button className="nav-arrow prev" onClick={prevSlide}>
+            <FiChevronLeft size={24} />
+          </button>
+          <button className="nav-arrow next" onClick={nextSlide}>
+            <FiChevronRight size={24} />
+          </button>
+
+          <div className="slider-indicators">
+            {sliderImages.map((_, index) => (
+              <span
+                key={index}
+                className={`indicator-dot ${currentIndex === index ? 'active' : ''}`}
+                onClick={() => setCurrentIndex(index)}
               />
-            </Link>
+            ))}
           </div>
         </div>
 
-        {/* Nút Điều Hướng Trái / Phải */}
-        <button className="slider-arrow-btn prev" onClick={handlePrev} aria-label="Slide trước">
-          <FiChevronLeft size={22} />
-        </button>
-        <button className="slider-arrow-btn next" onClick={handleNext} aria-label="Slide tiếp theo">
-          <FiChevronRight size={22} />
-        </button>
-
-        {/* Chấm Chỉ Số Slide (Dots Indicator) */}
-        <div className="slider-dots-bar">
-          {promoSlides.map((s, idx) => (
-            <button
-              key={s.id}
-              className={`dot-indicator ${idx === currentIndex ? 'active' : ''}`}
-              onClick={() => setCurrentIndex(idx)}
-              aria-label={`Chuyển đến quảng cáo ${idx + 1}`}
-            />
+        {/* 2. ẢNH PHỤ PHẢI */}
+        <div className="side-banners-box">
+          {sideImages.map((item, index) => (
+            <div className="side-banner-item" key={index}>
+              <img src={item.src} alt={item.alt} />
+            </div>
           ))}
         </div>
+        
       </div>
+
+      {/* DẢI CAM KẾT DƯỚI CÙNG KIỂU SHOPEE */}
+      <div className="marketing-strip">
+        {marketingBadges.map((badge, idx) => (
+          <div className="marketing-item" key={idx}>
+            <span className="marketing-icon">{badge.icon}</span>
+            <span className="marketing-title">{badge.title}</span>
+          </div>
+        ))}
+      </div>
+
     </div>
   );
 };

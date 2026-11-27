@@ -6,11 +6,16 @@ import { authService } from '../services/authService';
 import {
   FiShoppingCart, FiSearch, FiShoppingBag,
   FiUser, FiTag, FiPackage, FiChevronDown, FiLogOut, FiLogIn, FiUserPlus,
-  FiCreditCard, FiMessageSquare
+  FiCreditCard, FiMessageSquare, FiBell, FiHelpCircle
 } from 'react-icons/fi';
+
+// 1. IMPORT LOGO CỦA BẠN TỪ THƯ MỤC ASSETS
+import ctutLogo from '../assets/Glossy Red and White Gaming Logo.png';
+
 import './Header.css';
 
 const Header = ({ onSearch }) => {
+  // ... (Giữ nguyên toàn bộ logic xử lý hook, state và các hàm chức năng cũ)
   const { totalQuantity } = useContext(CartContext);
   const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
@@ -19,7 +24,6 @@ const Header = ({ onSearch }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Kiểm tra phiên đăng nhập của Khách Hàng & Chủ Shop (Hệ thống tài khoản kép thống nhất)
   const [customer, setCustomer] = useState(() => authService.getCurrentCustomer());
   const isSeller = Boolean(
     customer && (
@@ -35,7 +39,6 @@ const Header = ({ onSearch }) => {
       setCustomer(authService.getCurrentCustomer());
     };
 
-    // Luôn đồng bộ lại phiên đăng nhập khi đường dẫn hoặc URL thay đổi
     handleUserUpdate();
 
     window.addEventListener('customer-user-updated', handleUserUpdate);
@@ -73,131 +76,116 @@ const Header = ({ onSearch }) => {
     navigate('/login');
   };
 
-  // Ẩn Header sàn khi đang ở các trang đăng ký / đăng nhập chuyên biệt
   const authRoutes = ['/login', '/register', '/seller/login', '/seller/register'];
   if (authRoutes.includes(location.pathname)) {
     return null;
   }
 
   return (
-    <header className="market-header">
-      {/* Main Navigation Bar */}
-      <div className="main-nav">
-        <div className="container nav-content">
-          {/* Logo */}
-          <Link to="/" className="market-logo">
-            <div className="logo-badge">
-              <FiShoppingBag size={22} />
-            </div>
-            <div className="logo-text">
-              <h1>CTUT GEAR</h1>
-              <span>Marketplace Đa Gian Hàng</span>
-            </div>
-          </Link>
+    <header className="market-header shopee-theme">
+      {/* Top Navbar */}
+      <div className="top-navbar">
+        <div className="container nav-content-top">
+          <div className="nav-left">
+            <Link to="/seller" className="nav-link-top">Kênh Người Bán</Link>
+            <span className="divider"></span>
+            <Link to="#" className="nav-link-top">Tải ứng dụng</Link>
+            <span className="divider"></span>
+            <span className="nav-link-top">Kết nối</span>
+          </div>
 
-          {/* Search Box */}
-          <form className="search-form" onSubmit={handleSearchSubmit}>
-            <input
-              type="text"
-              placeholder="Tìm kiếm theo tên sản phẩm, mã SKU, danh mục, gian hàng..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <button type="submit" className="btn-search" title="Tìm kiếm">
-              <FiSearch size={18} />
-            </button>
-          </form>
-
-          {/* Action Icons */}
-          <div className="nav-actions">
-            <Link to="/vouchers" className="nav-link-btn" title="Khuyến mãi & Voucher">
-              <FiTag size={18} />
-              <span>Mã Giảm Giá</span>
+          <div className="nav-right">
+            <Link to="/vouchers" className="nav-link-top" title="Khuyến mãi & Voucher">
+              <FiTag size={16} /> Mã Giảm Giá
             </Link>
-
-            <Link to="/my-orders" className="nav-link-btn" title="Lịch sử đơn mua">
-              <FiPackage size={18} />
-              <span>Đơn Mua</span>
+            <Link to="/my-orders" className="nav-link-top" title="Lịch sử đơn mua">
+              <FiPackage size={16} /> Đơn Mua
             </Link>
+            <Link to="#" className="nav-link-top"><FiBell size={16} /> Thông Báo</Link>
+            <Link to="#" className="nav-link-top"><FiHelpCircle size={16} /> Hỗ Trợ</Link>
 
-            <Link to="/cart" className="cart-btn" title="Giỏ hàng đa shop">
-              <div className="cart-icon-wrapper">
-                <FiShoppingCart size={22} />
-                {totalQuantity > 0 && <span className="cart-badge">{totalQuantity}</span>}
-              </div>
-              <span className="cart-label">Giỏ Hàng</span>
-            </Link>
-
-            {/* User Profile or Guest Auth Buttons */}
             {customer ? (
               <div
-                className="user-profile-btn"
-                onClick={() => setShowUserDropdown(!showUserDropdown)}
-                tabIndex={0}
-                onBlur={() => setTimeout(() => setShowUserDropdown(false), 250)}
+                className="user-profile-wrapper"
+                onMouseEnter={() => setShowUserDropdown(true)}
+                onMouseLeave={() => setShowUserDropdown(false)}
               >
-                <div className="avatar-circle">
-                  <FiUser size={18} />
-                </div>
-                <div className="user-info-text">
-                  <span className="user-name">{customer.hoTen || customer.taiKhoan}</span>
-                  <span className="user-role">
-                    {isSeller ? 'CHỦ SHOP & KHÁCH HÀNG' : 'KHÁCH HÀNG'} <FiChevronDown size={11} />
-                  </span>
+                <div className="user-profile-trigger">
+                  <FiUser size={16} />
+                  <span className="user-name-top">{customer.hoTen || customer.taiKhoan}</span>
                 </div>
 
                 {showUserDropdown && (
                   <div className="user-dropdown-menu">
-                    <div className="dropdown-header">
-                      <strong>{customer.hoTen || customer.taiKhoan}</strong>
-                      <small>{customer.email || `${customer.taiKhoan}@ctutgear.vn`}</small>
-                    </div>
-                    <div className="dropdown-divider"></div>
-                    <Link to="/profile" className="dropdown-item profile-link-item">
-                      <FiUser size={16} /> Tài Khoản Của Tôi
-                    </Link>
+                    <Link to="/profile" className="dropdown-item">Tài Khoản Của Tôi</Link>
+                    <Link to="/my-orders" className="dropdown-item">Đơn Mua</Link>
                     <Link to="/profile" state={{ activeTab: 'seller' }} className="dropdown-item">
-                      <FiShoppingBag size={16} /> {isSeller ? '🏬 Gian Hàng Của Tôi' : '🚀 Mở Gian Hàng Bán Hàng'}
-                    </Link>
-                    <Link to="/profile" state={{ activeTab: 'wallet' }} className="dropdown-item">
-                      <FiCreditCard size={16} /> Ví Điện Tử CTUT Pay
-                    </Link>
-                    <Link to="/profile" state={{ activeTab: 'chat' }} className="dropdown-item">
-                      <FiMessageSquare size={16} /> Tin Nhắn & Chat Shop
-                    </Link>
-                    <Link to="/my-orders" className="dropdown-item">
-                      <FiPackage size={16} /> Đơn Mua Của Tôi
-                    </Link>
-                    <Link to="/vouchers" className="dropdown-item">
-                      <FiTag size={16} /> Kho Voucher Toàn Sàn
-                    </Link>
-                    <Link to="/cart" className="dropdown-item">
-                      <FiShoppingCart size={16} /> Giỏ Hàng ({totalQuantity})
-                    </Link>
-                    <div className="dropdown-divider"></div>
-                    <Link to="/seller" className="dropdown-item seller-menu-item">
-                      <FiShoppingBag size={16} /> 🏪 Vào Kênh Người Bán
+                      {isSeller ? 'Gian Hàng Của Tôi' : 'Mở Gian Hàng Bán Hàng'}
                     </Link>
                     <button
                       type="button"
                       className="dropdown-item logout-item"
                       onClick={handleCustomerLogout}
                     >
-                      <FiLogOut size={16} /> Đăng Xuất
+                      Đăng Xuất
                     </button>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="guest-auth-actions">
-                <Link to="/login" className="btn-auth-login">
-                  <FiLogIn size={15} /> Đăng Nhập
-                </Link>
-                <Link to="/register" className="btn-auth-register">
-                  <FiUserPlus size={15} /> Đăng Ký
-                </Link>
+              <div className="guest-auth-actions-top">
+                <Link to="/register" className="nav-link-top">Đăng Ký</Link>
+                <span className="divider"></span>
+                <Link to="/login" className="nav-link-top">Đăng Nhập</Link>
               </div>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Header */}
+      <div className="main-header">
+        <div className="container nav-content-main">
+          {/* Logo Section */}
+          <Link to="/" className="market-logo">
+            <div className="logo-badge">
+              {/* 2. SỬ DỤNG THẺ IMG ĐỂ HIỂN THỊ LOGO CỦA BẠN THAY VÌ ICON */}
+              <img src={ctutLogo} alt="CTUT GEAR Logo" className="custom-brand-logo" />
+            </div>
+            <div className="logo-text">
+              <h1>CtutGear</h1>
+            </div>
+          </Link>
+
+          {/* Search Box */}
+          <div className="search-section">
+            <form className="search-form" onSubmit={handleSearchSubmit}>
+              <input
+                type="text"
+                placeholder="Tìm kiếm theo tên sản phẩm, mã SKU, danh mục..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <button type="submit" className="btn-search" title="Tìm kiếm">
+                <FiSearch size={20} />
+              </button>
+            </form>
+            <div className="search-suggestions">
+              <Link to="/?q=laptop">Laptop Gaming</Link>
+              <Link to="/?q=chuot">Chuột Không Dây</Link>
+              <Link to="/?q=ban+phim">Bàn Phím Cơ</Link>
+              <Link to="/?q=man+hinh">Màn Hình 144Hz</Link>
+            </div>
+          </div>
+
+          {/* Cart */}
+          <div className="cart-section">
+            <Link to="/cart" className="cart-btn" title="Giỏ hàng đa shop">
+              <div className="cart-icon-wrapper">
+                <FiShoppingCart size={32} />
+                {totalQuantity > 0 && <span className="cart-badge">{totalQuantity}</span>}
+              </div>
+            </Link>
           </div>
         </div>
       </div>

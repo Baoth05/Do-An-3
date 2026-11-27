@@ -2,16 +2,44 @@
  * ==============================================================================
  * Module: WarehouseManagement.jsx
  * Phân hệ: Quản Lý Danh Sách Cửa Hàng (Store Management)
- * Mô tả: Giao diện quản lý các chi nhánh cửa hàng kết nối Backend WMS Core.
+ * Mô tả: Đồng bộ 1-1 danh sách cửa hàng từ tài khoản bán hàng (userService),
+ *        có dự phòng qua wmsCoreService và chuẩn hóa hiển thị trạng thái.
  * ==============================================================================
  */
 import { useState, useEffect } from 'react';
-import { 
-  FiSearch, FiRefreshCw, 
-  FiMapPin, FiShoppingBag, FiCheckCircle, FiAlertCircle 
+import {
+  FiSearch,
+  FiRefreshCw,
+  FiMapPin,
+  FiShoppingBag,
+  FiCheckCircle,
+  FiAlertCircle,
 } from 'react-icons/fi';
 import { wmsCoreService } from '../../services/wmsCoreService';
+import { userService } from '../../services/userService';
 import './WarehouseManagement.css';
+
+// Hàm kiểm tra trạng thái hoạt động linh hoạt cho mọi kiểu dữ liệu Backend trả về
+const isStoreActive = (store) => {
+  const status = store.trangThai ?? store.status ?? store.isActive;
+
+  // Nếu dữ liệu không có trường trạng thái (null/undefined), mặc định là Hoạt động
+  if (status === undefined || status === null) return true;
+
+  if (typeof status === 'boolean') return status;
+  if (typeof status === 'number') return status === 1;
+
+  const normalized = String(status).trim().toUpperCase();
+  return [
+    'HOAT_DONG',
+    'HOẠT ĐỘNG',
+    'DANG_HOAT_DONG',
+    'ACTIVE',
+    '1',
+    'TRUE',
+    'OPEN',
+  ].includes(normalized);
+};
 
 const WarehouseManagement = () => {
   const [stores, setStores] = useState([]);
@@ -19,32 +47,54 @@ const WarehouseManagement = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
 
-  // Hàm nạp danh sách và lọc chỉ lấy CỬA HÀNG
+  // Hàm nạp danh sách cửa hàng
   const fetchStores = async () => {
     try {
       setIsLoading(true);
+
+      // CÁCH 1 (Ưu tiên): Lấy trực tiếp từ tài khoản bán hàng giống màn hình Admin
+      const salesUsers = await userService.getSalesUsers();
+
+      if (Array.isArray(salesUsers) && salesUsers.length > 0) {
+        const mappedStores = salesUsers.map((user) => ({
+          id: user.id,
+          // Tự sinh mã SHOP-01, SHOP-02... nếu tài khoản chưa có trường maKho
+          maKho: user.maKho || `SHOP-${String(user.id).padStart(2, '0')}`,
+          tenKho: user.hoTen || user.tenCuaHang || user.taiKhoan || 'Cửa hàng chưa đặt tên',
+          diaChi:
+            user.diaChi ||
+            [user.soDienThoai && `SĐT: ${user.soDienThoai}`, user.email]
+              .filter(Boolean)
+              .join(' • ') ||
+            'Chưa cập nhật địa chỉ',
+          trangThai: user.trangThai,
+        }));
+
+        console.log('[WarehouseManagement] Đã đồng bộ cửa hàng từ tài khoản bán hàng:', mappedStores);
+        setStores(mappedStores);
+        setIsBackendConnected(true);
+        return;
+      }
+
+      // CÁCH 2 (Dự phòng): Nếu Cách 1 trả về rỗng, lấy từ bảng Kho của WMS Core
+      console.warn('[WarehouseManagement] Không có dữ liệu từ /auth/users, chuyển sang wmsCoreService...');
       const data = await wmsCoreService.getWarehouses();
-      
+
       if (Array.isArray(data)) {
-        const onlyStores = data.filter(w => {
+        const onlyStores = data.filter((w) => {
           const code = (w.maKho || '').toUpperCase();
           const name = (w.tenKho || '').toUpperCase();
-          
-          // 1. Loại bỏ Kho Tổng: ẩn nếu mã chứa chữ "MAIN" hoặc tên chứa chữ "KHO TỔNG"
+
+          // Loại bỏ Kho Tổng
           if (code.includes('MAIN') || name.includes('KHO TỔNG') || name.includes('KHO TONG')) {
             return false;
           }
-          
-          // 2. Điều kiện cũ: loại bỏ các kho nội bộ (mã KHO-) nếu không phải là SHOP/STORE
+          // Loại bỏ các kho nội bộ không phải cửa hàng
           if (code.startsWith('KHO-') && !name.includes('SHOP') && !name.includes('STORE')) {
             return false;
           }
-          
-          // Giữ lại các cửa hàng hợp lệ
           return true;
         });
-        // THÊM DÒNG NÀY ĐỂ KIỂM TRA DỮ LIỆU TỪ BACKEND
-        console.log("Dữ liệu cửa hàng sau khi lọc:", onlyStores);
 
         setStores(onlyStores);
         setIsBackendConnected(true);
@@ -52,7 +102,7 @@ const WarehouseManagement = () => {
         setStores([]);
       }
     } catch (e) {
-      console.warn('Lỗi lấy danh sách cửa hàng từ Backend:', e.message);
+      console.error('[WarehouseManagement] Lỗi lấy danh sách cửa hàng:', e.message);
       setIsBackendConnected(false);
     } finally {
       setIsLoading(false);
@@ -63,45 +113,50 @@ const WarehouseManagement = () => {
     fetchStores();
   }, []);
 
-  // Lọc danh sách theo từ khóa tìm kiếm
-  const filteredStores = stores.filter(s => {
+  // Lọc danh sách theo ô tìm kiếm
+  const filteredStores = stores.filter((s) => {
     const code = s.maKho || '';
     const name = s.tenKho || '';
     const addr = s.diaChi || '';
-    return code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           addr.toLowerCase().includes(searchTerm.toLowerCase());
+    const keyword = searchTerm.toLowerCase();
+    return (
+      code.toLowerCase().includes(keyword) ||
+      name.toLowerCase().includes(keyword) ||
+      addr.toLowerCase().includes(keyword)
+    );
   });
 
-  // Tính toán số liệu thống kê
-  const activeCount = stores.filter(s => s.trangThai === 'HOAT_DONG').length;
+  // Đếm số lượng cho 3 thẻ thống kê trên cùng
+  const activeCount = stores.filter((s) => isStoreActive(s)).length;
   const inactiveCount = stores.length - activeCount;
 
   return (
     <div className="store-container">
-      {/* Header Chuyên Nghiệp */}
+      {/* Header */}
       <div className="store-header">
         <div>
           <h2>Quản Lý Danh Sách Cửa Hàng</h2>
           <p>Mạng lưới các chi nhánh cửa hàng bán hàng trực thuộc hệ thống</p>
         </div>
-        
+
         <div className="store-actions-top">
           <button className="btn-secondary-live" onClick={fetchStores} disabled={isLoading}>
-            <FiRefreshCw className={isLoading ? 'spin-icon' : ''} size={15} /> 
+            <FiRefreshCw className={isLoading ? 'spin-icon' : ''} size={15} />
             {isBackendConnected ? 'Đã kết nối Backend' : 'Đồng bộ'}
           </button>
         </div>
       </div>
 
-      {/* Thẻ Thống Kê Tổng Quan UI Nâng Cấp */}
+      {/* Thẻ Thống Kê Tổng Quan */}
       <div className="store-stats-grid">
         <div className="store-stat-card primary-gradient">
           <div className="stat-content">
             <span className="stat-label">Tổng số cửa hàng</span>
             <div className="stat-value">{stores.length}</div>
           </div>
-          <div className="stat-icon-bg white-translucent"><FiShoppingBag size={24} /></div>
+          <div className="stat-icon-bg white-translucent">
+            <FiShoppingBag size={24} />
+          </div>
         </div>
 
         <div className="store-stat-card success-gradient">
@@ -109,7 +164,9 @@ const WarehouseManagement = () => {
             <span className="stat-label">Đang hoạt động</span>
             <div className="stat-value">{activeCount}</div>
           </div>
-          <div className="stat-icon-bg white-translucent"><FiCheckCircle size={24} /></div>
+          <div className="stat-icon-bg white-translucent">
+            <FiCheckCircle size={24} />
+          </div>
         </div>
 
         <div className="store-stat-card warning-gradient">
@@ -117,7 +174,9 @@ const WarehouseManagement = () => {
             <span className="stat-label">Tạm dừng</span>
             <div className="stat-value">{inactiveCount}</div>
           </div>
-          <div className="stat-icon-bg white-translucent"><FiAlertCircle size={24} /></div>
+          <div className="stat-icon-bg white-translucent">
+            <FiAlertCircle size={24} />
+          </div>
         </div>
       </div>
 
@@ -125,23 +184,23 @@ const WarehouseManagement = () => {
       <div className="store-toolbar">
         <div className="search-box">
           <FiSearch className="search-icon" size={16} />
-          <input 
-            type="text" 
-            placeholder="Tìm kiếm theo mã, tên hoặc địa chỉ cửa hàng..." 
+          <input
+            type="text"
+            placeholder="Tìm kiếm theo mã, tên hoặc địa chỉ cửa hàng..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      {/* Bảng Hiển Thị Dữ Liệu Nâng Cấp UI */}
+      {/* Bảng Hiển Thị Dữ Liệu */}
       <div className="table-card-wrapper">
         <table className="store-table">
           <thead>
             <tr>
               <th style={{ width: '160px' }}>MÃ CỬA HÀNG</th>
               <th>TÊN CỬA HÀNG</th>
-              <th>ĐỊA CHỈ</th>
+              <th>ĐỊA CHỈ / LIÊN HỆ</th>
               <th style={{ textAlign: 'center', width: '150px' }}>TRẠNG THÁI</th>
             </tr>
           </thead>
@@ -162,7 +221,7 @@ const WarehouseManagement = () => {
               </tr>
             ) : (
               filteredStores.map((s) => {
-                const isActive = s.trangThai === 'HOAT_DONG';
+                const isActive = isStoreActive(s);
                 return (
                   <tr key={s.id}>
                     <td>
@@ -173,7 +232,7 @@ const WarehouseManagement = () => {
                     </td>
                     <td>
                       <span className="store-address-flex">
-                        <FiMapPin size={15} style={{ color: '#ef4444', flexShrink: 0 }} /> 
+                        <FiMapPin size={15} style={{ color: '#ef4444', flexShrink: 0 }} />
                         {s.diaChi || 'Chưa cập nhật địa chỉ'}
                       </span>
                     </td>
@@ -192,7 +251,9 @@ const WarehouseManagement = () => {
       </div>
 
       <div className="store-footer">
-        <span>Hiển thị <strong>{filteredStores.length}</strong> cửa hàng</span>
+        <span>
+          Hiển thị <strong>{filteredStores.length}</strong> cửa hàng
+        </span>
       </div>
     </div>
   );

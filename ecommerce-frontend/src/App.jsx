@@ -2,6 +2,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import Header from './components/Header';
+import Footer from './components/Footer'; // <-- 1. Import component Footer mới chuẩn Shopee
 import LiveChatWidget from './components/LiveChatWidget';
 import MarketplaceHome from './pages/MarketplaceHome';
 import ShopPage from './pages/ShopPage';
@@ -32,9 +33,12 @@ import './App.css';
 
 function AppContent() {
   const location = useLocation();
-  const isSellerPortal = location.pathname.startsWith('/seller') && 
-                         location.pathname !== '/seller/register' && 
-                         location.pathname !== '/seller/login';
+
+  // Kiểm tra xem người dùng có đang ở trong Kênh Người Bán (Dashboard) hay không
+  const isSellerPortal =
+    location.pathname.startsWith('/seller') &&
+    location.pathname !== '/seller/register' &&
+    location.pathname !== '/seller/login';
 
   return (
     <div className={isSellerPortal ? 'seller-root' : 'marketplace-app'}>
@@ -81,36 +85,8 @@ function AppContent() {
       {/* Bot Chat Hỗ Trợ Tư Vấn Mua Sắm & Khiếu Nại Báo Lỗi Toàn Cục */}
       <LiveChatWidget />
 
-      {/* Ẩn Footer sàn khi đang ở Kênh Người Bán */}
-      {!isSellerPortal && (
-        <footer className="marketplace-footer">
-          <div className="container footer-content">
-            <div className="footer-col">
-              <h4>CTUT GEAR MARKETPLACE</h4>
-              <p>Sàn thương mại điện tử chuyên cung cấp thiết bị công nghệ, phụ kiện gaming chính hãng kết hợp hệ thống kho vận chuỗi cung ứng chuẩn hóa.</p>
-              <small>© 2026 CTUT Đồ Án 3 - All Rights Reserved.</small>
-            </div>
-            <div className="footer-col">
-              <h5>Chăm Sóc Khách Hàng</h5>
-              <ul>
-                <li>• Hướng Dẫn Mua Hàng & Thanh Toán</li>
-                <li>• Chính Sách Đổi Trả & Bảo Hành 1 Đổi 1</li>
-                <li>• Quy Chế Hoạt Động Sàn Thương Mại Điện Tử</li>
-                <li>• Trung Tâm Hỗ Trợ Khách Hàng 24/7</li>
-              </ul>
-            </div>
-            <div className="footer-col">
-              <h5>Phương Thức Thanh Toán</h5>
-              <ul>
-                <li>• Ví Điện Tử Cá Nhân CTUT Pay</li>
-                <li>• Cổng Thanh Toán MoMo QR Siêu Tốc</li>
-                <li>• Thẻ Ngân Hàng Nội Địa & Quốc Tế</li>
-                <li>• Thanh Toán Khi Nhận Hàng (COD)</li>
-              </ul>
-            </div>
-          </div>
-        </footer>
-      )}
+      {/* 2. Hiển thị Footer mới chuẩn Shopee ở toàn bộ trang sàn (tự ẩn ở Kênh Người Bán) */}
+      {!isSellerPortal && <Footer />}
     </div>
   );
 }

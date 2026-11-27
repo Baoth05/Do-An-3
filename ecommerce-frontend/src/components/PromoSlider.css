@@ -1,320 +1,219 @@
 /* src/components/PromoSlider.css */
-.promo-slider-wrapper {
-  margin-bottom: 32px;
-  position: relative;
+
+.promo-wrapper {
+  margin-bottom: 24px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.promo-slider-container {
-  background: linear-gradient(135deg, #090e17 0%, #0f172a 50%, #1e1b4b 100%);
-  border-radius: 20px;
+/* ==========================================================================
+   BỐ CỤC LƯỚI (GRID): TRÁI 2 PHẦN - PHẢI 1 PHẦN
+   ========================================================================== */
+.banners-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+
+/* ==========================================================================
+   SLIDER BÊN TRÁI (10 ẢNH) - LÀM DÀI CHIỀU NGANG
+   ========================================================================== */
+.main-slider-box {
+  position: relative;
+  width: 100%;
+  /* Đã tăng từ 2.8 lên 3.3 để banner trải dài ra chiều ngang hơn */
+  aspect-ratio: 3.3 / 1; 
+  background: #f5f5f5;
+  border-radius: 4px;
   overflow: hidden;
-  position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
-  min-height: 380px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
 }
 
-.promo-slide-item {
+.slider-track {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 44px 56px;
-  gap: 36px;
-  animation: fadeIn 0.4s ease-out;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s ease-in-out;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+.slide-image {
+  min-width: 100%;
+  width: 100%;
+  height: 100%;
+  flex-shrink: 0;
 }
 
-/* Cột Trái: Thông tin sản phẩm quảng cáo */
-.slide-content-left {
-  flex: 1;
-  max-width: 620px;
-  color: #ffffff;
-}
-
-.promo-badge-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  margin-bottom: 12px;
-  text-transform: uppercase;
-}
-
-.promo-badge-tag.BEST_SELLER {
-  background: linear-gradient(90deg, #ef4444 0%, #f97316 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
-}
-
-.promo-badge-tag.NEW_ARRIVAL {
-  background: linear-gradient(90deg, #06b6d4 0%, #3b82f6 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35);
-}
-
-.promo-badge-tag.HOT_DEAL {
-  background: linear-gradient(90deg, #f59e0b 0%, #eab308 100%);
-  color: #0f172a;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
-}
-
-.slide-shop-name {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: #94a3b8;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.slide-title {
-  font-size: 26px;
-  font-weight: 800;
-  line-height: 1.3;
-  margin: 0 0 12px 0;
-  color: #ffffff;
-  letter-spacing: -0.3px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.slide-desc {
-  font-size: 13.5px;
-  color: #cbd5e1;
-  line-height: 1.55;
-  margin: 0 0 14px 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.slide-highlight-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 5px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  color: #e2e8f0;
-  font-weight: 600;
-  margin-bottom: 18px;
-}
-
-.slide-pricing-row {
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-  margin-bottom: 22px;
-}
-
-.slide-current-price {
-  font-size: 26px;
-  font-weight: 800;
-  color: #f43f5e;
-}
-
-.slide-original-price {
-  font-size: 16px;
-  color: #94a3b8;
-  text-decoration: line-through;
-}
-
-.slide-discount-badge {
-  background: #f43f5e;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 6px;
-}
-
-.slide-actions-row {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.btn-slide-cta {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 800;
-  padding: 12px 22px;
-  border-radius: 10px;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  letter-spacing: 0.5px;
-  transition: all 0.25s;
-  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
-}
-
-.btn-slide-cta:hover {
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.55);
-}
-
-.slide-trust-tags {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-size: 12px;
-  color: #94a3b8;
-}
-
-.slide-trust-tags span {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* Cột Phải: Ảnh sản phẩm */
-.slide-content-right {
-  flex: 0 0 340px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.slide-img-link {
-  position: relative;
+.slide-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill; 
   display: block;
 }
 
-.slide-img-glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 260px;
-  height: 260px;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.3) 0%, rgba(37, 99, 235, 0) 70%);
-  border-radius: 50%;
-  filter: blur(20px);
-  pointer-events: none;
-}
-
-.slide-product-img {
-  width: 320px;
-  height: 240px;
-  object-fit: cover;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  position: relative;
-  z-index: 2;
-  transition: transform 0.3s;
-}
-
-.slide-img-link:hover .slide-product-img {
-  transform: scale(1.04);
-}
-
-/* Mũi tên điều hướng */
-.slider-arrow-btn {
+/* Nút mũi tên trượt */
+.nav-arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: rgba(15, 23, 42, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #ffffff;
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  border: none;
+  width: 32px;
+  height: 60px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  z-index: 10;
-  backdrop-filter: blur(8px);
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  opacity: 0;
+  z-index: 5;
 }
 
-.slider-arrow-btn:hover {
-  background: #2563eb;
-  border-color: #2563eb;
-  transform: translateY(-50%) scale(1.08);
+.main-slider-box:hover .nav-arrow {
+  opacity: 1;
 }
 
-.slider-arrow-btn.prev {
-  left: 14px;
+.nav-arrow:hover {
+  background: rgba(0, 0, 0, 0.5);
 }
 
-.slider-arrow-btn.next {
-  right: 14px;
-}
+.nav-arrow.prev { left: 0; border-top-right-radius: 4px; border-bottom-right-radius: 4px; }
+.nav-arrow.next { right: 0; border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
 
-/* Dots Indicator Bar */
-.slider-dots-bar {
+/* Dấu chấm (Dots) */
+.slider-indicators {
   position: absolute;
-  bottom: 16px;
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 8px;
-  z-index: 10;
+  gap: 6px;
+  z-index: 5;
 }
 
-.dot-indicator {
-  width: 10px;
-  height: 10px;
+.indicator-dot {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  border: none;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0,0,0,0.1);
   cursor: pointer;
-  transition: all 0.25s;
-  padding: 0;
+  transition: all 0.3s ease;
 }
 
-.dot-indicator.active {
-  width: 28px;
-  border-radius: 10px;
-  background: #38bdf8;
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+.indicator-dot.active {
+  background: #ee4d2d; 
+  border-color: #ee4d2d;
 }
 
-/* Responsive */
-@media (max-width: 992px) {
-  .promo-slide-item {
-    flex-direction: column-reverse;
-    padding: 30px 24px;
-    gap: 20px;
-  }
+/* ==========================================================================
+   2 ẢNH PHỤ BÊN PHẢI XẾP CHỒNG
+   ========================================================================== */
+.side-banners-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%; 
+}
 
-  .slide-content-left {
-    max-width: 100%;
-    text-align: center;
-  }
+.side-banner-item {
+  flex: 1; 
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  cursor: pointer;
+}
 
-  .slide-shop-name,
-  .slide-pricing-row,
-  .slide-actions-row {
+.side-banner-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill; 
+  display: block;
+  transition: opacity 0.2s ease;
+}
+
+.side-banner-item:hover img {
+  opacity: 0.85; 
+}
+
+/* ==========================================================================
+   DẢI MARKETING BÊN DƯỚI & HIỆU ỨNG HOVER ICON
+   ========================================================================== */
+.marketing-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  padding: 12px 24px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.marketing-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  /* Thêm transition cho toàn bộ thẻ khi hover */
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Hiệu ứng nhích nhẹ lên và tạo bóng mờ khi rê chuột vào thẻ */
+.marketing-item:hover {
+  transform: translateY(-3px);
+  background-color: #fff1f0; /* Nền đỏ nhạt phong cách Shopee */
+  box-shadow: 0 4px 12px rgba(238, 77, 45, 0.15);
+}
+
+.marketing-icon {
+  color: #ee4d2d;
+  display: flex;
+  /* Thêm transition cho icon */
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Phóng to icon và xoay nhẹ khi hover vào thẻ */
+.marketing-item:hover .marketing-icon {
+  transform: scale(1.15) rotate(-5deg);
+}
+
+.marketing-title {
+  font-size: 14px;
+  color: #222;
+  transition: color 0.3s ease;
+}
+
+/* Đổi màu chữ sang cam khi hover */
+.marketing-item:hover .marketing-title {
+  color: #ee4d2d;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   RESPONSIVE (ĐIỆN THOẠI & TABLET)
+   ========================================================================== */
+@media (max-width: 900px) {
+  .banners-layout {
+    grid-template-columns: 1fr; 
+  }
+  .main-slider-box {
+    aspect-ratio: 2.5 / 1; /* Khi thu nhỏ về điện thoại thì không nên để quá dài ngang */
+  }
+  .side-banners-box {
+    flex-direction: row; 
+    aspect-ratio: 4 / 1; 
+  }
+  .marketing-strip {
+    flex-wrap: wrap;
     justify-content: center;
+    gap: 16px;
   }
-
-  .slide-product-img {
-    width: 260px;
-    height: 190px;
-  }
-
-  .slider-arrow-btn {
-    display: none;
+  .marketing-item:hover {
+    transform: none; /* Tắt nhích lên trên mobile để tránh vướng víu khi chạm */
   }
 }
-

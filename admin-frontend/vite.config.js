@@ -5,7 +5,8 @@ import react from '@vitejs/plugin-react';
 // Biến lưu địa chỉ của API Gateway (Backend) để dễ dàng chỉnh sửa ở một nơi duy nhất
 
 
-const BACKEND_GATEWAY_URL = process.env.VITE_API_GATEWAY_URL || 'http://10.10.41.19:8080';
+const BACKEND_GATEWAY_URL = process.env.VITE_API_GATEWAY_URL || 'http://10.10.62.112:8080';
+
 
 
 
