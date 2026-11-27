@@ -201,4 +201,22 @@ class AuthServiceTest {
         assertThatThrownBy(() -> service.getAllUsers()).isInstanceOf(ForbiddenException.class);
         assertThatThrownBy(() -> service.toggleUserStatus(6L)).isInstanceOf(ForbiddenException.class);
     }
+
+    @Test
+    @DisplayName("Admin và nhân sự kho xem được danh sách tài khoản cửa hàng (/auth/stores); khách & shop bị từ chối")
+    void storeUsersAllowedForAdminAndWarehouseOnly() {
+        User shop = user(10L, "shopA", "STORE_OWNER", "x");
+        User kho = user(11L, "thukho", "THUKHO", "x");
+        when(userRepository.findAll()).thenReturn(java.util.List.of(alice, shop, kho));
+
+        as("CUSTOMER", 5L, "alice");
+        assertThatThrownBy(() -> service.getStoreUsers()).isInstanceOf(ForbiddenException.class);
+        as("STORE_OWNER", 10L, "shopA");
+        assertThatThrownBy(() -> service.getStoreUsers()).isInstanceOf(ForbiddenException.class);
+
+        as("THUKHO", 11L, "thukho");
+        assertThat(service.getStoreUsers()).extracting(UserProfileResponse::getTaiKhoan).containsExactly("shopA");
+        as("ADMIN", 1L, "admin");
+        assertThat(service.getStoreUsers()).extracting(UserProfileResponse::getTaiKhoan).containsExactly("shopA");
+    }
 }

@@ -149,14 +149,19 @@ class AuthenticationFilterTest {
             "STORE_OWNER, POST, /export-notes, 403",
             // Nhân sự kho
             "WAREHOUSE_MANAGER, POST, /inventory/add, 200",
+            "WAREHOUSE_MANAGER, GET, /auth/stores, 200",
             "WAREHOUSE_STAFF, PUT, /import-notes/1/status, 200",
             "WAREHOUSE_STAFF, PUT, /supply-contracts/1/dispatch, 200",
+            "WAREHOUSE_STAFF, GET, /auth/stores, 200",
             "WAREHOUSE_STAFF, GET, /auth/profile/nvkho, 200",
+            "STORE_OWNER, GET, /auth/stores, 403",
+            "CUSTOMER, GET, /auth/stores, 403",
             "WAREHOUSE_STAFF, GET, /wms/finance/summary, 403",
             "WAREHOUSE_STAFF, PUT, /inventory/3/publish, 403",
             "WAREHOUSE_STAFF, POST, /orders/checkout-multishop, 403",
             // Admin
             "ADMIN, GET, /wms/finance/summary, 200",
+            "ADMIN, GET, /auth/stores, 200",
             "ADMIN, GET, /auth/users, 200",
     })
     @DisplayName("Ma trận phân quyền RBAC")

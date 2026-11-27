@@ -5,9 +5,9 @@
  * Mô tả: Cung cấp API đăng ký, đăng nhập JWT và quản lý tài khoản người dùng theo vai trò.
  * Chức năng chính:
  *   - POST /auth/login: Xác thực tài khoản, sinh JWT token chứa vai trò người dùng.
- *   - POST /auth/register: Đăng ký tài khoản khách hàng mới.
- *   - POST /auth/users: Admin tạo tài khoản nhân sự (Quản lý kho, Thủ kho, Chủ shop).
- *   - GET /auth/users: Lấy danh sách người dùng theo vai trò và trạng thái.
+ *   - POST /auth/register: Đăng ký tài khoản mới (Admin có thể tạo thêm vai trò nhân sự).
+ *   - GET /auth/users: Lấy danh sách toàn bộ người dùng (chỉ Admin).
+ *   - GET /auth/stores: Lấy danh sách tài khoản cửa hàng (Admin & Bộ phận Kho).
  * ==============================================================================
  */
 package com.ctut.wms.identityservice.controller;
@@ -30,7 +30,7 @@ public class AuthController {
 
     // --- API ĐĂNG KÝ ---
     @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request){
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
         String result = authService.registerUser(request);
         return ResponseEntity.ok(result);
     }
@@ -42,7 +42,8 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    // --- API KHÁCH HÀNG TỰ MỞ GIAN HÀNG (nâng vai trò lên STORE_OWNER, trả token mới) ---
+    // --- API KHÁCH HÀNG TỰ MỞ GIAN HÀNG (nâng vai trò lên STORE_OWNER, trả token
+    // mới) ---
     @PutMapping("/upgrade-to-seller")
     public ResponseEntity<AuthResponse> upgradeToSeller() {
         return ResponseEntity.ok(authService.upgradeToSeller());
@@ -71,7 +72,8 @@ public class AuthController {
 
     // --- API CẬP NHẬT THÔNG TIN CÁ NHÂN ---
     @PutMapping("/users/{id}")
-    public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody com.ctut.wms.identityservice.dto.UpdateUserRequest request) {
+    public ResponseEntity<String> updateUser(@PathVariable Long id,
+            @RequestBody UpdateUserRequest request) {
         String result = authService.updateUser(id, request);
         return ResponseEntity.ok(result);
     }
@@ -103,5 +105,11 @@ public class AuthController {
     public ResponseEntity<List<UserProfileResponse>> getAllUsers() {
         List<UserProfileResponse> userList = authService.getAllUsers();
         return ResponseEntity.ok(userList);
+    }
+
+    // --- API LẤY DANH SÁCH TÀI KHOẢN CỬA HÀNG (Admin & Bộ phận Kho) ---
+    @GetMapping("/stores")
+    public ResponseEntity<List<UserProfileResponse>> getStoreUsers() {
+        return ResponseEntity.ok(authService.getStoreUsers());
     }
 }

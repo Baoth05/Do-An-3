@@ -287,7 +287,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         // Chỉnh sửa danh mục master / sản phẩm master catalog
         boolean catalogWrite = (path.startsWith("/products") || path.startsWith("/categories"))
                 && (method == HttpMethod.POST || method == HttpMethod.PUT || method == HttpMethod.DELETE);
-        return wmsArea || catalogWrite;
+        boolean storeAccountsRead = method == HttpMethod.GET && path.equals("/auth/stores");
+        return wmsArea || catalogWrite || storeAccountsRead;
     }
 
     private boolean isSelfAccountEndpoint(String path, HttpMethod method) {
