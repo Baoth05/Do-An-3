@@ -33,6 +33,15 @@ public class WmsClient {
         private Long quanLyId;
     }
 
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class WmsExportSyncStatus {
+        private boolean shipped;
+        private String status;
+        private String maPhieuXuat;
+        private String message;
+    }
+
     /** Lấy bản ghi tồn kho (giá bán, tồn khả dụng) của sản phẩm tại gian hàng. Ném lỗi nếu không bán. */
     public WmsInventoryItem getInventoryItem(Long sanPhamId, Long khoHangId) {
         try {
@@ -101,6 +110,35 @@ public class WmsClient {
             restTemplate.postForEntity(wmsUrl + "/export-notes", request, String.class);
         } catch (RestClientException e) {
             log.warn("Cảnh báo gửi yêu cầu xuất kho WMS cho đơn {}: {}", request.getDonHangId(), e.getMessage());
+        }
+    }
+
+    /**
+     * Đồng bộ vận hành: kiểm tra Thủ kho đã duyệt & xuất kho thành công (HOÀN THÀNH) trên phân hệ WMS chưa
+     * trước khi Chủ shop được phép chuyển đơn sang DELIVERING hoặc COMPLETED.
+     */
+    public void requireExportShipped(String maDonHang) {
+        if (maDonHang == null || maDonHang.isBlank()) {
+            throw new RuntimeException("Lỗi đồng bộ WMS: Đơn hàng chưa có mã đơn hợp lệ để đối chiếu phiếu xuất kho!");
+        }
+        try {
+            WmsExportSyncStatus sync = restTemplate.getForObject(
+                    wmsUrl + "/export-notes/by-order/{id}/sync-status",
+                    WmsExportSyncStatus.class, maDonHang);
+            if (sync == null || !sync.isShipped()) {
+                String detail = (sync != null && sync.getMessage() != null && !sync.getMessage().isBlank())
+                        ? sync.getMessage()
+                        : "Thủ kho chưa xác nhận duyệt và xuất kho thành công (HOÀN THÀNH) trên phân hệ WMS!";
+                throw new RuntimeException("Chưa thể chuyển trạng thái (chờ đồng bộ WMS): " + detail);
+            }
+        } catch (HttpClientErrorException e) {
+            String body = e.getResponseBodyAsString();
+            throw new RuntimeException(body != null && !body.isBlank()
+                    ? body
+                    : "Lỗi kiểm tra trạng thái xuất kho WMS cho đơn " + maDonHang + "!");
+        } catch (RestClientException e) {
+            log.error("Không kết nối được WMS Core để kiểm tra xuất kho đơn {}: {}", maDonHang, e.getMessage());
+            throw new RuntimeException("Lỗi: Hệ thống kho WMS đang bận, chưa thể xác minh xuất kho cho đơn " + maDonHang + "!");
         }
     }
 }

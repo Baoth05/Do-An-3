@@ -159,7 +159,7 @@ public class SupplyContractService {
     public ContractResponse approveRequest(Long id, String note) {
         SupplyContract c = findContract(id);
         if (!CurrentUser.isAdmin()) {
-            StoreAccess.requireCanManage(c.getStore());
+            throw new ForbiddenException("Từ chối: Chỉ Quản trị viên mới có quyền duyệt yêu cầu hợp đồng vòng 1!");
         }
         requireStatus(c, CHO_ADMIN_DUYET, "duyệt yêu cầu");
         c.setTrangThai(CHO_SHOP_KY);
@@ -205,7 +205,7 @@ public class SupplyContractService {
     public ContractResponse approveTransfer(Long id, String note) {
         SupplyContract c = findContract(id);
         if (!CurrentUser.isAdmin()) {
-            StoreAccess.requireCanManage(c.getStore());
+            throw new ForbiddenException("Từ chối: Chỉ Quản trị viên mới có quyền duyệt chuyển hợp đồng sang Kho Tổng!");
         }
         requireStatus(c, DA_KY_CHO_DUYET_KHO, "duyệt chuyển kho");
         c.setTrangThai(CHUYEN_QUA_KHO);
@@ -220,8 +220,8 @@ public class SupplyContractService {
     @Transactional
     public ContractResponse warehouseManagerApprove(Long id, String note) {
         SupplyContract c = findContract(id);
-        if (!CurrentUser.isAdmin() && !CurrentUser.isWarehouse()) {
-            StoreAccess.requireCanManage(c.getStore());
+        if (!CurrentUser.isAdmin() && !CurrentUser.isWarehouseManager()) {
+            throw new ForbiddenException("Từ chối: Chỉ Thủ kho hoặc Quản trị viên mới có quyền duyệt lệnh xuất kho chuyển xuống cho nhân viên!");
         }
         requireStatus(c, CHUYEN_QUA_KHO, "thủ kho duyệt xuất kho");
         c.setTrangThai(THU_KHO_DA_DUYET);
@@ -237,9 +237,9 @@ public class SupplyContractService {
     public ContractResponse dispatch(Long id, String shippingProvider) {
         SupplyContract c = findContract(id);
         if (!CurrentUser.isAdmin() && !CurrentUser.isWarehouse()) {
-            StoreAccess.requireCanManage(c.getStore());
+            throw new ForbiddenException("Từ chối: Chỉ nhân sự Kho Tổng hoặc Quản trị viên mới được phép lên đơn và xuất kho cung ứng!");
         }
-        requireStatusAny(c, Set.of(THU_KHO_DA_DUYET, CHUYEN_QUA_KHO), "lên đơn và xuất kho");
+        requireStatus(c, THU_KHO_DA_DUYET, "lên đơn và xuất kho");
 
         // 🌟 SỬA: Lấy trực tiếp từ object
         Warehouse central = c.getKhoTong();
@@ -293,7 +293,7 @@ public class SupplyContractService {
         return toResponse(c);
     }
 
-    // ===================== BƯỚC 6: SHOP NHẬN HÀNG =====================
+    // ===================== BƯỚC 7: SHOP NHẬN HÀNG =====================
 
     @Transactional
     public ContractResponse complete(Long id) {
@@ -401,12 +401,6 @@ public class SupplyContractService {
 
     private void requireStatus(SupplyContract c, String expected, String action) {
         if (!expected.equals(c.getTrangThai())) {
-            throw new RuntimeException("Lỗi: Không thể " + action + " khi hợp đồng đang ở trạng thái [" + c.getTrangThai() + "]!");
-        }
-    }
-
-    private void requireStatusAny(SupplyContract c, Set<String> expected, String action) {
-        if (!expected.contains(c.getTrangThai())) {
             throw new RuntimeException("Lỗi: Không thể " + action + " khi hợp đồng đang ở trạng thái [" + c.getTrangThai() + "]!");
         }
     }

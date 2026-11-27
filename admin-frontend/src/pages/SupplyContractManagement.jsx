@@ -113,7 +113,7 @@ const SupplyContractManagement = () => {
   const countPendingRound1 = contracts.filter((c) => c.trangThai === 'CHO_ADMIN_DUYET').length;
   const countPendingSign = contracts.filter((c) => c.trangThai === 'CHO_SHOP_KY').length;
   const countPendingRound2 = contracts.filter((c) => c.trangThai === 'DA_KY_CHO_DUYET_KHO').length;
-  const countWarehouse = contracts.filter((c) => c.trangThai === 'CHUYEN_QUA_KHO' || c.trangThai === 'DANG_GIAO_HANG').length;
+  const countWarehouse = contracts.filter((c) => c.trangThai === 'CHUYEN_QUA_KHO' || c.trangThai === 'THU_KHO_DA_DUYET' || c.trangThai === 'DANG_GIAO_HANG').length;
   const countCompleted = contracts.filter((c) => c.trangThai === 'HOAN_THANH').length;
 
   const renderStatusBadge = (status) => {
@@ -146,7 +146,7 @@ const SupplyContractManagement = () => {
         <div className="title-group">
           <h1>
             Phê Duyệt Hợp Đồng Cung Ứng & Lệnh Xuất Kho (B2B2C)
-            <span className="tag-badge-project">QUY TRÌNH 5 BƯỚC</span>
+            <span className="tag-badge-project">QUY TRÌNH 7 BƯỚC</span>
           </h1>
           <p className="subtitle">
             Quản lý và phê duyệt yêu cầu nhập hàng từ các cửa hàng thành viên: Duyệt yêu cầu (Vòng 1) → Shop ký số → Duyệt chuyển kho (Vòng 2) → Kho tổng lên đơn xuất kho.
@@ -503,7 +503,10 @@ const SupplyContractManagement = () => {
                       <strong>Vòng 2 (Duyệt Chuyển Kho):</strong> {viewingContract.adminDuyetVong2?.daDuyet ? `✓ Đã duyệt bởi ${viewingContract.adminDuyetVong2.nguoiDuyet} lúc ${new Date(viewingContract.adminDuyetVong2.ngayDuyet).toLocaleString('vi-VN')}` : '⏳ Chưa duyệt'}
                     </li>
                     <li>
-                      <strong>Lên Đơn Kho Tổng:</strong> {viewingContract.thongTinXuatKho?.daLenDon ? `✓ Phiếu xuất [${viewingContract.thongTinXuatKho.maPhieuXuat}] tạo lúc ${new Date(viewingContract.thongTinXuatKho.ngayXuat).toLocaleString('vi-VN')}` : '⏳ Chưa lên đơn'}
+                      <strong>Thủ Kho Duyệt Xuất:</strong> {viewingContract.thuKhoDuyet?.daDuyet ? `✓ Thủ kho ${viewingContract.thuKhoDuyet.nguoiDuyet} đã duyệt lúc ${new Date(viewingContract.thuKhoDuyet.ngayDuyet).toLocaleString('vi-VN')}` : '⏳ Chờ thủ kho duyệt'}
+                    </li>
+                    <li>
+                      <strong>NV Kho Lên Đơn & Xuất:</strong> {viewingContract.thongTinXuatKho?.daLenDon ? `✓ Phiếu xuất [${viewingContract.thongTinXuatKho.maPhieuXuat}] tạo lúc ${new Date(viewingContract.thongTinXuatKho.ngayXuat).toLocaleString('vi-VN')}` : '⏳ Chưa lên đơn'}
                     </li>
                   </ul>
                 </div>

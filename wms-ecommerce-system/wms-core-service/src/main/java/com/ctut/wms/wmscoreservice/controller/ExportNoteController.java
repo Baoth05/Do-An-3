@@ -79,4 +79,10 @@ public class ExportNoteController {
             return ResponseEntity.status(409).body(e.getMessage());
         }
     }
+
+    // API kiểm tra phiếu xuất của đơn hàng đã hoàn thành xuất kho trên WMS chưa (order-service đồng bộ vận hành)
+    @GetMapping("/by-order/{donHangId}/sync-status")
+    public ResponseEntity<?> getOrderExportSyncStatus(@PathVariable String donHangId) {
+        return ResponseEntity.ok(exportNoteService.getOrderExportSyncStatus(donHangId));
+    }
 }

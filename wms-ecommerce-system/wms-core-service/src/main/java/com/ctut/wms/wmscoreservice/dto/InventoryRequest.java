@@ -18,5 +18,14 @@ public class InventoryRequest {
     private BigDecimal giaBanHienTai;
     private Integer soLuongCanhBao;
     private Boolean dangBan;
+
+    /**
+     * Loại điều chỉnh kiểm kê nội bộ:
+     * - KIEM_KE_THUA: Điều chỉnh tăng sau kiểm kê thực tế (chênh lệch thừa so với sổ sách)
+     * - HOAN_TRA_NGUYEN_VEN: Nhập lại hàng hoàn trả nguyên vẹn vào kho
+     */
+    private String loaiDieuChinh;
+    private String maChungTu;
+    private String ghiChu;
 }
 

@@ -2,9 +2,11 @@ package com.ctut.wms.wmscoreservice.controller;
 
 import com.ctut.wms.wmscoreservice.dto.InventoryRequest;
 import com.ctut.wms.wmscoreservice.dto.InventoryResponse;
+import com.ctut.wms.wmscoreservice.security.ForbiddenException;
 import com.ctut.wms.wmscoreservice.service.InventoryService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,11 +20,13 @@ public class InventoryController {
 
     private final InventoryService inventoryService; // Dùng Service thay vì Repository
 
-    // API thêm/nhập số lượng tồn kho vào vị trí kệ
+    // API điều chỉnh tăng tồn kho nội bộ (kiểm kê thừa / hoàn trả nguyên vẹn vào kho)
     @PostMapping("/add")
     public ResponseEntity<?> addStock(@RequestBody InventoryRequest request) {
         try {
             return ResponseEntity.ok(inventoryService.addStock(request));
+        } catch (ForbiddenException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

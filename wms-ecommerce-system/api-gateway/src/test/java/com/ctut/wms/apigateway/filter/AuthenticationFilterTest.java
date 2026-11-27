@@ -132,8 +132,10 @@ class AuthenticationFilterTest {
             "CUSTOMER, POST, /stores, 403",
             "CUSTOMER, GET, /wms/finance/summary, 403",
             "CUSTOMER, DELETE, /orders/9, 403",
+            "CUSTOMER, POST, /inventory/add, 403",
             // Chủ cửa hàng
             "STORE_OWNER, PUT, /inventory/3/publish, 200",
+            "STORE_OWNER, POST, /inventory/add, 200",
             "STORE_OWNER, PUT, /orders/9/status, 200",
             "STORE_OWNER, POST, /vouchers, 200",
             "STORE_OWNER, PUT, /vouchers/SHOPA10/deactivate, 200",
@@ -146,6 +148,7 @@ class AuthenticationFilterTest {
             "STORE_OWNER, GET, /auth/customers, 403",
             "STORE_OWNER, POST, /export-notes, 403",
             // Nhân sự kho
+            "WAREHOUSE_MANAGER, POST, /inventory/add, 200",
             "WAREHOUSE_STAFF, PUT, /import-notes/1/status, 200",
             "WAREHOUSE_STAFF, PUT, /supply-contracts/1/dispatch, 200",
             "WAREHOUSE_STAFF, GET, /auth/profile/nvkho, 200",

@@ -18,18 +18,28 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class InventoryService {
 
+    public static final String ADJ_KIEM_KE_THUA = "KIEM_KE_THUA";
+    public static final String ADJ_HOAN_TRA_NGUYEN_VEN = "HOAN_TRA_NGUYEN_VEN";
+    private static final Set<String> VALID_ADJUSTMENT_TYPES = Set.of(ADJ_KIEM_KE_THUA, ADJ_HOAN_TRA_NGUYEN_VEN);
+
     private final InventoryRepository inventoryRepository; // Quản lý dữ liệu bảng tồn kho
     private final ProductRepository productRepository;     // Quản lý dữ liệu sản phẩm
     private final WarehouseRepository warehouseRepository; // Quản lý dữ liệu kho bãi
     private final TheKhoRepository theKhoRepository;       // Quản lý lịch sử thẻ kho vật lý
 
-    // Hàm thêm/cộng số lượng hàng vào kho
+    /**
+     * Điều chỉnh tăng tồn kho nội bộ (NHẬP BỔ SUNG):
+     * Chỉ dùng cho nghiệp vụ kiểm kê thực tế thừa so với sổ sách hoặc nhập hàng hoàn trả nguyên vẹn vào kho.
+     * Tách biệt hoàn toàn với luồng nhập thương mại từ Nhà cung cấp (ImportNote) và luồng cấp hàng B2B sang Cửa hàng (SupplyContract).
+     */
     @Transactional
     public InventoryResponse addStock(InventoryRequest request) {
         Product product = productRepository.findById(request.getSanPhamId())
@@ -40,12 +50,28 @@ public class InventoryService {
         StoreAccess.requireCanManage(warehouse);
 
         if (request.getSoLuong() == null || request.getSoLuong() <= 0) {
-            throw new RuntimeException("Lỗi: Số lượng nhập phải lớn hơn 0!");
+            throw new RuntimeException("Lỗi: Số lượng điều chỉnh phải lớn hơn 0!");
         }
 
-        Inventory inventory = inventoryRepository.findBySanPhamAndKhoHang(product, warehouse)
-                .orElse(new Inventory());
+        String adjType = request.getLoaiDieuChinh() != null && !request.getLoaiDieuChinh().isBlank()
+                ? request.getLoaiDieuChinh().trim().toUpperCase()
+                : ADJ_KIEM_KE_THUA;
+        if (!VALID_ADJUSTMENT_TYPES.contains(adjType)) {
+            throw new RuntimeException(
+                "Lỗi nghiệp vụ: Endpoint /inventory/add (NHẬP BỔ SUNG) chỉ dùng cho điều chỉnh tăng kiểm kê (KIEM_KE_THUA) " +
+                "hoặc hàng hoàn trả nguyên vẹn (HOAN_TRA_NGUYEN_VEN). Nhập hàng từ Nhà cung cấp phải qua Phiếu Nhập Kho!"
+            );
+        }
 
+        Optional<Inventory> existingOpt = inventoryRepository.findBySanPhamAndKhoHang(product, warehouse);
+        if ("KHO_CUA_HANG".equalsIgnoreCase(warehouse.getLoaiHinh()) && existingOpt.isEmpty()) {
+            throw new RuntimeException(
+                "Lỗi nghiệp vụ: Kho cửa hàng chỉ tiếp nhận hàng hóa mới thông qua Hợp đồng cung ứng B2B từ Kho Tổng! " +
+                "Không thể thêm mặt hàng mới qua điều chỉnh kiểm kê (POST /inventory/add)."
+            );
+        }
+
+        Inventory inventory = existingOpt.orElse(new Inventory());
         if (inventory.getId() == null) {
             inventory.setSanPham(product);
             inventory.setKhoHang(warehouse);
@@ -57,17 +83,25 @@ public class InventoryService {
         }
 
         int soLuongCu = inventory.getSoLuongThucTe();
-        int addQty = request.getSoLuong() != null ? request.getSoLuong() : 0;
-        inventory.setSoLuongThucTe(inventory.getSoLuongThucTe() + addQty);
+        int addQty = request.getSoLuong();
+        inventory.setSoLuongThucTe(soLuongCu + addQty);
         inventory.setSoLuongKhaDung(inventory.getSoLuongKhaDung() + addQty);
         Inventory saved = inventoryRepository.save(inventory);
+
+        String voucherPrefix = ADJ_HOAN_TRA_NGUYEN_VEN.equals(adjType) ? "HT-" : "KK-";
+        String maChungTu = request.getMaChungTu() != null && !request.getMaChungTu().isBlank()
+                ? request.getMaChungTu().trim()
+                : voucherPrefix + (System.currentTimeMillis() % 1000000);
+        if (maChungTu.length() > 50) {
+            maChungTu = maChungTu.substring(0, 50);
+        }
 
         // Ghi nhận biến động thẻ kho
         TheKho theKho = new TheKho();
         theKho.setHangHoa(product);
         theKho.setKhoCuaHang(warehouse);
         theKho.setLoaiGiaoDich("NHẬP BỔ SUNG");
-        theKho.setMaChungTu("BS-" + (System.currentTimeMillis() % 1000000));
+        theKho.setMaChungTu(maChungTu);
         theKho.setSoLuongTruocBienDong(soLuongCu);
         theKho.setSoLuongBienDong(addQty);
         theKho.setSoLuongSauBienDong(saved.getSoLuongThucTe());

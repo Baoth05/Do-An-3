@@ -67,6 +67,16 @@ public final class CurrentUser {
         return "WAREHOUSE_MANAGER".equals(r) || "WAREHOUSE_STAFF".equals(r) || "THUKHO".equals(r) || "NVKHO".equals(r);
     }
 
+    public static boolean isWarehouseManager() {
+        String r = role();
+        return "WAREHOUSE_MANAGER".equals(r) || "THUKHO".equals(r);
+    }
+
+    public static boolean isWarehouseStaff() {
+        String r = role();
+        return "WAREHOUSE_STAFF".equals(r) || "NVKHO".equals(r);
+    }
+
     public static void requireAuthenticated() {
         if (!isAuthenticated()) {
             throw new ForbiddenException("Vui lòng đăng nhập để thực hiện thao tác này!");

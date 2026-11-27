@@ -405,6 +405,32 @@ class OrderServiceTest {
             assertThatThrownBy(() -> orderService.updateOrderStatus(1L, "COMPLETED"))
                     .hasMessageContaining("bàn giao");
         }
+
+        @Test
+        @DisplayName("Đồng bộ WMS: chặn chuyển DELIVERING khi Thủ kho chưa xuất kho (HOÀN THÀNH)")
+        void cannotDeliverBeforeWmsExportCompleted() {
+            Order o = existingOrder(1L, "CONFIRMED", "WAITING", "UNPAID", "COD");
+            o.setMaDonHang("DH-SYNC-01");
+            doThrow(new RuntimeException("Chưa thể chuyển trạng thái (chờ đồng bộ WMS)"))
+                    .when(wmsClient).requireExportShipped("DH-SYNC-01");
+
+            assertThatThrownBy(() -> orderService.updateShippingStatus(1L, "DELIVERING", "GHTK"))
+                    .hasMessageContaining("WMS");
+            assertThat(o.getTrangThaiGiaoHang()).isEqualTo("WAITING");
+        }
+
+        @Test
+        @DisplayName("Đồng bộ WMS: chặn chuyển COMPLETED khi Thủ kho chưa xuất kho (HOÀN THÀNH)")
+        void cannotCompleteBeforeWmsExportCompleted() {
+            Order o = existingOrder(1L, "CONFIRMED", "DELIVERING", "UNPAID", "COD");
+            o.setMaDonHang("DH-SYNC-02");
+            doThrow(new RuntimeException("Chưa thể chuyển trạng thái (chờ đồng bộ WMS)"))
+                    .when(wmsClient).requireExportShipped("DH-SYNC-02");
+
+            assertThatThrownBy(() -> orderService.updateOrderStatus(1L, "COMPLETED"))
+                    .hasMessageContaining("WMS");
+            assertThat(o.getTrangThaiDonHang()).isEqualTo("CONFIRMED");
+        }
     }
 
     // ===================== THANH TOÁN & ROLLBACK =====================

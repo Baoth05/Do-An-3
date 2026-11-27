@@ -104,7 +104,7 @@ const SellerContracts = () => {
       <div className="contracts-dashboard-header">
         <div>
           <h1>Hợp Đồng Cung Ứng & Nhập Hàng</h1>
-          <p>Quy trình điều chuyển hàng hóa 6 bước từ Kho Tổng Trung Tâm về Gian Hàng của bạn</p>
+          <p>Quy trình điều chuyển hàng hóa 7 bước từ Kho Tổng Trung Tâm về Gian Hàng của bạn</p>
         </div>
 
         <div className="header-actions-group">

@@ -256,10 +256,10 @@ const SellerContractDetail = () => {
         </div>
       )}
 
-      {/* 6-STEP PROCESS STEPPER (Quy trình nhập hàng rõ ràng) */}
+      {/* 7-STEP PROCESS STEPPER (Quy trình nhập hàng rõ ràng) */}
       <div className="contract-stepper-card">
         <div className="stepper-title-row">
-          <h3>Tiến Độ Quy Trình Cung Ứng Nội Bộ (6 Bước Chuẩn Hóa)</h3>
+          <h3>Tiến Độ Quy Trình Cung Ứng Nội Bộ (7 Bước Chuẩn Hóa)</h3>
           <span className={`status-pill status-${contract.trangThai?.toLowerCase()}`}>
             Trạng thái hiện tại: <strong>{contract.trangThai}</strong>
           </span>
@@ -407,7 +407,7 @@ const SellerContractDetail = () => {
           <div className="action-card-header">
             <div className="badge-delivery-step">
               <FiTruck size={22} color="#059669" />
-              <h3>BƯỚC 6: XÁC NHẬN NHẬP HÀNG VÀO KHO (DÀNH CHO CHỦ SHOP)</h3>
+              <h3>BƯỚC 7: XÁC NHẬN NHẬP HÀNG VÀO KHO (DÀNH CHO CHỦ SHOP)</h3>
             </div>
             <span className="delivery-status-pill">Hàng đang vận chuyển đến shop</span>
           </div>

@@ -1,12 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
   FiSearch, FiEye, FiCheckCircle, FiXCircle, FiRefreshCw, 
   FiTruck, FiBox, FiCheck, FiX, FiFileText, FiClock, FiShield 
 } from 'react-icons/fi';
 import { wmsCoreService } from '../../services/wmsCoreService';
+import { AuthContext } from '../../context/AuthContext';
 import './SupplyContractList.css';
 
 const SupplyContractList = () => {
+  const { user } = useContext(AuthContext);
+  const userRole = (user?.role || '').toUpperCase();
+  const canWarehouseManagerApprove = ['ADMIN', 'WAREHOUSE_MANAGER', 'THUKHO', 'MANAGER'].includes(userRole);
+
   const [contracts, setContracts] = useState([]);
   const [filterTab, setFilterTab] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
@@ -258,13 +263,19 @@ const SupplyContractList = () => {
                     <div className="wms-actions-cell">
                       {/* Bước 1: Thủ kho duyệt */}
                       {c.trangThai === 'CHUYEN_QUA_KHO' && (
-                        <button
-                          type="button"
-                          className="btn-wms-action approve-mgr"
-                          onClick={() => setApproveModalContract(c)}
-                        >
-                          <FiCheckCircle size={14} /> Thủ Kho Duyệt Xuất
-                        </button>
+                        canWarehouseManagerApprove ? (
+                          <button
+                            type="button"
+                            className="btn-wms-action approve-mgr"
+                            onClick={() => setApproveModalContract(c)}
+                          >
+                            <FiCheckCircle size={14} /> Thủ Kho Duyệt Xuất
+                          </button>
+                        ) : (
+                          <span className="state-info-text text-wait">
+                            ⏳ Chờ Thủ kho duyệt xuống
+                          </span>
+                        )
                       )}
 
                       {/* Bước 2: Nhân viên lên đơn và xuất kho */}
@@ -293,6 +304,12 @@ const SupplyContractList = () => {
                       {(c.trangThai === 'CHO_ADMIN_DUYET' || c.trangThai === 'CHO_SHOP_KY' || c.trangThai === 'DA_KY_CHO_DUYET_KHO') && (
                         <span className="state-info-text text-wait">
                           ⏳ Chờ hoàn tất thủ tục ký/duyệt
+                        </span>
+                      )}
+
+                      {c.trangThai === 'TU_CHOI' && (
+                        <span className="state-info-text" style={{ color: '#dc2626' }}>
+                          ❌ Đã từ chối
                         </span>
                       )}
                     </div>
