@@ -32,8 +32,8 @@ export const userService = {
   // Lấy toàn bộ danh sách tài khoản từ Identity Service
   getAllUsers: async () => {
     try {
-      // Tăng thời gian chờ (timeout) lên 15000ms (15 giây) để tránh ngắt kết nối sớm
-      const response = await api.get('/auth/users', { timeout: 15000 });
+      // Đổi từ '/auth/users' sang '/auth/stores' để khớp với API mới mở cho bộ phận Kho
+      const response = await api.get('/auth/stores', { timeout: 15000 });
       let data = response.data;
 
       // Xử lý trường hợp Backend trả về chuỗi JSON thay vì Object
