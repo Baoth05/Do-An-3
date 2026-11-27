@@ -64,7 +64,7 @@ Yêu cầu: JDK 21, Node.js ≥ 20.19, PostgreSQL đang chạy ở `localhost:54
 
 > ⚠️ Gateway và **cả 5 service phải dùng cùng `INTERNAL_SECRET` và `JWT_SECRET`** (mặc định đã giống nhau). Khi đổi khóa, phải khởi động lại tất cả.
 
-**Frontend:** mỗi app một terminal:
+**Frontend:** mỗi app một terminal (hoặc chạy nhanh `start-frontends.bat` trên Windows):
 
 ```bash
 cd ecommerce-frontend && npm install && npm run dev   # :5173
@@ -104,12 +104,12 @@ Mỗi service có bộ unit test (JUnit 5 + Mockito, **không cần CSDL**) cho 
 |---|---|
 | `api-gateway` | Ma trận phân quyền RBAC, chống giả mạo header `X-User-*`, token giả/cửa sau, đường dẫn bất thường |
 | `identity-service` | Chống tự đăng ký/tự nâng quyền ADMIN, chỉ chính chủ sửa tài khoản, đổi mật khẩu cần mật khẩu cũ |
-| `order-service` | Giá lấy từ WMS, voucher 2 tầng & phân bổ giảm giá, hủy đơn nhả tồn/hoàn voucher, máy trạng thái, rollback thanh toán |
-| `wms-core-service` | Giữ chỗ tồn kho khi lập phiếu xuất, không nhập kho 2 lần, hợp đồng cung ứng 6 bước chuyển tồn kho thật |
+| `order-service` | Giá lấy từ WMS, voucher 2 tầng & phân bổ giảm giá, hủy đơn nhả tồn/hoàn voucher, máy trạng thái & đồng bộ xuất kho WMS trước `DELIVERING`/`COMPLETED`, rollback thanh toán |
+| `wms-core-service` | Giữ chỗ tồn kho khi lập phiếu xuất, không nhập kho 2 lần, điều chỉnh kiểm kê nội bộ (`/inventory/add`), tách doanh thu B2B Kho Tổng & GMV Shop, hợp đồng cung ứng 7 bước (Admin → Shop ký → Chuyển kho → Thủ kho duyệt → NV xuất → Shop nhận) |
 | `payment-service` | Số tiền do server tính, IPN MoMo bắt buộc chữ ký, Crypto chờ Admin xác minh |
 
 ```bash
-cd wms-ecommerce-system/order-service && ./mvnw test
+cd wms-ecommerce-system && ./mvnw test "-Dtest=!*ApplicationTests" "-Dsurefire.failIfNoSpecifiedTests=false"
 ```
 
 Báo cáo kết quả nằm ở `target/surefire-reports/`.
@@ -140,6 +140,7 @@ Do-An-3/
 ├── wms-frontend/                # Trang kho vận
 ├── docker/                      # Dockerfile frontend, script khởi tạo PostgreSQL
 ├── docker-compose.yml
+├── start-frontends.bat          # Khởi động nhanh 3 Frontend (Windows)
 ├── .env.example                 # Mẫu biến môi trường (sao chép thành .env)
 └── LOGIC_HE_THONG_DO_AN_3.md    # Tài liệu logic hệ thống
 ```
@@ -156,4 +157,5 @@ Do-An-3/
 | Lỗi **CORS** khi demo qua mạng LAN | Gateway chỉ cho phép origin `localhost`/`127.0.0.1` cổng 5173–5176 & 3000–3001. Thêm IP máy demo vào `globalcors.allowedOrigins` trong `api-gateway/src/main/resources/application.yaml`. |
 | Đơn MoMo/Crypto tự chuyển **CANCELLED_PAYMENT_FAILED** | Quá hạn thanh toán (mặc định 30 phút). Tăng `ORDER_PAYMENT_TIMEOUT_MINUTES` khi demo. |
 | Chủ shop không **xác nhận** được đơn MoMo | Đơn thanh toán online phải được thanh toán trước. Demo bằng COD hoặc để Admin xác nhận thanh toán. |
+| Chủ shop không chuyển đơn sang **Đang giao / Hoàn thành** | Ràng buộc đồng bộ vận hành yêu cầu Thủ kho trên WMS phải duyệt và xác nhận xuất kho (`HOÀN THÀNH`) cho đơn hàng trước. |
 | `wms-frontend` báo thiếu `recharts` | Chạy `npm install` trong `wms-frontend`. |

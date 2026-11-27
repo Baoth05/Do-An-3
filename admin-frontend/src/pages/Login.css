@@ -1,4 +1,3 @@
-
 /* src/pages/Login.css - Bright Modern Theme */
 
 .login-wrapper {
@@ -7,19 +6,14 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: radial-gradient(
-    circle at 50% 10%,
-    #ffffff 0%,
-    #f1f5f9 60%,
-    #e2e8f0 100%
-  );
+  /* Nền sáng hiện đại, thanh lịch và tươi sáng */
+  background: radial-gradient(circle at 50% 10%, #ffffff 0%, #f1f5f9 60%, #e2e8f0 100%);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   padding: 30px 16px;
   box-sizing: border-box;
 }
 
-/* 1. Trạng thái máy chủ */
-
+/* 1. Badge trạng thái máy chủ */
 .server-status {
   background-color: #ffffff;
   color: #475569;
@@ -46,61 +40,45 @@
 }
 
 @keyframes pulse-green {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-  }
-  70% {
-    transform: scale(1.1);
-    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
-  }
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-  }
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
-/* 2. Khung đăng nhập */
-
+/* 2. Khung Form Đăng nhập chính (Card trắng sáng) */
 .login-card {
   background-color: #ffffff;
   width: 100%;
   max-width: 440px;
   border-radius: 16px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08),
-    0 0 1px 1px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.02);
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-/* Header */
-
+/* Header Form */
 .login-header {
-  padding: 36px 32px 0;
+  padding: 36px 32px 0 32px;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* Hỗ trợ cả hai cách đặt class logo */
-
-.brand-logo-container,
-.brand-logo {
+.brand-logo-container {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 18px;
   padding: 6px 14px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
   border-radius: 12px;
 }
 
-.login-logo-img,
-.brand-logo .logo-icon-img {
+.login-logo-img {
   width: 48px;
   height: 48px;
   object-fit: contain;
@@ -113,28 +91,27 @@
   gap: 8px;
 }
 
-.brand-title-wrap strong,
-.brand-logo strong {
+.brand-title-wrap strong {
   font-size: 17px;
   font-weight: 800;
-  color: #b91c1c;
+  color: #0f172a;
   letter-spacing: -0.2px;
 }
 
-.brand-title-wrap .logo-badge,
-.brand-logo .logo-badge {
+.brand-title-wrap .logo-badge {
   font-size: 9px;
   font-weight: 800;
   background: #fee2e2;
   color: #dc2626;
   padding: 3px 7px;
   border-radius: 6px;
+  letter-spacing: 0.5px;
 }
 
 .login-header h1 {
   font-size: 22px;
   color: #0f172a;
-  margin: 0 0 6px;
+  margin: 0 0 6px 0;
   font-weight: 800;
   letter-spacing: -0.3px;
 }
@@ -143,10 +120,8 @@
   color: #64748b;
   font-size: 13px;
   line-height: 1.5;
-  margin: 0 0 16px;
+  margin: 0 0 16px 0;
 }
-
-/* Nhãn module */
 
 .module-badge {
   display: inline-flex;
@@ -165,8 +140,7 @@
   color: #dc2626;
 }
 
-/* 3. Quick Fill */
-
+/* Quick Fill Chip */
 .quick-fill-box {
   padding: 0 32px;
   margin-top: 18px;
@@ -180,7 +154,6 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
 }
 
 .quick-fill-label {
@@ -209,16 +182,12 @@
   transform: translateY(-1px);
 }
 
-/* 4. Form đăng nhập */
-
+/* Form inputs & controls */
 .login-form {
-  padding: 20px 32px 28px;
+  padding: 20px 32px 28px 32px;
 }
 
-/* Thông báo lỗi / thành công */
-
-.login-alert,
-.error-message {
+.login-alert {
   padding: 11px 14px;
   border-radius: 8px;
   font-size: 12.5px;
@@ -229,8 +198,7 @@
   gap: 8px;
 }
 
-.login-alert.error,
-.error-message {
+.login-alert.error {
   background-color: #fee2e2;
   border: 1px solid #fca5a5;
   color: #b91c1c;
@@ -241,8 +209,6 @@
   border: 1px solid #a7f3d0;
   color: #047857;
 }
-
-/* Các trường nhập liệu */
 
 .input-group {
   margin-bottom: 18px;
@@ -292,12 +258,6 @@
   background-color: #ffffff;
 }
 
-.input-wrapper input::placeholder {
-  color: #cbd5e1;
-}
-
-/* Nút hiện / ẩn mật khẩu */
-
 .toggle-password {
   position: absolute;
   right: 12px;
@@ -315,15 +275,12 @@
   color: #334155;
 }
 
-/* Ghi nhớ và quên mật khẩu */
-
 .form-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 22px;
   font-size: 12.5px;
-  gap: 10px;
 }
 
 .remember-me {
@@ -336,9 +293,8 @@
 }
 
 .remember-me input {
-  cursor: pointer;
   accent-color: #dc2626;
-  margin: 0;
+  cursor: pointer;
 }
 
 .forgot-password {
@@ -352,8 +308,6 @@
   color: #1d4ed8;
   text-decoration: underline;
 }
-
-/* 5. Nút đăng nhập */
 
 .submit-btn {
   width: 100%;
@@ -379,17 +333,12 @@
   box-shadow: 0 6px 18px rgba(220, 38, 38, 0.38);
 }
 
-.submit-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
 .submit-btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
 }
 
-/* 6. Cảnh báo bảo mật */
-
+/* Security Notice */
 .security-warning {
   padding: 14px 24px;
   background-color: #f8fafc;
@@ -402,8 +351,7 @@
   line-height: 1.5;
 }
 
-.security-warning .warning-icon,
-.warning-icon {
+.security-warning .warning-icon {
   color: #dc2626;
   margin-top: 2px;
   flex-shrink: 0;
@@ -411,43 +359,28 @@
 
 .security-warning p {
   margin: 0;
-  font-size: 11.5px;
-  color: #64748b;
-  line-height: 1.5;
 }
 
-/* 7. Footer */
-
+/* Footer */
 .login-footer {
   margin-top: 24px;
   text-align: center;
 }
 
-.footer-brand,
-.footer-title {
+.footer-brand {
   font-size: 12px;
   color: #64748b;
-  margin: 0 0 8px;
+  margin: 0 0 8px 0;
 }
 
 .footer-brand strong {
   color: #1e293b;
 }
 
-.login-footer p {
-  font-size: 12px;
-  color: #64748b;
-  margin: 0 0 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
 .footer-links {
   font-size: 12px;
   color: #64748b;
-  margin: 0 0 10px;
+  margin: 0 0 10px 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -458,7 +391,6 @@
 .footer-links a {
   color: #2563eb;
   font-weight: 600;
-  text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -470,8 +402,7 @@
   text-decoration: underline;
 }
 
-.dot-sep,
-.separator {
+.dot-sep {
   color: #cbd5e1;
 }
 
@@ -481,36 +412,4 @@
   font-weight: 600;
   letter-spacing: 0.5px;
   margin: 0;
-}
-
-/* 8. Responsive */
-
-@media (max-width: 480px) {
-  .login-wrapper {
-    padding: 20px 12px;
-  }
-
-  .login-card {
-    max-width: 100%;
-  }
-
-  .login-header {
-    padding: 28px 20px 0;
-  }
-
-  .login-form {
-    padding: 20px 20px 24px;
-  }
-
-  .quick-fill-box {
-    padding: 0 20px;
-  }
-
-  .security-warning {
-    padding: 14px 20px;
-  }
-
-  .form-actions {
-    font-size: 11.5px;
-  }
 }

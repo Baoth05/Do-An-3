@@ -141,9 +141,15 @@
   color: #7c3aed;
 }
 
+.status-pill.status-chuyen_qua_kho,
 .status-pill.status-da_duyet_cho_xuat_kho {
   background: #f0fdfa;
   color: #0d9488;
+}
+
+.status-pill.status-thu_kho_da_duyet {
+  background: #ecfdf5;
+  color: #059669;
 }
 
 .status-pill.status-dang_giao_hang {
@@ -158,8 +164,8 @@
 
 .six-steps-bar {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
   position: relative;
 }
 

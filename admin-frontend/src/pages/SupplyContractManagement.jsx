@@ -73,10 +73,18 @@ const SupplyContractManagement = () => {
     `🏢 Đã duyệt hợp đồng ${c.maHopDong} và chuyển lệnh xuất sang Kho Tổng!`
   );
 
-  // 3. Kho Tổng lên đơn xuất kho (backend trừ tồn Kho Tổng, lập phiếu xuất, ghi thẻ kho)
+  // 3. Thủ kho duyệt lệnh xuất kho chuyển xuống cho nhân viên lên đơn
+  const handleWarehouseManagerApprove = (c) => runAction(
+    () => api.put(`/supply-contracts/${c.id}/warehouse-approve`, {
+      note: 'Thủ kho đã duyệt đối chiếu tồn kho, chuyển giao cho nhân viên kho lên đơn xuất kho.',
+    }),
+    `🏢 Thủ kho đã duyệt lệnh xuất cho hợp đồng ${c.maHopDong}! Chuyển nhân viên lên đơn.`
+  );
+
+  // 4. Nhân viên kho lên đơn và xuất kho (backend trừ tồn Kho Tổng, lập phiếu xuất, ghi thẻ kho)
   const handleDispatchOrder = (c) => runAction(
     () => api.put(`/supply-contracts/${c.id}/dispatch`, { shippingProvider: 'CTUT Express Logistics' }),
-    `📦 Đã xuất kho cho hợp đồng ${c.maHopDong}! Hàng đang vận chuyển sang shop.`
+    `📦 Đã lên đơn & xuất kho cho hợp đồng ${c.maHopDong}! Hàng đang vận chuyển sang shop.`
   );
 
   // 4. Từ chối yêu cầu
@@ -105,7 +113,7 @@ const SupplyContractManagement = () => {
   const countPendingRound1 = contracts.filter((c) => c.trangThai === 'CHO_ADMIN_DUYET').length;
   const countPendingSign = contracts.filter((c) => c.trangThai === 'CHO_SHOP_KY').length;
   const countPendingRound2 = contracts.filter((c) => c.trangThai === 'DA_KY_CHO_DUYET_KHO').length;
-  const countWarehouse = contracts.filter((c) => c.trangThai === 'CHUYEN_QUA_KHO' || c.trangThai === 'DANG_GIAO_HANG').length;
+  const countWarehouse = contracts.filter((c) => c.trangThai === 'CHUYEN_QUA_KHO' || c.trangThai === 'THU_KHO_DA_DUYET' || c.trangThai === 'DANG_GIAO_HANG').length;
   const countCompleted = contracts.filter((c) => c.trangThai === 'HOAN_THANH').length;
 
   const renderStatusBadge = (status) => {
@@ -117,11 +125,13 @@ const SupplyContractManagement = () => {
       case 'DA_KY_CHO_DUYET_KHO':
         return <span className="admin-contract-badge pending-round2"><FiCheckCircle /> 3. Đã Ký - Chờ Duyệt Chuyển Kho</span>;
       case 'CHUYEN_QUA_KHO':
-        return <span className="admin-contract-badge warehouse"><FiBox /> 4. Đã Chuyển Kho - Chờ Lên Đơn</span>;
+        return <span className="admin-contract-badge warehouse"><FiBox /> 4. Đã Chuyển Kho - Chờ Thủ Kho Duyệt</span>;
+      case 'THU_KHO_DA_DUYET':
+        return <span className="admin-contract-badge warehouse" style={{ background: '#ecfdf5', color: '#059669', borderColor: '#a7f3d0' }}><FiCheckCircle /> 5. Thủ Kho Đã Duyệt • Chờ Lên Đơn</span>;
       case 'DANG_GIAO_HANG':
-        return <span className="admin-contract-badge shipping"><FiTruck /> 5. Đang Giao Sang Shop</span>;
+        return <span className="admin-contract-badge shipping"><FiTruck /> 6. Đang Giao Sang Shop</span>;
       case 'HOAN_THANH':
-        return <span className="admin-contract-badge completed"><FiCheck /> Hoàn Thành & Đã Nhập Kho</span>;
+        return <span className="admin-contract-badge completed"><FiCheck /> 7. Hoàn Thành & Đã Nhập Kho</span>;
       case 'TU_CHOI':
         return <span className="admin-contract-badge rejected"><FiX /> Bị Từ Chối</span>;
       default:
@@ -136,7 +146,7 @@ const SupplyContractManagement = () => {
         <div className="title-group">
           <h1>
             Phê Duyệt Hợp Đồng Cung Ứng & Lệnh Xuất Kho (B2B2C)
-            <span className="tag-badge-project">QUY TRÌNH 5 BƯỚC</span>
+            <span className="tag-badge-project">QUY TRÌNH 7 BƯỚC</span>
           </h1>
           <p className="subtitle">
             Quản lý và phê duyệt yêu cầu nhập hàng từ các cửa hàng thành viên: Duyệt yêu cầu (Vòng 1) → Shop ký số → Duyệt chuyển kho (Vòng 2) → Kho tổng lên đơn xuất kho.
@@ -352,14 +362,25 @@ const SupplyContractManagement = () => {
                         </>
                       )}
 
-                      {/* Kho lên đơn */}
+                      {/* Thủ kho duyệt */}
                       {c.trangThai === 'CHUYEN_QUA_KHO' && (
+                        <button
+                          type="button"
+                          className="btn-admin-action approve"
+                          onClick={() => handleWarehouseManagerApprove(c)}
+                        >
+                          <FiCheckCircle /> Thủ Kho Duyệt Lệnh Xuất
+                        </button>
+                      )}
+
+                      {/* Nhân viên lên đơn & xuất kho */}
+                      {c.trangThai === 'THU_KHO_DA_DUYET' && (
                         <button
                           type="button"
                           className="btn-admin-action dispatch"
                           onClick={() => handleDispatchOrder(c)}
                         >
-                          <FiTruck /> Xác Nhận Kho Đã Lên Đơn
+                          <FiTruck /> NV Lên Đơn & Xuất Kho
                         </button>
                       )}
 
@@ -482,7 +503,10 @@ const SupplyContractManagement = () => {
                       <strong>Vòng 2 (Duyệt Chuyển Kho):</strong> {viewingContract.adminDuyetVong2?.daDuyet ? `✓ Đã duyệt bởi ${viewingContract.adminDuyetVong2.nguoiDuyet} lúc ${new Date(viewingContract.adminDuyetVong2.ngayDuyet).toLocaleString('vi-VN')}` : '⏳ Chưa duyệt'}
                     </li>
                     <li>
-                      <strong>Lên Đơn Kho Tổng:</strong> {viewingContract.thongTinXuatKho?.daLenDon ? `✓ Phiếu xuất [${viewingContract.thongTinXuatKho.maPhieuXuat}] tạo lúc ${new Date(viewingContract.thongTinXuatKho.ngayXuat).toLocaleString('vi-VN')}` : '⏳ Chưa lên đơn'}
+                      <strong>Thủ Kho Duyệt Xuất:</strong> {viewingContract.thuKhoDuyet?.daDuyet ? `✓ Thủ kho ${viewingContract.thuKhoDuyet.nguoiDuyet} đã duyệt lúc ${new Date(viewingContract.thuKhoDuyet.ngayDuyet).toLocaleString('vi-VN')}` : '⏳ Chờ thủ kho duyệt'}
+                    </li>
+                    <li>
+                      <strong>NV Kho Lên Đơn & Xuất:</strong> {viewingContract.thongTinXuatKho?.daLenDon ? `✓ Phiếu xuất [${viewingContract.thongTinXuatKho.maPhieuXuat}] tạo lúc ${new Date(viewingContract.thongTinXuatKho.ngayXuat).toLocaleString('vi-VN')}` : '⏳ Chưa lên đơn'}
                     </li>
                   </ul>
                 </div>

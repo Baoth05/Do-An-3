@@ -31,6 +31,7 @@ public class SupplyContractService {
     public static final String CHO_SHOP_KY = "CHO_SHOP_KY";
     public static final String DA_KY_CHO_DUYET_KHO = "DA_KY_CHO_DUYET_KHO";
     public static final String CHUYEN_QUA_KHO = "CHUYEN_QUA_KHO";
+    public static final String THU_KHO_DA_DUYET = "THU_KHO_DA_DUYET";
     public static final String DANG_GIAO_HANG = "DANG_GIAO_HANG";
     public static final String HOAN_THANH = "HOAN_THANH";
     public static final String TU_CHOI = "TU_CHOI";
@@ -158,7 +159,7 @@ public class SupplyContractService {
     public ContractResponse approveRequest(Long id, String note) {
         SupplyContract c = findContract(id);
         if (!CurrentUser.isAdmin()) {
-            StoreAccess.requireCanManage(c.getStore());
+            throw new ForbiddenException("Từ chối: Chỉ Quản trị viên mới có quyền duyệt yêu cầu hợp đồng vòng 1!");
         }
         requireStatus(c, CHO_ADMIN_DUYET, "duyệt yêu cầu");
         c.setTrangThai(CHO_SHOP_KY);
@@ -204,7 +205,7 @@ public class SupplyContractService {
     public ContractResponse approveTransfer(Long id, String note) {
         SupplyContract c = findContract(id);
         if (!CurrentUser.isAdmin()) {
-            StoreAccess.requireCanManage(c.getStore());
+            throw new ForbiddenException("Từ chối: Chỉ Quản trị viên mới có quyền duyệt chuyển hợp đồng sang Kho Tổng!");
         }
         requireStatus(c, DA_KY_CHO_DUYET_KHO, "duyệt chuyển kho");
         c.setTrangThai(CHUYEN_QUA_KHO);
@@ -214,15 +215,31 @@ public class SupplyContractService {
         return toResponse(c);
     }
 
-    // ===================== BƯỚC 5: KHO TỔNG XUẤT HÀNG =====================
+    // ===================== BƯỚC 5: THỦ KHO DUYỆT LỆNH XUẤT =====================
+
+    @Transactional
+    public ContractResponse warehouseManagerApprove(Long id, String note) {
+        SupplyContract c = findContract(id);
+        if (!CurrentUser.isAdmin() && !CurrentUser.isWarehouseManager()) {
+            throw new ForbiddenException("Từ chối: Chỉ Thủ kho hoặc Quản trị viên mới có quyền duyệt lệnh xuất kho chuyển xuống cho nhân viên!");
+        }
+        requireStatus(c, CHUYEN_QUA_KHO, "thủ kho duyệt xuất kho");
+        c.setTrangThai(THU_KHO_DA_DUYET);
+        c.setThuKhoDuyetNguoi(actorName());
+        c.setThuKhoDuyetNgay(LocalDateTime.now());
+        c.setThuKhoDuyetGhiChu(firstNonBlank(note, "Thủ kho đã duyệt yêu cầu xuất kho. Chuyển nhân viên soạn hàng và lên đơn xuất kho."));
+        return toResponse(c);
+    }
+
+    // ===================== BƯỚC 6: NHÂN VIÊN LÊN ĐƠN & KHO TỔNG XUẤT HÀNG =====================
 
     @Transactional
     public ContractResponse dispatch(Long id, String shippingProvider) {
         SupplyContract c = findContract(id);
         if (!CurrentUser.isAdmin() && !CurrentUser.isWarehouse()) {
-            StoreAccess.requireCanManage(c.getStore());
+            throw new ForbiddenException("Từ chối: Chỉ nhân sự Kho Tổng hoặc Quản trị viên mới được phép lên đơn và xuất kho cung ứng!");
         }
-        requireStatus(c, CHUYEN_QUA_KHO, "xuất kho");
+        requireStatus(c, THU_KHO_DA_DUYET, "lên đơn và xuất kho");
 
         // 🌟 SỬA: Lấy trực tiếp từ object
         Warehouse central = c.getKhoTong();
@@ -276,7 +293,7 @@ public class SupplyContractService {
         return toResponse(c);
     }
 
-    // ===================== BƯỚC 6: SHOP NHẬN HÀNG =====================
+    // ===================== BƯỚC 7: SHOP NHẬN HÀNG =====================
 
     @Transactional
     public ContractResponse complete(Long id) {
@@ -327,9 +344,9 @@ public class SupplyContractService {
         String st = c.getTrangThai();
         boolean allowed;
         if (CurrentUser.isAdmin()) {
-            allowed = Set.of(CHO_ADMIN_DUYET, CHO_SHOP_KY, DA_KY_CHO_DUYET_KHO, CHUYEN_QUA_KHO).contains(st);
+            allowed = Set.of(CHO_ADMIN_DUYET, CHO_SHOP_KY, DA_KY_CHO_DUYET_KHO, CHUYEN_QUA_KHO, THU_KHO_DA_DUYET).contains(st);
         } else if (CurrentUser.isWarehouse()) {
-            allowed = CHUYEN_QUA_KHO.equals(st);
+            allowed = Set.of(CHUYEN_QUA_KHO, THU_KHO_DA_DUYET).contains(st);
         } else {
             StoreAccess.requireCanManage(c.getStore());
             allowed = Set.of(CHO_ADMIN_DUYET, CHO_SHOP_KY).contains(st);
@@ -488,6 +505,8 @@ public class SupplyContractService {
                         .maChuKySo(c.getKyMaChuKySo()).ngayKy(c.getKyNgay()).build())
                 .adminDuyetVong2(Approval.builder().daDuyet(c.getDuyet2Ngay() != null).nguoiDuyet(c.getDuyet2Nguoi())
                         .ngayDuyet(c.getDuyet2Ngay()).ghiChu(c.getDuyet2GhiChu()).build())
+                .thuKhoDuyet(Approval.builder().daDuyet(c.getThuKhoDuyetNgay() != null).nguoiDuyet(c.getThuKhoDuyetNguoi())
+                        .ngayDuyet(c.getThuKhoDuyetNgay()).ghiChu(c.getThuKhoDuyetGhiChu()).build())
                 .thongTinXuatKho(Dispatch.builder().daLenDon(c.getXuatNgay() != null).phieuXuatId(c.getXuatPhieuId())
                         .maPhieuXuat(c.getXuatMaPhieu()).nguoiXuat(c.getXuatNguoi()).ngayXuat(c.getXuatNgay())
                         .donViVanChuyen(c.getXuatDonViVanChuyen()).build())

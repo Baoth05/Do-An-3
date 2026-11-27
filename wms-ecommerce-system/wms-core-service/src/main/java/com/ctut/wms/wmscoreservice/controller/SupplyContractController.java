@@ -59,13 +59,19 @@ public class SupplyContractController {
         return handle(() -> service.sign(id, body));
     }
 
-    // Bước 4: Admin duyệt vòng 2
+    // Bước 4: Admin duyệt vòng 2 (chuyển lệnh sang Kho Tổng)
     @PutMapping("/{id}/approve-transfer")
     public ResponseEntity<?> approveTransfer(@PathVariable Long id, @RequestBody(required = false) NoteRequest body) {
         return handle(() -> service.approveTransfer(id, body != null ? body.getNote() : null));
     }
 
-    // Bước 5: Kho Tổng xuất hàng (trừ tồn kho tổng)
+    // Bước 5: Thủ kho phê duyệt lệnh xuất kho chuyển xuống cho nhân viên lên đơn
+    @PutMapping("/{id}/warehouse-approve")
+    public ResponseEntity<?> warehouseApprove(@PathVariable Long id, @RequestBody(required = false) NoteRequest body) {
+        return handle(() -> service.warehouseManagerApprove(id, body != null ? body.getNote() : null));
+    }
+
+    // Bước 6: Nhân viên lên đơn và xuất kho (trừ tồn kho tổng)
     @PutMapping("/{id}/dispatch")
     public ResponseEntity<?> dispatch(@PathVariable Long id, @RequestBody(required = false) DispatchRequest body) {
         return handle(() -> service.dispatch(id, body != null ? body.getShippingProvider() : null));

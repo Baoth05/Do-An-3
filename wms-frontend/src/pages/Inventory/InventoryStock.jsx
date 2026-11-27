@@ -38,11 +38,13 @@ const InventoryStock = () => {
   const [stockCards, setStockCards] = useState([]);
   const [isLoadingCards, setIsLoadingCards] = useState(false);
 
-  // Form State
+  // Form State (Điều chỉnh tăng sau kiểm kê / hoàn trả nội bộ)
   const [formData, setFormData] = useState({
     sanPhamId: '',
     khoHangId: '',
-    soLuong: 10,
+    soLuong: 1,
+    loaiDieuChinh: 'KIEM_KE_THUA',
+    maChungTu: '',
   });
 
   const fetchStock = async () => {
@@ -135,22 +137,44 @@ const InventoryStock = () => {
     });
   }, [inventoryList, searchTerm, selectedWarehouse, filterStatus]);
 
+  // Nếu đang chọn Kho Cửa Hàng khi điều chỉnh kiểm kê, chỉ cho phép chọn các mặt hàng đã từng nhập qua Hợp đồng B2B
+  const selectedAdjustWarehouse = useMemo(
+    () => warehouses.find(w => String(w.id) === String(formData.khoHangId)),
+    [warehouses, formData.khoHangId]
+  );
+  const isStoreWarehouseSelected =
+    (selectedAdjustWarehouse?.loaiHinh || '').toUpperCase() === 'KHO_CUA_HANG';
+  const selectableAdjustProducts = useMemo(() => {
+    if (!isStoreWarehouseSelected || selectedStock) return products;
+    const existingIds = new Set(
+      inventoryList
+        .filter(inv => String(inv.khoHangId) === String(formData.khoHangId))
+        .map(inv => String(inv.sanPhamId))
+    );
+    return products.filter(p => existingIds.has(String(p.id)));
+  }, [isStoreWarehouseSelected, selectedStock, products, inventoryList, formData.khoHangId]);
+
   const handleOpenAdjust = (stock) => {
     setSelectedStock(stock);
     setFormData({
       sanPhamId: stock.sanPhamId || products[0]?.id || '',
       khoHangId: stock.khoHangId || warehouses[0]?.id || '',
-      soLuong: 10,
+      soLuong: 1,
+      loaiDieuChinh: 'KIEM_KE_THUA',
+      maChungTu: '',
     });
     setIsAdjustModalOpen(true);
   };
 
   const handleOpenNewStock = () => {
     setSelectedStock(null);
+    const centralWh = warehouses.find(w => (w.loaiHinh || '').toUpperCase() === 'KHO_TONG') || warehouses[0];
     setFormData({
       sanPhamId: products[0]?.id || '',
-      khoHangId: warehouses[0]?.id || '',
-      soLuong: 10,
+      khoHangId: centralWh?.id || '',
+      soLuong: 1,
+      loaiDieuChinh: 'KIEM_KE_THUA',
+      maChungTu: '',
     });
     setIsAdjustModalOpen(true);
   };
@@ -191,14 +215,16 @@ const InventoryStock = () => {
         sanPhamId: Number(formData.sanPhamId),
         khoHangId: Number(formData.khoHangId),
         soLuong: Number(formData.soLuong),
+        loaiDieuChinh: formData.loaiDieuChinh || 'KIEM_KE_THUA',
+        maChungTu: formData.maChungTu?.trim() || undefined,
       };
 
       await wmsCoreService.addStock(payload);
-      alert('Cập nhật tồn kho thành công!');
+      alert('Đã ghi nhận điều chỉnh kiểm kê (NHẬP BỔ SUNG) thành công!');
       setIsAdjustModalOpen(false);
       fetchStock();
     } catch (err) {
-      alert('Lỗi khi cập nhật tồn kho: ' + (err.response?.data || err.message));
+      alert('Không thể điều chỉnh tồn kho: ' + (err.response?.data || err.message));
     }
   };
   // Hàm xử lý khi nhấn nút "+" để yêu cầu nhập hàng
@@ -253,9 +279,13 @@ const InventoryStock = () => {
             <FiRefreshCw className={isLoading ? 'spin-icon' : ''} size={14} /> 
             <span>{isBackendConnected ? 'Đã Kết Nối (8081)' : 'Đồng Bộ'}</span>
           </button>
-          <button className="btn-primary" onClick={handleOpenNewStock}>
-            <FiPlus size={16} /> 
-            <span>Nhập Thêm Tồn Kho</span>
+          <button
+            className="btn-primary"
+            onClick={handleOpenNewStock}
+            title="Điều chỉnh tăng sau kiểm kê thực tế hoặc hoàn trả nguyên vẹn vào kho"
+          >
+            <FiPlus size={16} />
+            <span>Điều Chỉnh Kiểm Kê (+)</span>
           </button>
         </div>
       </div>
@@ -426,28 +456,13 @@ const InventoryStock = () => {
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       {isOutOfStock ? (
-                        <span className="status-badge badge-danger">
-                          {/* Icon cảnh báo màu đỏ kèm class hiệu ứng động */}
-                          <FiAlertTriangle size={14} className="icon-urgent" />
-                          Hết Hàng (Cần Nhập Gấp)
-                        </span>
+                        <span className="status-badge badge-danger">Hết Hàng</span>
                       ) : isUnderMin ? (
-                        <span className="status-badge badge-warning">
-                          {/* Icon cảnh báo màu vàng */}
-                          <FiAlertTriangle size={14} />
-                          Cạn Kho (Sắp Hết)
-                        </span>
+                        <span className="status-badge badge-warning">Cạn Kho (Cần Nhập)</span>
                       ) : isOverMax ? (
-                        <span className="status-badge badge-info">
-                          <FiBox size={14} />
-                          Quá Tải Kệ
-                        </span>
+                        <span className="status-badge badge-info">Quá Tải Kệ</span>
                       ) : (
-                        <span className="status-badge badge-success">
-                          {/* Icon tick màu xanh lá */}
-                          <FiCheckCircle size={14} />
-                          Đủ Hàng
-                        </span>
+                        <span className="status-badge badge-success">Đủ Hàng</span>
                       )}
                     </td>
                     <td style={{ textAlign: 'right' }}>
@@ -483,13 +498,48 @@ const InventoryStock = () => {
         </div>
       </div>
 
-      {/* 5. Modal Cộng Thêm Tồn Kho */}
+      {/* 5. Modal Điều Chỉnh Tăng Kiểm Kê / Hoàn Trả Nội Bộ */}
       <Modal 
         isOpen={isAdjustModalOpen} 
         onClose={() => setIsAdjustModalOpen(false)}
-        title={selectedStock ? `Nhập Thêm Hàng: ${selectedStock.tenHangHoa}` : "Nhập Hàng Vào Kho"}
+        title={selectedStock ? `Điều Chỉnh Kiểm Kê: ${selectedStock.tenHangHoa}` : "Điều Chỉnh Tăng Sau Kiểm Kê / Hoàn Trả"}
       >
         <form onSubmit={handleSubmitAdjust} className="inv-modal-form">
+          <div
+            style={{
+              background: '#fffbeb',
+              border: '1px solid #fde68a',
+              borderRadius: '8px',
+              padding: '10px 12px',
+              marginBottom: '14px',
+              fontSize: '12.5px',
+              color: '#92400e',
+              lineHeight: 1.5,
+            }}
+          >
+            <strong>Nguyên tắc kiểm kê nội bộ:</strong> Chỉ dùng khi kiểm kê thực tế thừa so với sổ sách hoặc nhập lại hàng hoàn trả nguyên vẹn. Nhập hàng thương mại từ Nhà cung cấp phải qua <em>Phiếu Nhập Kho</em>; Kho cửa hàng chỉ nhận hàng mới qua <em>Hợp đồng cung ứng B2B</em>.
+          </div>
+
+          <div className="form-item">
+            <label>Kho Lưu Trữ (*)</label>
+            <select 
+              value={formData.khoHangId} 
+              onChange={(e) => {
+                const nextWhId = e.target.value;
+                setFormData(prev => ({ ...prev, khoHangId: nextWhId, sanPhamId: selectedStock ? prev.sanPhamId : '' }));
+              }}
+              required
+              disabled={!!selectedStock}
+            >
+              <option value="">-- Chọn kho lưu trữ --</option>
+              {warehouses.map(w => (
+                <option key={w.id} value={w.id}>
+                  {w.tenKho} ({w.maKho}){(w.loaiHinh || '').toUpperCase() === 'KHO_CUA_HANG' ? ' - Kho Cửa Hàng' : ' - Kho Tổng'}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="form-item">
             <label>Sản Phẩm (*)</label>
             <select 
@@ -498,8 +548,12 @@ const InventoryStock = () => {
               required
               disabled={!!selectedStock}
             >
-              <option value="">-- Chọn sản phẩm --</option>
-              {products.map(p => (
+              <option value="">
+                {isStoreWarehouseSelected && selectableAdjustProducts.length === 0
+                  ? '-- Cửa hàng chưa có sản phẩm nào từ Hợp đồng B2B --'
+                  : '-- Chọn sản phẩm --'}
+              </option>
+              {selectableAdjustProducts.map(p => (
                 <option key={p.id} value={p.id}>
                   {p.tenSanPham || p.tenHangHoa} [{p.sku || `SP${p.id}`}]
                 </option>
@@ -508,29 +562,37 @@ const InventoryStock = () => {
           </div>
 
           <div className="form-item">
-            <label>Kho Hàng Lưu Trữ (*)</label>
-            <select 
-              value={formData.khoHangId} 
-              onChange={(e) => setFormData(prev => ({ ...prev, khoHangId: e.target.value }))}
+            <label>Lý Do Nghiệp Vụ (*)</label>
+            <select
+              value={formData.loaiDieuChinh}
+              onChange={(e) => setFormData(prev => ({ ...prev, loaiDieuChinh: e.target.value }))}
               required
-              disabled={!!selectedStock}
             >
-              <option value="">-- Chọn kho lưu trữ --</option>
-              {warehouses.map(w => (
-                <option key={w.id} value={w.id}>{w.tenKho} ({w.maKho})</option>
-              ))}
+              <option value="KIEM_KE_THUA">Kiểm kê thực tế — Chênh lệch thừa so với sổ sách (KK)</option>
+              <option value="HOAN_TRA_NGUYEN_VEN">Hoàn trả nội bộ — Hàng hoàn trả nguyên vẹn vào kho (HT)</option>
             </select>
           </div>
 
           <div className="form-item">
-            <label>Số Lượng Bổ Sung (*)</label>
+            <label>Mã Biên Bản / Chứng Từ (tùy chọn)</label>
+            <input
+              type="text"
+              value={formData.maChungTu}
+              onChange={(e) => setFormData(prev => ({ ...prev, maChungTu: e.target.value }))}
+              placeholder="VD: KK-2026-01 (để trống để tự sinh mã)"
+              maxLength={50}
+            />
+          </div>
+
+          <div className="form-item">
+            <label>Số Lượng Điều Chỉnh Tăng (*)</label>
             <input 
               type="number" 
               min="1"
               value={formData.soLuong} 
               onChange={(e) => setFormData(prev => ({ ...prev, soLuong: e.target.value }))}
               required
-              placeholder="Nhập số lượng..."
+              placeholder="Nhập số lượng thừa / hoàn trả..."
             />
           </div>
 
@@ -539,7 +601,7 @@ const InventoryStock = () => {
               Hủy Bỏ
             </button>
             <button type="submit" className="btn-primary">
-              <FiCheck size={16} /> Lưu Vào Kho
+              <FiCheck size={16} /> Xác Nhận Điều Chỉnh
             </button>
           </div>
         </form>

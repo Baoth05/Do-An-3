@@ -6,7 +6,8 @@
  *   - Khách mua: Lấy sản phẩm mở bán, Gian hàng, Voucher, Đặt đơn hàng, Đánh giá, Bình luận.
  *   - Chủ shop (Seller):
  *       + Đăng ký gian hàng & Tạo kho riêng (POST /stores)
- *       + Ký hợp đồng cung ứng & Nhập hàng từ Kho Tổng về Kho riêng (POST /inventory/add)
+ *       + Lập & ký hợp đồng cung ứng B2B nhận hàng từ Kho Tổng (POST /supply-contracts, PUT /supply-contracts/{id}/complete)
+ *       + Điều chỉnh tăng kiểm kê / hoàn trả nội bộ cho hàng đã có tại shop (POST /inventory/add - NHẬP BỔ SUNG)
  *       + Quản lý kho hàng shop, Đăng bán / Ngừng bán sản phẩm (PUT /inventory/{id}/publish)
  *       + Xử lý đơn hàng của shop, Tạo voucher shop, Cập nhật thông tin shop.
  * ==============================================================================
@@ -325,14 +326,6 @@ export const marketplaceService = {
   // Lấy Kho Tổng Trung Tâm duy nhất từ Cơ sở dữ liệu (Bên A)
   getSingleCentralWarehouse: async () => {
     try {
-      // 1. Thử gọi trực tiếp endpoint /warehouses/central
-      try {
-        const directCentral = await api.get('/warehouses/central');
-        if (directCentral && directCentral.id) return directCentral;
-      } catch (e) {
-        // Fallback tiếp tục lấy qua /warehouses
-      }
-
       const res = await api.get('/warehouses');
       if (Array.isArray(res) && res.length > 0) {
         // Tìm kho tổng duy nhất: Loại hình KHO_TONG hoặc mã KHO- và không phải Shop/Cửa hàng
@@ -357,13 +350,17 @@ export const marketplaceService = {
     return single ? [single] : [];
   },
 
-  // Nhập hàng vào kho của Cửa hàng sau khi đã ký Hợp đồng
+  // Điều chỉnh tăng tồn kho nội bộ (kiểm kê thừa / hoàn trả nguyên vẹn) cho mặt hàng đã có tại shop
+  // Lưu ý: Kho cửa hàng chỉ tiếp nhận hàng mới thông qua Hợp đồng cung ứng B2B từ Kho Tổng
   importStockToStore: async (importItem) => {
-    // importItem: { sanPhamId, khoHangId, soLuong }
+    // importItem: { sanPhamId, khoHangId, soLuong, loaiDieuChinh?, maChungTu? }
     try {
-      return await api.post('/inventory/add', importItem);
+      return await api.post('/inventory/add', {
+        loaiDieuChinh: 'KIEM_KE_THUA',
+        ...importItem,
+      });
     } catch (err) {
-      throw new Error(readApiError(err, 'Nhập hàng thất bại!'), { cause: err });
+      throw new Error(readApiError(err, 'Điều chỉnh tồn kho thất bại!'), { cause: err });
     }
   },
 
@@ -484,7 +481,7 @@ export const marketplaceService = {
       const res = await api.get(`/supply-contracts/${contractId}`);
       return res;
     } catch (err) {
-      throw new Error(readApiError(err, 'Không tải được chi tiết hợp đồng!'), { cause: err });
+      throw new Error(readApiError(err, 'Không tìm thấy thông tin hợp đồng!'), { cause: err });
     }
   },
 
@@ -542,7 +539,19 @@ export const marketplaceService = {
     }
   },
 
-  // Bước 5: Kho Tổng xuất hàng (backend trừ tồn Kho Tổng + lập phiếu xuất + ghi thẻ kho)
+  // Bước 5: Thủ kho duyệt xuất kho chuyển xuống cho nhân viên lên đơn
+  warehouseManagerApproveContract: async (contractId, warehouseManagerInfo = {}) => {
+    try {
+      const res = await api.put(`/supply-contracts/${contractId}/warehouse-approve`, {
+        note: warehouseManagerInfo.note || 'Thủ kho đã duyệt yêu cầu xuất kho. Chuyển nhân viên soạn hàng và lên đơn.',
+      });
+      return notifyContractsUpdated(res);
+    } catch (err) {
+      throw new Error(readApiError(err, 'Thủ kho duyệt thất bại!'), { cause: err });
+    }
+  },
+
+  // Bước 6: Nhân viên lên đơn và xuất hàng (backend trừ tồn Kho Tổng + lập phiếu xuất + ghi thẻ kho)
   warehouseDispatchContractOrder: async (contractId, warehouseStaffInfo = {}) => {
     try {
       const res = await api.put(`/supply-contracts/${contractId}/dispatch`, {
@@ -554,7 +563,7 @@ export const marketplaceService = {
     }
   },
 
-  // Bước 6: Shop xác nhận nhận hàng (backend cộng tồn kho shop + ghi thẻ kho)
+  // Bước 7: Shop xác nhận nhận hàng (backend cộng tồn kho shop + ghi thẻ kho)
   completeContractDelivery: async (contractId) => {
     try {
       const res = await api.put(`/supply-contracts/${contractId}/complete`);

@@ -20,10 +20,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Báo cáo tài chính kho - 100% từ dữ liệu thật:
- *   - THU: phiếu xuất ĐÃ XUẤT KHO THỰC TẾ (HOÀN THÀNH / giao vận), tính theo đơn giá thực tế lúc xuất.
- *   - CHI: phiếu nhập ĐÃ NHẬP KHO.
- * Phiếu chờ duyệt, bị từ chối hoặc bị hủy không được tính vào dòng tiền.
+ * Báo cáo tài chính toàn hệ thống - 100% từ dữ liệu thật, phân tách rõ 2 luồng tiền để tránh trùng lặp:
+ *   1. Doanh thu trực tiếp của Sàn/Kho Tổng: tổng giá trị các phiếu xuất cung ứng B2B (giá sỉ) đã xuất thực tế cho các Shop.
+ *   2. Tổng giá trị giao dịch (GMV) của các Shop: tổng giá trị các phiếu xuất bán lẻ cho khách hàng cuối
+ *      (doanh thu thuộc về Chủ shop, làm cơ sở đối soát — KHÔNG cộng gộp vào doanh thu trực tiếp Kho Tổng).
+ *   3. CHI: phiếu nhập NCC ĐÃ NHẬP KHO.
  */
 @Service
 @RequiredArgsConstructor
@@ -36,7 +37,7 @@ public class FinanceService {
 
     private static final Locale VI = Locale.forLanguageTag("vi-VN");
 
-    // ===================== DỮ LIỆU NGUỒN =====================
+    // ===================== DỮ LIỆU NGUỒN & PHÂN TÁCH 2 LUỒNG =====================
 
     private List<ImportNote> completedImports() {
         return importNoteRepository.findAll().stream()
@@ -48,6 +49,21 @@ public class FinanceService {
         return exportNoteRepository.findAll().stream()
                 .filter(n -> NoteStatus.isExportShipped(n.getTrangThai()))
                 .collect(Collectors.toList());
+    }
+
+    /** Phiếu xuất bán lẻ cho khách hàng cuối (thuộc GMV của Shop). */
+    private boolean isRetailExport(ExportNote note) {
+        if (note == null) return false;
+        if (note.getDonHangId() != null && !note.getDonHangId().isBlank()) return true;
+        if ("XUAT_BAN_LE_SAN_TMDT".equalsIgnoreCase(note.getLoaiXuat())) return true;
+        return note.getKhoHang() != null
+                && "KHO_CUA_HANG".equalsIgnoreCase(note.getKhoHang().getLoaiHinh())
+                && note.getKhoNhan() == null;
+    }
+
+    /** Phiếu xuất cung ứng B2B (giá sỉ) từ Kho Tổng cho Shop (Doanh thu trực tiếp Sàn/Kho Tổng). */
+    private boolean isB2bSupplyExport(ExportNote note) {
+        return note != null && !isRetailExport(note);
     }
 
     private double exportValue(ExportNote note) {
@@ -65,39 +81,54 @@ public class FinanceService {
     }
 
     private static boolean matches(LocalDateTime t, Integer month, Integer year) {
-        if (t == null) return month == null && year == null;
+        if (month == null && year == null) return true;
+        if (t == null) return false;
         return (month == null || t.getMonthValue() == month) && (year == null || t.getYear() == year);
     }
 
     // ===================== 1. TỔNG QUAN =====================
 
-    /** Tổng quan thu - chi - lợi nhuận, lọc theo tháng/năm nếu có. */
+    /** Tổng quan thu (chỉ B2B giá sỉ) - chi (nhập NCC) - lợi nhuận Kho Tổng & GMV bán lẻ của các Shop. */
     public Map<String, Object> getFinancialSummary(Integer month, Integer year) {
         List<ImportNote> imports = completedImports().stream()
                 .filter(n -> matches(n.getNgayNhap(), month, year)).collect(Collectors.toList());
         List<ExportNote> exports = shippedExports().stream()
                 .filter(n -> matches(n.getNgayXuat(), month, year)).collect(Collectors.toList());
 
+        List<ExportNote> b2bExports = exports.stream().filter(this::isB2bSupplyExport).collect(Collectors.toList());
+        List<ExportNote> retailExports = exports.stream().filter(this::isRetailExport).collect(Collectors.toList());
+
         BigDecimal totalExpense = imports.stream()
                 .map(ImportNote::getTongTienNhap).filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal totalIncome = BigDecimal.valueOf(exports.stream().mapToDouble(this::exportValue).sum())
+
+        // Luồng 1: Doanh thu trực tiếp Sàn/Kho Tổng (chỉ tính phiếu xuất cung ứng B2B giá sỉ)
+        BigDecimal b2bIncome = BigDecimal.valueOf(b2bExports.stream().mapToDouble(this::exportValue).sum())
                 .setScale(0, RoundingMode.HALF_UP);
-        BigDecimal profit = totalIncome.subtract(totalExpense);
+
+        // Luồng 2: GMV của các Shop (chỉ tính phiếu xuất bán lẻ cho khách cuối, dùng để đối soát)
+        BigDecimal retailGmv = BigDecimal.valueOf(retailExports.stream().mapToDouble(this::exportValue).sum())
+                .setScale(0, RoundingMode.HALF_UP);
+
+        BigDecimal profit = b2bIncome.subtract(totalExpense);
 
         int profitMargin = 0;
-        if (totalIncome.signum() > 0) {
+        if (b2bIncome.signum() > 0) {
             profitMargin = profit.multiply(BigDecimal.valueOf(100))
-                    .divide(totalIncome, 0, RoundingMode.HALF_UP).intValue();
+                    .divide(b2bIncome, 0, RoundingMode.HALF_UP).intValue();
         }
 
         Map<String, Object> summary = new HashMap<>();
-        summary.put("income", totalIncome);
+        summary.put("income", b2bIncome);
+        summary.put("b2bIncome", b2bIncome);
+        summary.put("retailGmv", retailGmv);
         summary.put("expense", totalExpense);
         summary.put("profit", profit);
         summary.put("profitMargin", profitMargin);
         summary.put("importCount", imports.size());
-        summary.put("exportCount", exports.size());
+        summary.put("exportCount", b2bExports.size());
+        summary.put("b2bExportCount", b2bExports.size());
+        summary.put("retailExportCount", retailExports.size());
         return summary;
     }
 
@@ -115,6 +146,8 @@ public class FinanceService {
             Map<String, Object> tx = new HashMap<>();
             tx.put("maGiaoDich", i.getMaPhieuNhap());
             tx.put("type", "OUT");
+            tx.put("flowType", "IMPORT_NCC");
+            tx.put("streamLabel", "Chi Nhập Kho Tổng (NCC)");
             tx.put("amount", i.getTongTienNhap() != null ? i.getTongTienNhap() : BigDecimal.ZERO);
             tx.put("description", "Nhập hàng từ NCC: " + (i.getNhaCungCap() != null ? i.getNhaCungCap().getTenNhaCungCap() : "Chưa xác định"));
             tx.put("rawTime", i.getNgayNhap());
@@ -125,11 +158,20 @@ public class FinanceService {
         for (ExportNote e : shippedExports()) {
             Map<String, Object> tx = new HashMap<>();
             tx.put("maGiaoDich", e.getMaPhieuXuat());
-            tx.put("type", "IN");
             tx.put("amount", BigDecimal.valueOf(exportValue(e)).setScale(0, RoundingMode.HALF_UP));
-            tx.put("description", e.getDonHangId() != null
-                    ? "Xuất bán theo đơn hàng: " + e.getDonHangId()
-                    : "Xuất kho cung ứng: " + (e.getTenShop() != null ? e.getTenShop() : "Nội bộ"));
+            if (isRetailExport(e)) {
+                tx.put("type", "GMV");
+                tx.put("flowType", "RETAIL_GMV");
+                tx.put("streamLabel", "GMV Shop (Đối soát)");
+                tx.put("description", "Xuất bán lẻ (GMV Shop): "
+                        + (e.getDonHangId() != null ? e.getDonHangId() : "Khách lẻ")
+                        + (e.getTenShop() != null && !e.getTenShop().isBlank() ? " • " + e.getTenShop() : ""));
+            } else {
+                tx.put("type", "IN");
+                tx.put("flowType", "B2B_SUPPLY");
+                tx.put("streamLabel", "Doanh thu Kho Tổng (B2B)");
+                tx.put("description", "Xuất cung ứng B2B (giá sỉ): " + (e.getTenShop() != null ? e.getTenShop() : "Nội bộ"));
+            }
             tx.put("rawTime", e.getNgayXuat());
             tx.put("time", e.getNgayXuat() != null ? e.getNgayXuat().format(formatter) : "");
             transactions.add(tx);
@@ -160,15 +202,21 @@ public class FinanceService {
                     .filter(n -> inMonth(n.getNgayNhap(), m, y))
                     .map(ImportNote::getTongTienNhap).filter(Objects::nonNull)
                     .mapToDouble(BigDecimal::doubleValue).sum();
-            double income = exports.stream()
+            double b2bIncome = exports.stream()
+                    .filter(this::isB2bSupplyExport)
+                    .filter(n -> inMonth(n.getNgayXuat(), m, y))
+                    .mapToDouble(this::exportValue).sum();
+            double retailGmv = exports.stream()
+                    .filter(this::isRetailExport)
                     .filter(n -> inMonth(n.getNgayXuat(), m, y))
                     .mapToDouble(this::exportValue).sum();
 
             Map<String, Object> point = new HashMap<>();
             point.put("name", "Tháng " + m + (i == 0 ? " (Hiện tại)" : ""));
             // Đơn vị: triệu đồng
-            point.put("income", Math.round(income / 1_000_000.0 * 10.0) / 10.0);
+            point.put("income", Math.round(b2bIncome / 1_000_000.0 * 10.0) / 10.0);
             point.put("expense", Math.round(expense / 1_000_000.0 * 10.0) / 10.0);
+            point.put("gmv", Math.round(retailGmv / 1_000_000.0 * 10.0) / 10.0);
             result.add(point);
         }
         return result;
@@ -181,22 +229,28 @@ public class FinanceService {
         List<ExportNote> shipped = allExports.stream()
                 .filter(n -> NoteStatus.isExportShipped(n.getTrangThai())).collect(Collectors.toList());
 
-        // Doanh thu & số lượng theo sản phẩm (chỉ hàng đã xuất thực tế)
-        double totalRev = 0.0;
+        List<ExportNote> b2bShipped = shipped.stream().filter(this::isB2bSupplyExport).collect(Collectors.toList());
+        List<ExportNote> retailShipped = shipped.stream().filter(this::isRetailExport).collect(Collectors.toList());
+
+        // Luồng 1: Doanh thu trực tiếp Sàn/Kho Tổng (từ phiếu xuất cung ứng B2B giá sỉ)
+        double b2bRev = 0.0;
         Map<Long, Double> productRev = new HashMap<>();
         Map<Long, Integer> productQty = new HashMap<>();
         Map<Long, Product> productMap = new HashMap<>();
-        for (ExportNote note : shipped) {
+        for (ExportNote note : b2bShipped) {
             for (ExportNoteDetail d : exportNoteDetailRepository.findByPhieuXuat(note)) {
                 Product p = d.getSanPham();
                 if (p == null || d.getSoLuong() == null) continue;
                 double line = ExportNoteService.unitPriceOf(d) * d.getSoLuong();
-                totalRev += line;
+                b2bRev += line;
                 productMap.put(p.getId(), p);
                 productRev.merge(p.getId(), line, Double::sum);
                 productQty.merge(p.getId(), d.getSoLuong(), Integer::sum);
             }
         }
+
+        // Luồng 2: GMV của các Shop (từ phiếu xuất bán lẻ cho khách hàng cuối)
+        double retailGmv = retailShipped.stream().mapToDouble(this::exportValue).sum();
 
         List<Map.Entry<Long, Double>> sorted = new ArrayList<>(productRev.entrySet());
         sorted.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
@@ -225,12 +279,16 @@ public class FinanceService {
         long cancelCount = allExports.stream().filter(e -> NoteStatus.isExportCancelled(e.getTrangThai())).count();
         int totalOrders = allExports.size();
 
-        // Tăng trưởng: tháng hiện tại so với tháng trước
+        // Tăng trưởng doanh thu B2B & GMV: tháng hiện tại so với tháng trước
         LocalDate now = LocalDate.now();
         LocalDate prev = now.minusMonths(1);
-        double revThis = shipped.stream().filter(e -> inMonth(e.getNgayXuat(), now.getMonthValue(), now.getYear()))
+        double revThis = b2bShipped.stream().filter(e -> inMonth(e.getNgayXuat(), now.getMonthValue(), now.getYear()))
                 .mapToDouble(this::exportValue).sum();
-        double revPrev = shipped.stream().filter(e -> inMonth(e.getNgayXuat(), prev.getMonthValue(), prev.getYear()))
+        double revPrev = b2bShipped.stream().filter(e -> inMonth(e.getNgayXuat(), prev.getMonthValue(), prev.getYear()))
+                .mapToDouble(this::exportValue).sum();
+        double gmvThis = retailShipped.stream().filter(e -> inMonth(e.getNgayXuat(), now.getMonthValue(), now.getYear()))
+                .mapToDouble(this::exportValue).sum();
+        double gmvPrev = retailShipped.stream().filter(e -> inMonth(e.getNgayXuat(), prev.getMonthValue(), prev.getYear()))
                 .mapToDouble(this::exportValue).sum();
         long ordThis = allExports.stream().filter(e -> inMonth(e.getNgayXuat(), now.getMonthValue(), now.getYear())).count();
         long ordPrev = allExports.stream().filter(e -> inMonth(e.getNgayXuat(), prev.getMonthValue(), prev.getYear())).count();
@@ -240,11 +298,18 @@ public class FinanceService {
                 .filter(s -> !s.isBlank()).distinct().count();
 
         Map<String, Object> report = new HashMap<>();
-        report.put("totalRevenue", totalRev);
-        report.put("totalRevenueFormatted", formatVnd(totalRev));
+        report.put("totalRevenue", b2bRev);
+        report.put("totalRevenueFormatted", formatVnd(b2bRev));
+        report.put("b2bRevenue", b2bRev);
+        report.put("b2bRevenueFormatted", formatVnd(b2bRev));
+        report.put("shopGmv", retailGmv);
+        report.put("shopGmvFormatted", formatVnd(retailGmv));
+        report.put("b2bOrdersCount", b2bShipped.size());
+        report.put("retailOrdersCount", retailShipped.size());
         report.put("totalOrders", totalOrders);
         report.put("newCustomers", partners);
         report.put("revenueGrowth", growth(revThis, revPrev));
+        report.put("gmvGrowth", growth(gmvThis, gmvPrev));
         report.put("orderGrowth", growth(ordThis, ordPrev));
         report.put("topProducts", topProducts);
 
@@ -258,7 +323,7 @@ public class FinanceService {
         statusDist.put("cancelPct", pct(cancelCount, totalOrders));
         report.put("statusDistribution", statusDist);
 
-        report.put("strategicAdvice", buildAdvice(topProducts, totalRev, pendingCount, cancelCount, totalOrders));
+        report.put("strategicAdvice", buildAdvice(topProducts, b2bRev, retailGmv, pendingCount, cancelCount, totalOrders));
         return report;
     }
 
@@ -281,16 +346,20 @@ public class FinanceService {
         return String.format(Locale.US, "%+.1f%%", g);
     }
 
-    private static String buildAdvice(List<Map<String, Object>> top, double totalRev, long pending, long cancel, int total) {
+    private static String buildAdvice(List<Map<String, Object>> top, double b2bRev, double retailGmv,
+                                      long pending, long cancel, int total) {
         if (total == 0) {
             return "Chưa có phiếu xuất kho nào. Báo cáo sẽ được cập nhật khi phát sinh giao dịch.";
         }
         StringBuilder sb = new StringBuilder();
-        if (!top.isEmpty() && totalRev > 0) {
+        if (!top.isEmpty() && b2bRev > 0) {
             Map<String, Object> first = top.get(0);
-            sb.append("Sản phẩm dẫn đầu doanh thu: ").append(first.get("name"))
+            sb.append("Sản phẩm dẫn đầu doanh thu cung ứng B2B: ").append(first.get("name"))
                     .append(" (").append(first.get("rev")).append("). ");
-            sb.append("Nên ưu tiên duy trì tồn kho an toàn cho nhóm sản phẩm bán chạy. ");
+            sb.append("Nên ưu tiên duy trì tồn kho an toàn tại Kho Tổng. ");
+        }
+        if (retailGmv > 0) {
+            sb.append("Tổng GMV bán lẻ đối soát của các Shop đạt ").append(formatVnd(retailGmv)).append(". ");
         }
         if (pending > 0) {
             sb.append("Hiện còn ").append(pending).append(" phiếu xuất đang chờ xử lý. ");

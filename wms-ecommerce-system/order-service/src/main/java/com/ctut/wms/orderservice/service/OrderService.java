@@ -269,6 +269,7 @@ public class OrderService {
                 if (!ST_CONFIRMED.equals(current) || !(isInTransit(ship) || SHIP_DELIVERED.equals(ship))) {
                     throw new RuntimeException("Lỗi: Đơn phải được xác nhận và đã bàn giao vận chuyển mới có thể hoàn thành!");
                 }
+                wmsClient.requireExportShipped(order.getMaDonHang());
                 order.setTrangThaiDonHang(ST_COMPLETED);
                 order.setTrangThaiGiaoHang(SHIP_DELIVERED);
                 // COD: khách trả tiền khi nhận hàng
@@ -306,6 +307,10 @@ public class OrderService {
         };
         if (!valid) {
             throw new RuntimeException("Lỗi: Không thể chuyển trạng thái giao hàng từ [" + current + "] sang [" + shippingStatus + "]!");
+        }
+
+        if (SHIP_DELIVERING.equals(target) || SHIP_DELIVERED.equals(target)) {
+            wmsClient.requireExportShipped(order.getMaDonHang());
         }
 
         if (donViVanChuyen != null && !donViVanChuyen.isBlank()) {

@@ -160,7 +160,9 @@ const SellerOrders = () => {
         </div>
       ) : filteredOrders.length === 0 ? (
         <div className="seller-empty-state">
-          <FiShoppingBag size={48} className="empty-icon" />
+          <div className="empty-icon-wrap">
+            <FiShoppingBag size={36} />
+          </div>
           <h3>Không có đơn hàng nào trong mục này</h3>
           <p>Các đơn hàng mới của khách sẽ hiển thị ngay tại đây khi có người mua.</p>
         </div>
@@ -277,7 +279,10 @@ const SellerOrders = () => {
             </div>
             
             <p className="modal-sub">
-              Xác nhận kiện hàng đã được Shop đóng gói hoàn tất và bàn giao cho tài xế giao vận:
+              Xác nhận kiện hàng đã được đóng gói và bàn giao cho tài xế giao vận.
+              <span style={{ display: 'block', marginTop: '6px', color: '#b45309', fontSize: '12.5px' }}>
+                ⚠️ Lưu ý đồng bộ WMS: Thủ kho phải xác nhận duyệt và xuất kho thực tế (<strong>HOÀN THÀNH</strong>) trên phân hệ WMS trước khi đơn chuyển sang <strong>Đang giao (DELIVERING)</strong>.
+              </span>
             </p>
 
             <div className="form-group-seller">

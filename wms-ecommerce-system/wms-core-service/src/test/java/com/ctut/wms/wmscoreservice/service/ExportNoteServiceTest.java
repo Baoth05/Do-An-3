@@ -193,4 +193,21 @@ class ExportNoteServiceTest {
         assertThat(inv().getSoLuongThucTe()).isEqualTo(8);
         assertThat(inv().getSoLuongDaBan()).isZero(); // không phải đơn bán hàng
     }
+
+    @Test
+    @DisplayName("Đồng bộ order-service: chỉ trả shipped=true sau khi Thủ kho duyệt và xuất thực tế (HOÀN THÀNH)")
+    void syncStatusRequiresActualExport() {
+        assertThat((Boolean) service.getOrderExportSyncStatus("DH-NONE").get("shipped")).isFalse();
+
+        Long id = createNote("DH-SYNC", 2, null).getId();
+        assertThat((Boolean) service.getOrderExportSyncStatus("DH-SYNC").get("shipped")).isFalse();
+
+        service.approveExportNote(id);
+        assertThat((Boolean) service.getOrderExportSyncStatus("DH-SYNC").get("shipped")).isFalse();
+
+        service.confirmActualExport(id);
+        Map<String, Object> synced = service.getOrderExportSyncStatus("DH-SYNC");
+        assertThat((Boolean) synced.get("shipped")).isTrue();
+        assertThat(synced.get("status")).isEqualTo("HOÀN THÀNH");
+    }
 }

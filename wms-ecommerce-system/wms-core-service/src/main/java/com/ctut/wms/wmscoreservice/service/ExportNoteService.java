@@ -11,9 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -53,6 +51,8 @@ public class ExportNoteService {
         exportNote.setMaPhieuXuat("PX-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         // Chỉ lưu mã đơn hàng thật (không tự sinh mã giả để không lẫn với đơn bán hàng)
         exportNote.setDonHangId(request.getDonHangId());
+        boolean isRetail = request.getDonHangId() != null && !request.getDonHangId().isBlank();
+        exportNote.setLoaiXuat(isRetail ? "XUAT_BAN_LE_SAN_TMDT" : "XUAT_CUNG_UNG_CUA_HANG");
         exportNote.setKhoHang(warehouse);
         exportNote.setDonViVanChuyen(shippingProvider);
         exportNote.setNguoiTao(request.getNguoiTao() != null ? request.getNguoiTao() : "Thủ kho");
@@ -258,6 +258,41 @@ public class ExportNoteService {
             count++;
         }
         return count;
+    }
+
+    /**
+     * Kiểm tra đồng bộ vận hành cho order-service:
+     * Đơn hàng chỉ coi là đã xuất kho khi có ít nhất 1 phiếu xuất đạt trạng thái HOÀN THÀNH (hoặc giao vận sau đó).
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> getOrderExportSyncStatus(String donHangId) {
+        List<ExportNote> notes = exportNoteRepository.findByDonHangId(donHangId);
+        Map<String, Object> res = new HashMap<>();
+        if (notes == null || notes.isEmpty()) {
+            res.put("shipped", false);
+            res.put("status", "CHƯA_CÓ_PHIẾU_XUẤT");
+            res.put("maPhieuXuat", null);
+            res.put("message", "Chưa tìm thấy phiếu xuất kho cho đơn hàng " + donHangId + " trên phân hệ WMS!");
+            return res;
+        }
+        Optional<ExportNote> shippedNote = notes.stream()
+                .filter(n -> NoteStatus.isExportShipped(n.getTrangThai()))
+                .findFirst();
+        if (shippedNote.isPresent()) {
+            ExportNote n = shippedNote.get();
+            res.put("shipped", true);
+            res.put("status", n.getTrangThai());
+            res.put("maPhieuXuat", n.getMaPhieuXuat());
+            res.put("message", "Thủ kho đã xác nhận duyệt và xuất kho thành công (" + n.getTrangThai() + ").");
+            return res;
+        }
+        ExportNote latest = notes.get(notes.size() - 1);
+        res.put("shipped", false);
+        res.put("status", latest.getTrangThai());
+        res.put("maPhieuXuat", latest.getMaPhieuXuat());
+        res.put("message", "Phiếu xuất [" + latest.getMaPhieuXuat() + "] đang ở trạng thái [" + latest.getTrangThai()
+                + "]. Thủ kho cần xác nhận duyệt và xuất kho (HOÀN THÀNH) trên WMS trước!");
+        return res;
     }
 
     // ===================== HÀM HỖ TRỢ =====================

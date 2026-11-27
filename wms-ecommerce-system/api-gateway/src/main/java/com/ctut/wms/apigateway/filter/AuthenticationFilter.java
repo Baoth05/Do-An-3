@@ -47,7 +47,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     @Autowired
     private JwtUtil jwtUtil;
 
-    // Khóa bí mật nội bộ: các microservice chỉ chấp nhận request có header này (tức là đi qua Gateway)
+    // Khóa bí mật nội bộ: các microservice chỉ chấp nhận request có header này (tức
+    // là đi qua Gateway)
     @Value("${internal.secret}")
     private String internalSecret;
 
@@ -62,7 +63,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         String path = request.getURI().getPath();
         HttpMethod method = request.getMethod();
 
-        // 0. Chặn các đường dẫn bất thường có thể dùng để lách luật phân quyền theo path
+        // 0. Chặn các đường dẫn bất thường có thể dùng để lách luật phân quyền theo
+        // path
         String rawPath = request.getURI().getRawPath();
         String lowerRaw = rawPath != null ? rawPath.toLowerCase() : "";
         if (lowerRaw.contains("//") || lowerRaw.contains("..") || lowerRaw.contains("%2e")
@@ -76,7 +78,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             return chain.filter(forward(exchange, null, null, null));
         }
 
-        // 2. Giải mã token (nếu có). Không bao giờ tin các header X-User-* do client tự gửi lên.
+        // 2. Giải mã token (nếu có). Không bao giờ tin các header X-User-* do client tự
+        // gửi lên.
         String username = null;
         String role = null;
         String userId = null;
@@ -105,10 +108,12 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
         // 4. Endpoint được bảo vệ: bắt buộc có token hợp lệ
         if (authHeader == null) {
-            return sendErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Vui lòng đăng nhập để thực hiện thao tác này!");
+            return sendErrorResponse(exchange, HttpStatus.UNAUTHORIZED,
+                    "Vui lòng đăng nhập để thực hiện thao tác này!");
         }
         if (!authHeader.startsWith("Bearer ")) {
-            return sendErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Header Authorization không đúng định dạng Bearer Token!");
+            return sendErrorResponse(exchange, HttpStatus.UNAUTHORIZED,
+                    "Header Authorization không đúng định dạng Bearer Token!");
         }
         if (!tokenValid) {
             return sendErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Token xác thực không hợp lệ hoặc đã hết hạn!");
@@ -120,12 +125,14 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
                     "Từ chối truy cập (403): Vai trò [" + role + "] không có quyền truy cập tài nguyên này!");
         }
 
-        // 6. Gắn Header người dùng, vai trò và khóa nội bộ để chuyển tiếp đến các Microservice
+        // 6. Gắn Header người dùng, vai trò và khóa nội bộ để chuyển tiếp đến các
+        // Microservice
         return chain.filter(forward(exchange, username, role, userId));
     }
 
     /**
-     * Xóa mọi header định danh do client gửi lên, sau đó gắn lại header do Gateway xác thực.
+     * Xóa mọi header định danh do client gửi lên, sau đó gắn lại header do Gateway
+     * xác thực.
      */
     private ServerWebExchange forward(ServerWebExchange exchange, String username, String role, String userId) {
         ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
@@ -160,22 +167,31 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     private boolean isPublicEndpoint(String path, HttpMethod method) {
         // Cổng xác thực công khai
         if (path.equals("/auth/login") ||
-            path.equals("/auth/register") ||
-            path.equals("/auth/validate")) {
+                path.equals("/auth/register") ||
+                path.equals("/auth/validate")) {
             return true;
         }
 
         // Các API đọc công khai trên Sàn TMĐT cho khách hàng & người xem
         if (method == HttpMethod.GET) {
-            if (path.startsWith("/inventory")) return true;
-            if (path.startsWith("/categories")) return true;
-            if (path.startsWith("/products")) return true;
-            if (path.startsWith("/stores")) return true;
-            if (path.startsWith("/warehouses")) return true;
-            if (path.startsWith("/vouchers")) return true;
-            if (path.startsWith("/interactions")) return true;
-            if (path.startsWith("/binh-luan")) return true;
-            if (path.startsWith("/danh-gia")) return true;
+            if (path.startsWith("/inventory"))
+                return true;
+            if (path.startsWith("/categories"))
+                return true;
+            if (path.startsWith("/products"))
+                return true;
+            if (path.startsWith("/stores"))
+                return true;
+            if (path.startsWith("/warehouses"))
+                return true;
+            if (path.startsWith("/vouchers"))
+                return true;
+            if (path.startsWith("/interactions"))
+                return true;
+            if (path.startsWith("/binh-luan"))
+                return true;
+            if (path.startsWith("/danh-gia"))
+                return true;
         }
 
         // Webhook IPN của MoMo (được bảo vệ bằng chữ ký HMAC ở payment-service)
@@ -203,7 +219,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         }
 
         // 3a. Hợp đồng cung ứng Kho Tổng -> Cửa hàng: Chủ shop & nhân sự kho
-        //     (service kiểm tra chi tiết: ai được duyệt / ký / xuất / nhận ở từng bước)
+        // (service kiểm tra chi tiết: ai được duyệt / ký / xuất / nhận ở từng bước)
         if (path.equals("/supply-contracts") || path.startsWith("/supply-contracts/")) {
             return isSellerRole(role) || isWarehouseRole(role);
         }
@@ -218,8 +234,10 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             return true;
         }
 
-        // 5. Ngưỡng cảnh báo tồn kho: Chủ shop (gian hàng của mình) hoặc nhân sự kho
-        if (method == HttpMethod.PUT && path.matches("^/inventory/\\d+/thresholds$")) {
+        // 5. Điều chỉnh kiểm kê nội bộ (NHẬP BỔ SUNG) & ngưỡng cảnh báo: Chủ shop (gian
+        // hàng đã có hàng từ HĐ B2B) hoặc nhân sự kho
+        if ((method == HttpMethod.PUT && path.matches("^/inventory/\\d+/thresholds$"))
+                || (method == HttpMethod.POST && path.equals("/inventory/add"))) {
             return isSellerRole(role) || isWarehouseRole(role);
         }
 
@@ -246,7 +264,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
                 || path.startsWith("/auth/delete/")
                 || path.startsWith("/auth/customers")
                 || (path.equals("/orders") && method == HttpMethod.GET)
-                // Trạng thái thanh toán: chỉ Admin (payment-service gọi nội bộ, không qua Gateway)
+                // Trạng thái thanh toán: chỉ Admin (payment-service gọi nội bộ, không qua
+                // Gateway)
                 || path.endsWith("/payment-status")
                 || path.startsWith("/payments/confirm-manual/")
                 || (path.equals("/payments/crypto") && method == HttpMethod.GET)
@@ -280,7 +299,6 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
     private boolean isSellerEndpoint(String path, HttpMethod method) {
         return (method == HttpMethod.PUT && path.matches("^/inventory/\\d+/publish$"))
-                || (method == HttpMethod.POST && path.equals("/inventory/add"))
                 || (method == HttpMethod.GET && path.matches("^/orders/store/\\d+$"))
                 || (method == HttpMethod.PUT && path.matches("^/orders/\\d+/status$"))
                 || (method == HttpMethod.PUT && path.matches("^/orders/\\d+/shipping-status$"))
@@ -308,23 +326,24 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
     private boolean isWarehouseRole(String role) {
         return "WAREHOUSE_MANAGER".equals(role) ||
-               "WAREHOUSE_STAFF".equals(role) ||
-               "THUKHO".equals(role) ||
-               "NVKHO".equals(role) ||
-               "ADMIN".equals(role);
+                "WAREHOUSE_STAFF".equals(role) ||
+                "THUKHO".equals(role) ||
+                "NVKHO".equals(role) ||
+                "ADMIN".equals(role);
     }
 
     private boolean isSellerRole(String role) {
         return "STORE_OWNER".equals(role) ||
-               "SELLER".equals(role) ||
-               "CHU_CUA_HANG".equals(role) ||
-               "ADMIN".equals(role);
+                "SELLER".equals(role) ||
+                "CHU_CUA_HANG".equals(role) ||
+                "ADMIN".equals(role);
     }
 
     private Mono<Void> sendErrorResponse(ServerWebExchange exchange, HttpStatus status, String message) {
         exchange.getResponse().setStatusCode(status);
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
-        String json = "{\"status\": " + status.value() + ", \"error\": \"" + status.getReasonPhrase() + "\", \"message\": \"" + message + "\"}";
+        String json = "{\"status\": " + status.value() + ", \"error\": \"" + status.getReasonPhrase()
+                + "\", \"message\": \"" + message + "\"}";
         byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
         return exchange.getResponse().writeWith(Mono.just(buffer));

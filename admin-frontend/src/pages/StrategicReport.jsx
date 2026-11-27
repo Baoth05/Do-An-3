@@ -74,21 +74,37 @@ const StrategicReport = () => {
         </div>
       </div>
 
-      {/* 2. Thẻ Thống Kê */}
+      {/* 2. Thẻ Thống Kê (Phân tách Doanh thu Sàn/Kho Tổng B2B & GMV Shop) */}
       <div className="report-stats-grid">
         <div className="report-stat-card">
           <div className="report-stat-header">
-            <span>Tổng doanh thu</span>
-            <FiDollarSign size={16} color="#d63031"/>
+            <span>Doanh thu Sàn / Kho Tổng (B2B)</span>
+            <FiDollarSign size={16} color="#00b894"/>
           </div>
           <div className="report-stat-value red">
-            {reportData?.totalRevenueFormatted ?? formatCurrency(reportData?.totalRevenue)}
+            {reportData?.b2bRevenueFormatted ?? reportData?.totalRevenueFormatted ?? formatCurrency(reportData?.totalRevenue)}
           </div>
           <div className="report-stat-trend trend-up">
             <FiTrendingUp size={14}/> {reportData?.revenueGrowth ?? 'Chưa đủ dữ liệu'} <span style={{color: '#636e72', fontWeight: 500}}>so với kỳ trước</span>
           </div>
           <div className="report-stat-footer">
-            <FiCreditCard size={14}/> Doanh thu tích lũy từ {reportData?.totalOrders ?? 0} phiếu xuất
+            <FiCreditCard size={14}/> Tổng giá sỉ từ {reportData?.b2bOrdersCount ?? 0} phiếu xuất B2B cho Shop
+          </div>
+        </div>
+
+        <div className="report-stat-card">
+          <div className="report-stat-header">
+            <span>Tổng GMV các Shop (Đối soát)</span>
+            <FiShoppingBag size={16} color="#0984e3"/>
+          </div>
+          <div className="report-stat-value dark" style={{ color: '#0984e3' }}>
+            {reportData?.shopGmvFormatted ?? formatCurrency(reportData?.shopGmv)}
+          </div>
+          <div className="report-stat-trend trend-up">
+            <FiTrendingUp size={14}/> {reportData?.gmvGrowth ?? 'Chưa đủ dữ liệu'} <span style={{color: '#636e72', fontWeight: 500}}>so với kỳ trước</span>
+          </div>
+          <div className="report-stat-footer">
+            <FiCheckCircle size={14}/> Từ {reportData?.retailOrdersCount ?? 0} phiếu bán lẻ cho khách (thuộc Chủ shop)
           </div>
         </div>
 
@@ -98,7 +114,7 @@ const StrategicReport = () => {
             <FiShoppingBag size={16} color="#d63031"/>
           </div>
           <div className="report-stat-value dark">
-            {reportData?.totalOrders ?? 0} <span style={{fontSize: '18px'}}>đơn</span>
+            {reportData?.totalOrders ?? 0} <span style={{fontSize: '18px'}}>phiếu</span>
           </div>
           <div className="report-stat-trend trend-up">
             <FiTrendingUp size={14}/> {reportData?.orderGrowth ?? 'Chưa đủ dữ liệu'} <span style={{color: '#636e72', fontWeight: 500}}>tăng trưởng lưu chuyển</span>
@@ -110,17 +126,17 @@ const StrategicReport = () => {
 
         <div className="report-stat-card">
           <div className="report-stat-header">
-            <span>Khách hàng & Đối tác</span>
+            <span>Gian hàng & Đối tác</span>
             <FiUserPlus size={16} color="#0984e3"/>
           </div>
           <div className="report-stat-value dark">
             {reportData?.newCustomers ?? 0} <span style={{fontSize: '18px'}}>đối tác</span>
           </div>
           <div className="report-stat-trend">
-            <span className="trend-badge"><FiUserPlus size={12}/> +12</span> <span style={{color: '#636e72', fontWeight: 500}}>kết nối mới tháng này</span>
+            <span className="trend-badge"><FiUserPlus size={12}/> Đang hoạt động</span>
           </div>
           <div className="report-stat-footer">
-            <FiPieChart size={14} color="#d63031"/> Tỷ lệ quay lại mua hàng đạt 65%
+            <FiPieChart size={14} color="#d63031"/> Điểm nhận hàng phát sinh giao dịch
           </div>
         </div>
       </div>

@@ -81,9 +81,12 @@ const SellerContracts = () => {
       case 'CHO_SHOP_KY':
         return <span className="contract-badge blue"><FiShield size={12} /> Chờ Shop ký số</span>;
       case 'DA_KY_CHO_DUYET_KHO':
-        return <span className="contract-badge purple"><FiCheckCircle size={12} /> Đã ký • Chờ duyệt kho</span>;
+        return <span className="contract-badge purple"><FiCheckCircle size={12} /> Đã ký • Chờ Admin chuyển kho</span>;
+      case 'CHUYEN_QUA_KHO':
       case 'DA_DUYET_CHO_XUAT_KHO':
-        return <span className="contract-badge teal"><FiTruck size={12} /> Đã duyệt • Chờ xuất kho</span>;
+        return <span className="contract-badge indigo"><FiBox size={12} /> Đã chuyển kho • Chờ Thủ kho duyệt</span>;
+      case 'THU_KHO_DA_DUYET':
+        return <span className="contract-badge teal"><FiTruck size={12} /> Thủ kho đã duyệt • Chờ NV lên đơn</span>;
       case 'DANG_GIAO_HANG':
         return <span className="contract-badge orange"><FiTruck size={12} /> Đang giao hàng</span>;
       case 'HOAN_THANH':
@@ -101,7 +104,7 @@ const SellerContracts = () => {
       <div className="contracts-dashboard-header">
         <div>
           <h1>Hợp Đồng Cung Ứng & Nhập Hàng</h1>
-          <p>Quy trình điều chuyển hàng hóa 6 bước từ Kho Tổng Trung Tâm về Gian Hàng của bạn</p>
+          <p>Quy trình điều chuyển hàng hóa 7 bước từ Kho Tổng Trung Tâm về Gian Hàng của bạn</p>
         </div>
 
         <div className="header-actions-group">

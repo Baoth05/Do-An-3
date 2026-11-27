@@ -12,9 +12,10 @@ const STEPS = [
   { key: 'CHO_ADMIN_DUYET', title: '1. Gửi yêu cầu', desc: 'Shop lập yêu cầu' },
   { key: 'CHO_SHOP_KY', title: '2. Admin duyệt V1', desc: 'Thẩm định định mức' },
   { key: 'DA_KY_CHO_DUYET_KHO', title: '3. Shop ký số', desc: 'Xác thực chữ ký điện tử' },
-  { key: 'DA_DUYET_CHO_XUAT_KHO', title: '4. Chuyển Kho Tổng', desc: 'Lệnh điều chuyển kho' },
-  { key: 'DANG_GIAO_HANG', title: '5. Xuất kho vận chuyển', desc: 'Phiếu xuất kho tổng' },
-  { key: 'HOAN_THANH', title: '6. Nhập kho hoàn tất', desc: 'Ghi thẻ kho shop' },
+  { key: 'CHUYEN_QUA_KHO', title: '4. Chuyển Kho Tổng', desc: 'Chờ Thủ kho duyệt lệnh' },
+  { key: 'THU_KHO_DA_DUYET', title: '5. Thủ kho duyệt', desc: 'Chờ NV lên đơn xuất kho' },
+  { key: 'DANG_GIAO_HANG', title: '6. Xuất kho vận chuyển', desc: 'Phiếu xuất kho tổng' },
+  { key: 'HOAN_THANH', title: '7. Nhập kho hoàn tất', desc: 'Ghi thẻ kho shop' },
 ];
 
 const getStepIndex = (status) => {
@@ -22,9 +23,11 @@ const getStepIndex = (status) => {
     case 'CHO_ADMIN_DUYET': return 1;
     case 'CHO_SHOP_KY': return 2;
     case 'DA_KY_CHO_DUYET_KHO': return 3;
+    case 'CHUYEN_QUA_KHO':
     case 'DA_DUYET_CHO_XUAT_KHO': return 4;
-    case 'DANG_GIAO_HANG': return 5;
-    case 'HOAN_THANH': return 6;
+    case 'THU_KHO_DA_DUYET': return 5;
+    case 'DANG_GIAO_HANG': return 6;
+    case 'HOAN_THANH': return 7;
     case 'TU_CHOI': return -1;
     default: return 1;
   }
@@ -151,13 +154,28 @@ const SellerContractDetail = () => {
     }
   };
 
+  const handleWarehouseManagerApprove = async () => {
+    setActionLoading(true);
+    try {
+      await marketplaceService.warehouseManagerApproveContract(contract.id, {
+        note: 'Thủ kho đã đối chiếu và duyệt lệnh xuất kho chuyển cho nhân viên lên đơn.',
+      });
+      setAlertNotice('🏢 [Thủ Kho] Đã duyệt lệnh xuất kho! Chuyển nhân viên kho tiến hành lên đơn.');
+      await fetchContractDetail();
+    } catch (err) {
+      alert('Lỗi phê duyệt thủ kho: ' + err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleWarehouseDispatch = async () => {
     setActionLoading(true);
     try {
       await marketplaceService.warehouseDispatchContractOrder(contract.id, {
         shippingProvider: 'Đội Vận Chuyển Nội Bộ CTUT Logistics',
       });
-      setAlertNotice('🚚 [Kho Tổng] Đã xuất kho thành công và đang trên đường giao tới Cửa Hàng!');
+      setAlertNotice('🚚 [Nhân Viên Kho] Đã lên đơn & xuất kho thành công, hàng đang trên đường giao tới Cửa Hàng!');
       await fetchContractDetail();
     } catch (err) {
       alert('Lỗi xuất kho: ' + err.message);
@@ -238,10 +256,10 @@ const SellerContractDetail = () => {
         </div>
       )}
 
-      {/* 6-STEP PROCESS STEPPER (Quy trình nhập hàng rõ ràng) */}
+      {/* 7-STEP PROCESS STEPPER (Quy trình nhập hàng rõ ràng) */}
       <div className="contract-stepper-card">
         <div className="stepper-title-row">
-          <h3>Tiến Độ Quy Trình Cung Ứng Nội Bộ (6 Bước Chuẩn Hóa)</h3>
+          <h3>Tiến Độ Quy Trình Cung Ứng Nội Bộ (7 Bước Chuẩn Hóa)</h3>
           <span className={`status-pill status-${contract.trangThai?.toLowerCase()}`}>
             Trạng thái hiện tại: <strong>{contract.trangThai}</strong>
           </span>
@@ -389,7 +407,7 @@ const SellerContractDetail = () => {
           <div className="action-card-header">
             <div className="badge-delivery-step">
               <FiTruck size={22} color="#059669" />
-              <h3>BƯỚC 6: XÁC NHẬN NHẬP HÀNG VÀO KHO (DÀNH CHO CHỦ SHOP)</h3>
+              <h3>BƯỚC 7: XÁC NHẬN NHẬP HÀNG VÀO KHO (DÀNH CHO CHỦ SHOP)</h3>
             </div>
             <span className="delivery-status-pill">Hàng đang vận chuyển đến shop</span>
           </div>
@@ -431,19 +449,24 @@ const SellerContractDetail = () => {
               👑 [Admin] Duyệt Vòng 2 & Lệnh Chuyển Kho Tổng
             </button>
           )}
-          {contract.trangThai === 'DA_DUYET_CHO_XUAT_KHO' && (
+          {(contract.trangThai === 'CHUYEN_QUA_KHO' || contract.trangThai === 'DA_DUYET_CHO_XUAT_KHO') && (
+            <button type="button" className="btn-sim approve" onClick={handleWarehouseManagerApprove} disabled={actionLoading}>
+              🏢 [Thủ Kho] Phê Duyệt Lệnh Xuất (Chuyển xuống cho Nhân viên lên đơn)
+            </button>
+          )}
+          {contract.trangThai === 'THU_KHO_DA_DUYET' && (
             <button type="button" className="btn-sim dispatch" onClick={handleWarehouseDispatch} disabled={actionLoading}>
-              🏢 [Thủ Kho] Lập Phiếu & Xuất Kho Giao Hàng
+              📦 [Nhân Viên Kho] Lên Đơn & Xuất Kho Bàn Giao Vận Chuyển
             </button>
           )}
           {contract.trangThai === 'CHO_SHOP_KY' && (
             <span className="sim-hint">👉 Hợp đồng đã duyệt V1, vui lòng nhập mã PIN và ký số ở khung Bước 3 bên trên!</span>
           )}
           {contract.trangThai === 'DANG_GIAO_HANG' && (
-            <span className="sim-hint">🚚 Kho Tổng đã xuất hàng, vui lòng bấm nút xác nhận ở khung Bước 6 bên trên khi nhận đủ hàng!</span>
+            <span className="sim-hint">🚚 Kho Tổng đã xuất hàng, vui lòng bấm nút xác nhận ở khung Bước 7 bên trên khi nhận đủ hàng!</span>
           )}
           {contract.trangThai === 'HOAN_THANH' && (
-            <span className="sim-hint success">🎉 Toàn bộ quy trình 6 bước đã hoàn tất thành công! Tồn kho và thẻ kho gian hàng đã được ghi nhận.</span>
+            <span className="sim-hint success">🎉 Toàn bộ quy trình 7 bước đã hoàn tất thành công! Tồn kho và thẻ kho gian hàng đã được ghi nhận.</span>
           )}
         </div>
       </div>
@@ -616,7 +639,7 @@ const SellerContractDetail = () => {
             <div className={`log-item ${contract.adminDuyetVong2?.daDuyet ? 'done' : ''}`}>
               <div className="log-marker"></div>
               <div className="log-content">
-                <strong>Duyệt Vòng 2 (Chuyển lệnh xuất kho):</strong>
+                <strong>Duyệt Vòng 2 (Admin duyệt chuyển lệnh kho):</strong>
                 {contract.adminDuyetVong2?.daDuyet ? (
                   <span>
                     Bởi {contract.adminDuyetVong2.nguoiDuyet} lúc {new Date(contract.adminDuyetVong2.ngayDuyet).toLocaleString('vi-VN')}
@@ -627,13 +650,28 @@ const SellerContractDetail = () => {
               </div>
             </div>
 
-            <div className={`log-item ${contract.khoTongXuatHang?.daXuat ? 'done' : ''}`}>
+            <div className={`log-item ${contract.thuKhoDuyet?.daDuyet ? 'done' : ''}`}>
               <div className="log-marker"></div>
               <div className="log-content">
-                <strong>Xuất kho điều chuyển (Kho Tổng):</strong>
-                {contract.khoTongXuatHang?.daXuat ? (
+                <strong>Thủ Kho Duyệt Xuất Kho (Chuyển nhân viên):</strong>
+                {contract.thuKhoDuyet?.daDuyet ? (
                   <span>
-                    Xuất phiếu bởi {contract.khoTongXuatHang.nguoiXuat} • ĐVVC: {contract.khoTongXuatHang.donViVanChuyen || 'Nội bộ'}
+                    Phê duyệt bởi {contract.thuKhoDuyet.nguoiDuyet} lúc {new Date(contract.thuKhoDuyet.ngayDuyet).toLocaleString('vi-VN')}
+                    {contract.thuKhoDuyet.ghiChu && <em className="note-text"> ({contract.thuKhoDuyet.ghiChu})</em>}
+                  </span>
+                ) : (
+                  <span className="pending-text">Chờ thủ kho phê duyệt...</span>
+                )}
+              </div>
+            </div>
+
+            <div className={`log-item ${contract.thongTinXuatKho?.daLenDon ? 'done' : ''}`}>
+              <div className="log-marker"></div>
+              <div className="log-content">
+                <strong>Nhân Viên Lên Đơn & Xuất Kho:</strong>
+                {contract.thongTinXuatKho?.daLenDon ? (
+                  <span>
+                    Phiếu #{contract.thongTinXuatKho.maPhieuXuat} bởi {contract.thongTinXuatKho.nguoiXuat} • ĐVVC: {contract.thongTinXuatKho.donViVanChuyen || 'Nội bộ'}
                   </span>
                 ) : (
                   <span className="pending-text">Chưa xuất kho...</span>

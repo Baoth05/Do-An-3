@@ -202,7 +202,7 @@
       </map>
     </option>
   </component>
-  <component name="RunManager" selected="Spring Boot.InteractionServiceApplication">
+  <component name="RunManager" selected="Spring Boot.OrderServiceApplication">
     <configuration name="ApiGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="api-gateway" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.ctut.wms.apigateway.ApiGatewayApplication" />

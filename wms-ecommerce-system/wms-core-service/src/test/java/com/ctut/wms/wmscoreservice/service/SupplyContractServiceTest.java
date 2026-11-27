@@ -100,7 +100,7 @@ class SupplyContractServiceTest {
     }
 
     @Test
-    @DisplayName("Luồng đủ 6 bước: Kho Tổng giảm, kho shop tăng, hàng chưa tự mở bán")
+    @DisplayName("Luồng đủ 7 bước: Admin duyệt -> Shop ký -> Chuyển kho -> Thủ kho duyệt -> NV xuất -> Shop nhận hàng")
     void fullFlowMovesStock() {
         ContractResponse c = request(5);
         assertThat(c.getTrangThai()).isEqualTo("CHO_ADMIN_DUYET");
@@ -116,7 +116,10 @@ class SupplyContractServiceTest {
         assertThat(signed.getChuKyShop().getMaChuKySo()).startsWith("DS-SHA256-");
 
         TestFixtures.as("ADMIN", 1L);
-        service.approveTransfer(id, null);
+        assertThat(service.approveTransfer(id, null).getTrangThai()).isEqualTo("CHUYEN_QUA_KHO");
+
+        TestFixtures.as("WAREHOUSE_MANAGER", 3L);
+        assertThat(service.warehouseManagerApprove(id, null).getTrangThai()).isEqualTo("THU_KHO_DA_DUYET");
 
         TestFixtures.as("WAREHOUSE_STAFF", 2L);
         ContractResponse dispatched = service.dispatch(id, "GHTK");
@@ -184,9 +187,11 @@ class SupplyContractServiceTest {
         service.sign(id, signature("123456"));
         TestFixtures.as("ADMIN", 1L);
         service.approveTransfer(id, null);
+        TestFixtures.as("WAREHOUSE_MANAGER", 3L);
+        service.warehouseManagerApprove(id, null);
 
         fx.stockOf(phone, central).setSoLuongKhaDung(3); // hàng đã bị giữ cho việc khác
-        TestFixtures.as("WAREHOUSE_MANAGER", 2L);
+        TestFixtures.as("WAREHOUSE_STAFF", 2L);
         assertThatThrownBy(() -> service.dispatch(id, null)).hasMessageContaining("không đủ hàng");
         assertThat(fx.stockOf(phone, central).getSoLuongThucTe()).isEqualTo(20);
     }
@@ -203,6 +208,22 @@ class SupplyContractServiceTest {
         TestFixtures.as("STORE_OWNER", OWNER);
         service.sign(id2, signature("123456"));
         assertThatThrownBy(() -> service.reject(id2, "x")).hasMessageContaining("Không thể từ chối");
+    }
+
+    @Test
+    @DisplayName("Nhân viên kho không duyệt thay Thủ kho và không thể lên đơn xuất trước khi Thủ kho duyệt")
+    void staffCannotApproveOrDispatchBeforeManager() {
+        Long id = request(2).getId();
+        TestFixtures.as("ADMIN", 1L);
+        service.approveRequest(id, null);
+        TestFixtures.as("STORE_OWNER", OWNER);
+        service.sign(id, signature("123456"));
+        TestFixtures.as("ADMIN", 1L);
+        service.approveTransfer(id, null);
+
+        TestFixtures.as("WAREHOUSE_STAFF", 2L);
+        assertThatThrownBy(() -> service.warehouseManagerApprove(id, null)).isInstanceOf(ForbiddenException.class);
+        assertThatThrownBy(() -> service.dispatch(id, null)).hasMessageContaining("CHUYEN_QUA_KHO");
     }
 
     @Test

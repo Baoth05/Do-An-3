@@ -1,88 +1,133 @@
-/* src/pages/Seller/SellerLayout.css */
+/* src/pages/Seller/SellerLayout.css - Bright Modern Seller Center Theme */
+
 .seller-portal-layout {
   display: flex;
   min-height: 100vh;
-  background-color: #f1f5f9;
+  background-color: #f8fafc;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Sidebar */
+/* ==================== 1. SIDEBAR SÁNG HIỆN ĐẠI ==================== */
 .seller-sidebar {
   width: 270px;
-  background: #0f172a;
-  color: #f8fafc;
+  background: #ffffff;
+  color: #1e293b;
   display: flex;
   flex-direction: column;
   position: sticky;
   top: 0;
   height: 100vh;
-  padding: 24px 16px;
+  padding: 20px 16px;
   box-sizing: border-box;
   flex-shrink: 0;
-  border-right: 1px solid #1e293b;
+  border-right: 1px solid #e2e8f0;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.02);
+  z-index: 10;
 }
 
 .seller-brand {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #1e293b;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .seller-logo-badge {
   width: 42px;
   height: 42px;
-  /* Đổi gradient sang tông màu cam chủ đạo #ff6c05 */
-  background: linear-gradient(135deg, #ff8a3d 0%, #ff6c05 100%);
-  color: #ffffff; /* Đổi icon thành màu trắng cho nổi bật */
-  border-radius: 10px;
+  background: linear-gradient(135deg, #ff8a3d 0%, #ea580c 100%);
+  color: #ffffff;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  box-shadow: 0 4px 12px rgba(255, 108, 5, 0.3);
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+  flex-shrink: 0;
 }
 
 .seller-brand h3 {
   font-size: 15px;
   font-weight: 800;
   margin: 0;
-  color: #ffffff;
-  letter-spacing: 0.5px;
+  color: #0f172a;
+  letter-spacing: -0.2px;
 }
 
 .seller-brand span {
-  font-size: 11px;
-  color: #94a3b8;
-}
-
-.seller-store-selector-box {
-  background: #1e293b;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 20px;
-}
-
-.seller-store-selector-box label {
-  display: block;
-  font-size: 11px;
-  color: #94a3b8;
-  font-weight: 600;
-  margin-bottom: 6px;
+  font-size: 10.5px;
+  color: #ea580c;
+  font-weight: 700;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
-.seller-store-selector-box select {
-  width: 100%;
-  padding: 8px;
-  background: #0f172a;
-  color: #ffffff;
-  border: 1px solid #334155;
+/* ==================== 2. KHUNG KHO RIÊNG GIAN HÀNG ==================== */
+.seller-store-selector-box {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 18px;
+}
+
+.selector-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.selector-label-row label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #9a3412;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 0;
+}
+
+.owner-verified-pill {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
   border-radius: 6px;
-  font-size: 13px;
-  outline: none;
-  cursor: pointer;
+}
+
+.single-owner-store-card {
+  background: #ffffff;
+  border: 1px solid #ffedd5;
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 3px rgba(234, 88, 12, 0.05);
+}
+
+.store-locked-name {
+  margin: 0 0 6px 0;
+  font-size: 13.5px;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.store-locked-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+.store-locked-meta strong {
+  color: #ea580c;
+  font-weight: 700;
 }
 
 .store-status-indicator {
@@ -90,8 +135,10 @@
   align-items: center;
   gap: 6px;
   margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed #f1f5f9;
   font-size: 11px;
-  color: #cbd5e1;
+  color: #64748b;
 }
 
 .dot-green {
@@ -99,82 +146,126 @@
   height: 7px;
   background: #10b981;
   border-radius: 50%;
+  box-shadow: 0 0 4px rgba(16, 185, 129, 0.6);
+  flex-shrink: 0;
 }
 
+.admin-store-switcher {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-store-switcher select {
+  width: 100%;
+  padding: 8px 10px;
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #fed7aa;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+}
+
+.admin-tag {
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  align-self: flex-start;
+  letter-spacing: 0.5px;
+}
+
+/* ==================== 3. MENU ĐIỀU HƯỚNG ==================== */
 .seller-nav-menu {
   display: flex;
   flex-direction: column;
   gap: 6px;
   flex: 1;
+  overflow-y: auto;
 }
 
 .seller-nav-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
-  color: #94a3b8;
+  padding: 11px 14px;
+  color: #475569;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
-  border-radius: 8px;
-  transition: all 0.2s;
+  border-radius: 10px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Hiệu ứng lướt chuột: Nền cam nhạt, chữ cam */
-.seller-nav-item:hover:not(.active) {
-  background: rgba(255, 108, 5, 0.1);
-  color: #ff6c05;
-}
-
-/* TRẠNG THÁI ĐANG CHỌN: Dùng màu cam chủ đạo #ff6c05 */
-.seller-nav-item.active {
-  background: #ff6c05;
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(255, 108, 5, 0.35); /* Đổ bóng cam cho nút nổi khối */
-}
-
-.nav-icon {
+.seller-nav-item .nav-icon {
   font-size: 18px;
   display: flex;
   align-items: center;
+  color: #64748b;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
-.seller-footer-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* Hover Menu */
+.seller-nav-item:hover:not(.active) {
+  background: #fff7ed;
+  color: #ea580c;
+  transform: translateX(3px);
+}
+
+.seller-nav-item:hover:not(.active) .nav-icon {
+  color: #ea580c;
+  transform: scale(1.1);
+}
+
+/* Trạng thái Đang Chọn (Active) */
+.seller-nav-item.active {
+  background: linear-gradient(135deg, #ff7a18 0%, #ea580c 100%);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.3);
+}
+
+.seller-nav-item.active .nav-icon {
+  color: #ffffff;
+}
+
+/* ==================== 4. FOOTER SIDEBAR ==================== */
+.seller-sidebar-footer {
+  margin-top: 16px;
+  border-top: 1px solid #f1f5f9;
   padding-top: 16px;
-  border-top: 1px solid #1e293b;
 }
 
-.btn-switch-to-marketplace {
+.btn-back-market {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #334155;
-  color: #ffffff;
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
   padding: 10px;
-  border-radius: 8px;
+  border-radius: 10px;
   text-decoration: none;
   font-size: 13px;
   font-weight: 600;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
-.btn-switch-to-marketplace:hover {
-  background: #475569;
+.btn-back-market:hover {
+  background: #fff7ed;
+  color: #ea580c;
+  border-color: #fed7aa;
+  transform: translateX(-2px);
 }
 
-.wms-core-link {
-  font-size: 12px;
-  color: #38bdf8;
-  text-align: center;
-  text-decoration: none;
-}
-
-/* Main Content Area */
+/* ==================== 5. TOP NAVBAR SÁNG & SANG ==================== */
 .seller-main-wrapper {
   flex: 1;
   display: flex;
@@ -190,7 +281,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+  position: sticky;
+  top: 0;
+  z-index: 9;
 }
 
 .navbar-left {
@@ -202,11 +296,11 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 13.5px;
-  color: #334155;
+  font-size: 13px;
+  color: #475569;
   background: #f8fafc;
   padding: 6px 14px;
-  border-radius: 8px;
+  border-radius: 20px;
   border: 1px solid #e2e8f0;
 }
 
@@ -232,26 +326,31 @@
 .navbar-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
 }
 
 .seller-user-badge {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 5px 12px 5px 6px;
+  border-radius: 30px;
 }
 
 .seller-user-avatar {
-  width: 36px;
-  height: 36px;
-  background: #f59e0b;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #ff8a3d 0%, #ea580c 100%);
   color: #ffffff;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 14px;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.25);
 }
 
 .seller-user-info {
@@ -260,95 +359,43 @@
 }
 
 .seller-user-info strong {
-  font-size: 14px;
+  font-size: 13px;
   color: #0f172a;
   line-height: 1.2;
 }
 
 .seller-user-info span {
-  font-size: 11px;
+  font-size: 10.5px;
   color: #64748b;
   font-weight: 600;
-  letter-spacing: 0.3px;
-  margin-top: 2px;
+  letter-spacing: 0.2px;
 }
 
-/* Thêm định dạng cho nút Back Sàn mua sắm trong Sidebar */
-.seller-sidebar-footer {
-  margin-top: 20px;
-  border-top: 1px solid #1e293b;
-  padding-top: 20px;
-}
-
-.btn-back-market {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: transparent;
-  color: #94a3b8;
-  border: 1px solid #334155;
-  padding: 10px;
-  border-radius: 8px;
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.2s;
-}
-
-/* Đổi màu viền và chữ sang cam khi hover */
-.btn-back-market:hover {
-  background: rgba(255, 108, 5, 0.05);
-  color: #ff6c05;
-  border-color: #ff6c05;
-}
-.seller-content-body {
-  padding: 28px 32px;
-  flex: 1;
-}
-
-
-.selector-label-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-}
-
-.selector-label-row label {
-  margin-bottom: 0 !important;
-}
-
-.link-register-mini {
-  color: #f59e0b;
-  font-size: 11px;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.link-register-mini:hover {
-  text-decoration: underline;
-}
-
-/* Seller Logout Button */
 .btn-seller-logout {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #fee2e2;
+  background: #fef2f2;
   color: #dc2626;
-  border: 1px solid #fca5a5;
+  border: 1px solid #fee2e2;
   padding: 8px 14px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  margin-left: 12px;
 }
 
 .btn-seller-logout:hover {
-  background: #fecaca;
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+/* ==================== 6. BODY NỘI DUNG ==================== */
+.seller-content-body {
+  padding: 28px 32px;
+  flex: 1;
 }
 
 .seller-redirecting {
@@ -360,58 +407,4 @@
   background: #f8fafc;
   color: #475569;
   font-weight: 500;
-}
-
-
-/* Single Owner Locked Store Info Card */
-.owner-verified-pill {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.single-owner-store-card {
-  background: #0f172a;
-  border: 1px solid #334155;
-  border-radius: 8px;
-  padding: 10px 12px;
-}
-
-.store-locked-name {
-  margin: 0 0 6px 0;
-  font-size: 13.5px;
-  color: #ffffff;
-  font-weight: 700;
-}
-
-.store-locked-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: 11px;
-  color: #94a3b8;
-}
-
-.store-locked-meta strong {
-  color: #fcd34d;
-}
-
-.admin-store-switcher {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.admin-tag {
-  background: #dc2626;
-  color: #ffffff;
-  font-size: 9px;
-  font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 4px;
-  align-self: flex-start;
-  letter-spacing: 0.5px;
 }

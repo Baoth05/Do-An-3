@@ -6,7 +6,7 @@
 > **Mô hình kiến trúc:** Microservices (Spring Boot 4.1 / Spring Cloud Gateway / Netflix Eureka) + 3 Web Frontend (React + Vite)  
 > **Cơ chế lưu trữ:** Database-per-service (5 cơ sở dữ liệu PostgreSQL độc lập)  
 > **Cổng truy cập tập trung:** API Gateway `http://localhost:8080`  
-> **Ngày cập nhật:** 16/11/2026 — đã đối chiếu với mã nguồn
+> **Ngày cập nhật:** 27/11/2026 — đã đối chiếu với mã nguồn
 
 ---
 
@@ -14,7 +14,7 @@
 1. [Tổng Quan Đề Tài & Mô Hình Nghiệp Vụ B2B2C](#1-tổng-quan-đề-tài--mô-hình-nghiệp-vụ-b2b2c)
 2. [Kiến Trúc Tổng Thể Hệ Thống](#2-kiến-trúc-tổng-thể-hệ-thống)
 3. [Phân Quyền RBAC & Cơ Chế Xác Thực](#3-phân-quyền-rbac--cơ-chế-xác-thực)
-4. [Kho Vận 2 Tầng & Hợp Đồng Cung Ứng 6 Bước](#4-kho-vận-2-tầng--hợp-đồng-cung-ứng-6-bước)
+4. [Kho Vận 2 Tầng & Hợp Đồng Cung Ứng 7 Bước](#4-kho-vận-2-tầng--hợp-đồng-cung-ứng-7-bước)
 5. [Quản Trị Gian Hàng & Đăng Bán Lên Sàn](#5-quản-trị-gian-hàng--đăng-bán-lên-sàn)
 6. [Mua Sắm Khách Hàng & Voucher 2 Tầng](#6-mua-sắm-khách-hàng--voucher-2-tầng)
 7. [Thuật Toán Tách Đơn Đa Gian Hàng](#7-thuật-toán-tách-đơn-đa-gian-hàng)
@@ -46,7 +46,7 @@
                       │   TẦNG 1: KHO TỔNG (loai_hinh=KHO_TONG)│
                       │   Thủ kho & Nhân viên kho vận hành   │
                       └──────────────────┬───────────────────┘
-                                         │ Hợp đồng cung ứng điện tử 6 bước
+                                         │ Hợp đồng cung ứng điện tử 7 bước
              ┌───────────────────────────┴───────────────────────────┐
              ▼                                                       ▼
 ┌──────────────────────────┐                           ┌──────────────────────────┐
@@ -70,7 +70,7 @@
 
 ### 1.2. Ba trụ cột vận hành
 1. **Kho Tổng (Tầng 1):** kho có `loai_hinh = KHO_TONG` trong bảng `kho_va_cua_hang`, do Thủ kho (`WAREHOUSE_MANAGER`/`THUKHO`) và Nhân viên kho (`WAREHOUSE_STAFF`/`NVKHO`) vận hành. Quản lý danh mục hàng hóa chuẩn (SKU), nhà cung cấp, nhập hàng từ NCC và xuất cung ứng cho các cửa hàng.
-2. **Kho Cửa Hàng (Tầng 2):** mỗi Chủ cửa hàng (`STORE_OWNER`) sở hữu 1 kho riêng (`loai_hinh = KHO_CUA_HANG`, `quan_ly_id` = id người dùng). Hàng vào kho shop qua **Hợp đồng cung ứng** với Kho Tổng. Chủ shop tự định giá, bật/tắt đăng bán, phát hành voucher riêng.
+2. **Kho Cửa Hàng (Tầng 2):** mỗi Chủ cửa hàng (`STORE_OWNER`) sở hữu 1 kho riêng (`loai_hinh = KHO_CUA_HANG`, `quan_ly_id` = id người dùng). Hàng hóa mới vào kho shop chỉ thông qua **Hợp đồng cung ứng B2B** với Kho Tổng (endpoint `POST /inventory/add` chỉ dùng điều chỉnh tăng kiểm kê thừa hoặc hoàn trả nguyên vẹn cho mặt hàng đã có). Chủ shop tự định giá, bật/tắt đăng bán, phát hành voucher riêng.
 3. **Sàn TMĐT (Tầng 3):** mọi gian hàng cùng bán trên 1 website. Khách hàng gom hàng nhiều shop vào 1 giỏ, thanh toán 1 lần; hệ thống tự **tách đơn** về từng shop.
 
 ---
@@ -83,8 +83,8 @@
  ├──────────────────────────────┬──────────────────────────────┬─────────────────────────┤
  │ ecommerce-frontend  :5173    │ admin-frontend  :5174        │ wms-frontend  :5175     │
  │ • Sàn mua sắm, giỏ, checkout │ • Quản lý người dùng & khóa  │ • Tồn kho, phiếu nhập/  │
- │ • Kênh Người Bán (/seller)   │ • Duyệt hợp đồng cung ứng    │   xuất, thẻ kho         │
- │ • Hợp đồng cung ứng (shop)   │ • Tài chính & báo cáo        │ • Duyệt/xuất kho thực tế│
+ │ • Kênh Người Bán (/seller)   │ • Duyệt hợp đồng cung ứng    │   xuất, thẻ kho, HĐ B2B │
+ │ • Hợp đồng cung ứng (shop)   │ • Tài chính B2B & GMV Shop   │ • Thủ kho duyệt/NV xuất │
  └──────────────────────────────┴──────────────┬───────────────┴─────────────────────────┘
                                                │ HTTP REST + JWT Bearer
                                                ▼
@@ -117,7 +117,7 @@
 ```
 
 **Giao tiếp giữa các service** dùng `RestTemplate` `@LoadBalanced` (phân giải tên service qua Eureka, timeout kết nối 3s / đọc 5s), có interceptor tự gắn `X-Internal-Secret` và vai trò `SYSTEM`:
-- order-service → wms-core: tra giá & tồn (`/inventory/item`), tra chủ gian hàng (`/stores/{id}`), tạo/hủy phiếu xuất.
+- order-service → wms-core: tra giá & tồn (`/inventory/item`), tra chủ gian hàng (`/stores/{id}`), tạo/hủy phiếu xuất, kiểm tra đồng bộ xuất kho (`/export-notes/by-order/{maDonHang}/sync-status`).
 - payment-service → order-service: lấy số tiền phải trả, đồng bộ trạng thái thanh toán.
 - interaction-service → order-service: xác minh người đánh giá đã mua hàng (`/orders/purchased`).
 
@@ -129,10 +129,10 @@
 
 | Nhóm | Mã vai trò | Sàn TMĐT (:5173) | Kênh Người Bán (/seller) | WMS (:5175) | Admin (:5174) | Quyền nghiệp vụ chính |
 |---|---|:---:|:---:|:---:|:---:|---|
-| Quản trị viên | `ADMIN` | ✅ | ✅ (xem mọi gian hàng) | ✅ | ✅ | Toàn quyền; duyệt hợp đồng vòng 1 & 2; khóa tài khoản; xem tài chính; xác nhận/từ chối giao dịch Crypto |
-| Thủ kho | `WAREHOUSE_MANAGER`, `THUKHO` | ❌ | ❌ | ✅ | ❌ | Danh mục, NCC, phiếu nhập/xuất, xuất hàng theo hợp đồng cung ứng |
-| Nhân viên kho | `WAREHOUSE_STAFF`, `NVKHO` | ❌ | ❌ | ✅ | ❌ | Thao tác kho, xuất hàng theo hợp đồng |
-| Chủ cửa hàng | `STORE_OWNER`, `SELLER` | ✅ Mua hàng | ✅ Chỉ gian hàng của mình | ❌ | ❌ | Lập & ký hợp đồng, định giá, đăng bán, xử lý đơn của shop, tạo voucher shop |
+| Quản trị viên | `ADMIN` | ✅ | ✅ (xem mọi gian hàng) | ✅ | ✅ | Toàn quyền; duyệt hợp đồng vòng 1 & chuyển qua kho (vòng 2); khóa tài khoản; xem tài chính (tách B2B & GMV); xác nhận/từ chối giao dịch Crypto |
+| Thủ kho | `WAREHOUSE_MANAGER`, `THUKHO` | ❌ | ❌ | ✅ | ❌ | Danh mục, NCC, phiếu nhập/xuất; duyệt xuống cho nhân viên xuất hàng theo hợp đồng (bước 5) & duyệt phiếu xuất |
+| Nhân viên kho | `WAREHOUSE_STAFF`, `NVKHO` | ❌ | ❌ | ✅ | ❌ | Thao tác kho; lên đơn và xuất kho hợp đồng sau khi Thủ kho đã duyệt (bước 6) |
+| Chủ cửa hàng | `STORE_OWNER`, `SELLER` | ✅ Mua hàng | ✅ Chỉ gian hàng của mình | ❌ | ❌ | Lập & ký hợp đồng, xác nhận nhận hàng, định giá, đăng bán, xử lý đơn của shop (`DELIVERING`/`COMPLETED` sau khi WMS đã xuất kho `HOÀN THÀNH`), tạo voucher shop |
 | Khách hàng | `CUSTOMER` | ✅ | ⚡ Fast-Switch (nâng cấp thành chủ shop) | ❌ | ❌ | Mua hàng, giỏ đa shop, thanh toán, hủy đơn chưa giao, bình luận/đánh giá |
 
 ### 3.2. Hai tầng kiểm soát quyền
@@ -141,6 +141,7 @@
    - Hồ sơ, đổi mật khẩu: chính chủ hoặc Admin; đổi mật khẩu phải nhập đúng mật khẩu cũ (trừ Admin đặt lại).
    - Đơn hàng: người mua, chủ gian hàng của đơn, hoặc Admin.
    - Gian hàng, tồn kho shop, voucher shop, hợp đồng: chủ shop có `quan_ly_id` trùng `X-User-Id`.
+   - Hợp đồng cung ứng: bước 5 (Thủ kho duyệt xuống) chặn `WAREHOUSE_STAFF`/`NVKHO` (chỉ `WAREHOUSE_MANAGER`/`THUKHO` hoặc `ADMIN`); bước 6 (lên đơn & xuất kho) bắt buộc trạng thái `THU_KHO_DA_DUYET`.
    - Đổi vai trò người dùng: chỉ Admin. Tự đăng ký chỉ được chọn `CUSTOMER` hoặc `STORE_OWNER`.
 
 ### 3.3. Bảo mật giữa Gateway và Microservices
@@ -162,7 +163,7 @@
 
 ---
 
-## 4. KHO VẬN 2 TẦNG & HỢP ĐỒNG CUNG ỨNG 6 BƯỚC
+## 4. KHO VẬN 2 TẦNG & HỢP ĐỒNG CUNG ỨNG 7 BƯỚC
 
 ### 4.1. Cấu trúc kho
 - Bảng `kho_va_cua_hang`: mỗi dòng là một kho; `loai_hinh = KHO_TONG` (Kho Tổng) hoặc `KHO_CUA_HANG` (kho của 1 gian hàng, có `quan_ly_id`).
@@ -173,34 +174,37 @@
   - `gia_ban_hien_tai`, `dang_ban`, `so_luong_da_ban`: dữ liệu bán hàng của gian hàng.
   - `version`: khóa lạc quan chống tranh chấp cập nhật.
 
-### 4.2. Hợp đồng cung ứng điện tử 6 bước (lưu trên `wms_core_db`)
-Bảng `hop_dong_cung_ung` + `chi_tiet_hop_dong_cung_ung`, API `/supply-contracts`. Hợp đồng được thao tác từ Kênh Người Bán (ecommerce-frontend) và trang "Hợp đồng cung ứng" của admin-frontend — dữ liệu dùng chung trên backend.
+### 4.2. Hợp đồng cung ứng điện tử 7 bước (lưu trên `wms_core_db`)
+Bảng `hop_dong_cung_ung` + `chi_tiet_hop_dong_cung_ung`, API `/supply-contracts`. Hợp đồng được thao tác từ Kênh Người Bán (`ecommerce-frontend`), trang "Hợp đồng cung ứng" của `admin-frontend` và phân hệ WMS (`wms-frontend` `/supply-contracts`) — dữ liệu dùng chung trên backend.
 
 ```
-[1] Shop gửi yêu cầu                                    -> CHO_ADMIN_DUYET
+[1] Shop gửi yêu cầu                                         -> CHO_ADMIN_DUYET
     • Chọn sản phẩm có trong Kho Tổng + số lượng (không vượt tồn khả dụng Kho Tổng)
     • Server tự sinh mã HDCU-<năm>/<mã shop>-<ngẫu nhiên>, tự tính GIÁ SỈ:
       giá nhập sản phẩm, nếu chưa có thì 90% giá niêm yết
-[2] Admin duyệt vòng 1                                  -> CHO_SHOP_KY
-[3] Chủ shop ký số (họ tên + đồng ý điều khoản + mã PIN) -> DA_KY_CHO_DUYET_KHO
+[2] Admin duyệt vòng 1 (phê duyệt yêu cầu)                  -> CHO_SHOP_KY
+[3] Chủ shop ký số (họ tên + đồng ý điều khoản + mã PIN)     -> DA_KY_CHO_DUYET_KHO
     • Mã chữ ký: "DS-SHA256-" + SHA-256(mã HĐ, shop, kho, tổng tiền, người ký,
       thời điểm ký, từng dòng hàng)
-[4] Admin duyệt vòng 2                                  -> CHUYEN_QUA_KHO
-[5] Kho Tổng xuất hàng (Thủ kho / NV kho / Admin)        -> DANG_GIAO_HANG
+[4] Admin duyệt qua kho (chuyển xuống Thủ kho xem xét)       -> CHUYEN_QUA_KHO
+[5] Thủ kho duyệt xuống để nhân viên kho lên đơn & xuất      -> THU_KHO_DA_DUYET
+    • Chỉ Thủ kho (WAREHOUSE_MANAGER / THUKHO) hoặc Admin; chặn NVKHO
+[6] Nhân viên kho lên đơn và xuất kho Kho Tổng (NV / hệ thống)-> DANG_GIAO_HANG
+    • Chỉ thực hiện được khi trạng thái đã là THU_KHO_DA_DUYET
     • TRỪ tồn thực tế & khả dụng của Kho Tổng
     • Lập phiếu xuất cung ứng (XUAT_CUNG_UNG_CUA_HANG, trạng thái HOÀN THÀNH, đơn giá = giá sỉ)
     • Ghi thẻ kho "XUẤT CUNG ỨNG" tại Kho Tổng
-[6] Chủ shop xác nhận đã nhận hàng                      -> HOAN_THANH
+[7] Chủ shop xác nhận đã nhận hàng                           -> HOAN_THANH
     • CỘNG tồn thực tế & khả dụng vào kho shop (tạo dòng tồn kho mới nếu chưa có,
       giá bán gợi ý = giá niêm yết, dang_ban = false)
     • Ghi thẻ kho "NHẬP TỪ KHO TỔNG" tại kho shop
 
-Từ chối (TU_CHOI), chỉ trước bước [5]:
-    • Admin: ở bất kỳ bước 1–4      • Kho Tổng: ở bước 4 (không đủ hàng)
+Từ chối (TU_CHOI), chỉ trước bước [6]:
+    • Admin: ở bất kỳ bước 1–4      • Kho Tổng (Thủ kho / NV kho): ở bước 4–5 (từ chối / không đủ hàng)
     • Chủ shop: tự rút yêu cầu ở bước 1–2
 ```
 
-Mọi bước 5–6 chạy trong **một transaction**: nếu bất kỳ dòng hàng nào không đủ tồn, toàn bộ bước bị hoàn tác.
+Mọi bước 6–7 chạy trong **một transaction**: nếu bất kỳ dòng hàng nào không đủ tồn, toàn bộ bước bị hoàn tác.
 
 ---
 
@@ -303,6 +307,7 @@ WAITING ──> PACKING ──> DELIVERING ──> DELIVERED
    └────────────────────┘        └──> RETURNED
 ```
 - Khi chuyển sang `DELIVERING`: sinh **mã vận đơn** `ma_van_don` (tiền tố GHTK / GHN / VTP / CTUT + 10 chữ số).
+- **Ràng buộc đồng bộ vận hành (`order-service` ↔ `wms-core-service`):** Chủ shop chỉ được phép chuyển đơn sang `DELIVERING` (`PUT /orders/{id}/shipping-status`) và `COMPLETED` (`PUT /orders/{id}/status`) **sau khi** Thủ kho đã xác nhận duyệt và xuất kho thực tế (`HOÀN THÀNH`) trên phân hệ WMS (`GET /export-notes/by-order/{maDonHang}/sync-status` trả `shipped = true`).
 - Khi đơn `COMPLETED`: giao hàng chuyển `DELIVERED`; đơn **COD** tự chuyển thanh toán `PAID`.
 
 ### 8.2. Quy tắc hủy đơn
@@ -381,20 +386,21 @@ Mỗi biến động lưu: `so_luong_truoc_bien_dong`, `so_luong_bien_dong`, `so
 | `loai_giao_dich` | Phát sinh khi | Kho | Tác động |
 |---|---|---|:---:|
 | `NHẬP KHO THỰC TẾ` | Phiếu nhập NCC chuyển `DA_NHAP_KHO` | Kho nhận | + |
-| `NHẬP BỔ SUNG` | `POST /inventory/add` (điều chỉnh/nhập bổ sung) | Kho chỉ định | + |
+| `NHẬP BỔ SUNG` | `POST /inventory/add` (chỉ dùng điều chỉnh tăng kiểm kê thừa `KIEM_KE_THUA` hoặc hoàn trả nguyên vẹn `HOAN_TRA_NGUYEN_VEN`; kho cửa hàng không được tự thêm mặt hàng mới) | Kho chỉ định | + |
 | `XUẤT KHO` | Xác nhận xuất thực tế phiếu xuất | Kho xuất | − |
-| `XUẤT CUNG ỨNG` | Bước 5 hợp đồng cung ứng | Kho Tổng | − |
-| `NHẬP TỪ KHO TỔNG` | Bước 6 hợp đồng cung ứng | Kho cửa hàng | + |
+| `XUẤT CUNG ỨNG` | Bước 6 hợp đồng cung ứng | Kho Tổng | − |
+| `NHẬP TỪ KHO TỔNG` | Bước 7 hợp đồng cung ứng | Kho cửa hàng | + |
 
 ---
 
 ## 12. BÁO CÁO TÀI CHÍNH
 
-`/wms/finance/*` — **chỉ Admin**. Toàn bộ số liệu lấy từ dữ liệu thật, không có số liệu giả:
-- **Thu:** các phiếu xuất đã xuất thực tế (HOÀN THÀNH và các trạng thái giao vận sau đó), tính theo đơn giá thực tế lúc xuất (bao gồm cả xuất cung ứng cho cửa hàng theo giá sỉ).
-- **Chi:** các phiếu nhập đã `DA_NHAP_KHO`.
-- `summary` hỗ trợ lọc `month`, `year`; `chart`: 6 tháng gần nhất (triệu đồng); `transactions`: nhật ký thu/chi.
-- `strategic-report`: top 5 sản phẩm theo doanh thu, phân bố trạng thái phiếu xuất, tăng trưởng doanh thu & số phiếu **tháng này so với tháng trước** ("Chưa đủ dữ liệu" khi tháng trước bằng 0), số đối tác nhận hàng, khuyến nghị sinh từ dữ liệu.
+`/wms/finance/*` — **chỉ Admin**. Toàn bộ số liệu lấy từ dữ liệu thật, không có số liệu giả, **phân tách rõ 2 luồng tiền để tránh trùng lặp dữ liệu**:
+- **Doanh thu trực tiếp của Sàn / Kho Tổng (`income` / `b2bIncome`):** Chỉ tính từ tổng giá trị các **phiếu xuất cung ứng B2B (giá sỉ)** đã xuất thực tế cho các Shop.
+- **Tổng giá trị giao dịch của các Shop (`retailGmv`):** Tính từ tổng giá trị các **phiếu xuất bán lẻ** cho khách hàng cuối (doanh thu thuộc về Chủ shop, làm cơ sở đối soát — không cộng gộp vào doanh thu/lợi nhuận trực tiếp của Kho Tổng).
+- **Chi (`expense`):** Các phiếu nhập NCC đã `DA_NHAP_KHO`.
+- `summary` hỗ trợ lọc `month`, `year`; `chart`: 6 tháng gần nhất (triệu đồng) tách `income`, `expense`, `gmv`; `transactions`: nhật ký gắn nhãn `IN` (B2B), `OUT` (Nhập NCC), `GMV` (Bán lẻ Shop).
+- `strategic-report`: tách `b2bRevenue` (`totalRevenue`) và `shopGmv`, top 5 sản phẩm B2B theo doanh thu, phân bố trạng thái phiếu xuất, tăng trưởng doanh thu & GMV so với kỳ trước.
 
 ---
 
@@ -425,7 +431,7 @@ Tất cả gọi qua Gateway `:8080`. Các API của wms-core cũng gọi đư�
 | GET | `/inventory/marketplace` | Sản phẩm đang bán trên Sàn | Public |
 | GET | `/inventory`, `/inventory/store/{id}`, `/inventory/warehouse/{id}` | Tồn kho | Public |
 | GET | `/inventory/item?sanPhamId=&khoHangId=` | Giá & tồn khả dụng 1 mặt hàng | Public (order-service dùng) |
-| POST | `/inventory/add` | Nhập bổ sung vào kho shop | Shop |
+| POST | `/inventory/add` | Điều chỉnh tăng kiểm kê thừa / hoàn trả nguyên vẹn (`NHẬP BỔ SUNG`, không nhận mặt hàng mới ở kho shop) | Shop / Kho |
 | PUT | `/inventory/{id}/publish` | Đăng bán & định giá | Shop |
 | PUT | `/inventory/{id}/thresholds` | Ngưỡng cảnh báo | Shop / Kho |
 | GET | `/stores`, `/stores/{id}`, `/stores/manager/{userId}` | Gian hàng | Public |
@@ -440,13 +446,15 @@ Tất cả gọi qua Gateway `:8080`. Các API của wms-core cũng gọi đư�
 | GET/POST | `/export-notes` | Phiếu xuất | Kho (order-service tạo nội bộ) |
 | PUT | `/export-notes/{id}/approve`, `/{id}/confirm`, `/{id}/status` | Duyệt / xuất thực tế / hủy, giao vận | Kho |
 | PUT | `/export-notes/by-order/{maDonHang}/cancel` | Hủy phiếu xuất của đơn, nhả tồn | Nội bộ |
+| GET | `/export-notes/by-order/{maDonHang}/sync-status` | Kiểm tra phiếu xuất đã `HOÀN THÀNH` trên WMS chưa | Nội bộ |
 | GET | `/supply-contracts?storeId=` | Hợp đồng của shop (bỏ `storeId`: toàn hệ thống) | Shop / Kho / Admin |
 | POST | `/supply-contracts` | Bước 1: gửi yêu cầu | Shop |
-| PUT | `/supply-contracts/{id}/approve-request` | Bước 2 | Admin |
-| PUT | `/supply-contracts/{id}/sign` | Bước 3 | Shop |
-| PUT | `/supply-contracts/{id}/approve-transfer` | Bước 4 | Admin |
-| PUT | `/supply-contracts/{id}/dispatch` | Bước 5: xuất Kho Tổng | Kho / Admin |
-| PUT | `/supply-contracts/{id}/complete` | Bước 6: nhận hàng vào kho shop | Shop |
+| PUT | `/supply-contracts/{id}/approve-request` | Bước 2: Admin duyệt yêu cầu | Admin |
+| PUT | `/supply-contracts/{id}/sign` | Bước 3: Chủ shop ký số | Shop |
+| PUT | `/supply-contracts/{id}/approve-transfer` | Bước 4: Admin chuyển qua kho | Admin |
+| PUT | `/supply-contracts/{id}/warehouse-approve` | Bước 5: Thủ kho duyệt xuống cho NV lên đơn | Thủ kho / Admin |
+| PUT | `/supply-contracts/{id}/dispatch` | Bước 6: NV kho lên đơn và xuất Kho Tổng | Kho / Admin |
+| PUT | `/supply-contracts/{id}/complete` | Bước 7: Chủ shop nhận hàng vào kho shop | Shop |
 | PUT | `/supply-contracts/{id}/reject` | Từ chối / rút yêu cầu | Theo bước (mục 4.2) |
 | GET | `/wms/finance/summary`, `/chart`, `/transactions`, `/strategic-report` | Tài chính & báo cáo | Admin |
 
@@ -533,7 +541,7 @@ Dữ liệu demo có thể bật bằng biến môi trường:
 3. Kênh Người Bán → **Hợp đồng cung ứng** → chọn sản phẩm Kho Tổng → gửi yêu cầu.
 4. `admin` (admin-frontend → Hợp đồng cung ứng) → duyệt vòng 1.
 5. Chủ shop → **Ký số**, nhập PIN `123456`.
-6. `admin` → duyệt vòng 2 → bấm xuất kho (hoặc thủ kho thực hiện) → tồn Kho Tổng giảm, có phiếu xuất & thẻ kho.
+6. `admin` → duyệt qua kho (chuyển xuống kho) → `thukho` (`wms-frontend` → Hợp đồng cung ứng) → **Thủ kho duyệt xuống** → `nvkho` → **NV lên đơn & xuất kho** → tồn Kho Tổng giảm, có phiếu xuất & thẻ kho.
 7. Chủ shop → **Xác nhận đã nhận hàng** → tồn kho shop tăng (chưa mở bán).
 
 ### 15.3. Kịch bản 2 — Đăng bán & mua đa gian hàng
@@ -541,8 +549,7 @@ Dữ liệu demo có thể bật bằng biến môi trường:
 2. `baomap05` thêm sản phẩm của 2 shop vào giỏ → giỏ tự chia 2 nhóm.
 3. Nhập voucher sàn `CTUT50K` và voucher shop hợp lệ của từng shop → đặt hàng → tạo 2 đơn con chung `maGiaoDichGoc`.
 4. Chọn MoMo: QR hiện đúng **tổng tiền do server tính**. (Không thanh toán trong 30 phút → đơn tự hủy, tồn kho & voucher được trả lại.)
-5. Chọn COD: chủ shop `/seller/orders` → Xác nhận → Bàn giao GHTK (sinh mã vận đơn) → Giao thành công → đơn `COMPLETED`, thanh toán `PAID`.
-6. Thủ kho duyệt & xác nhận xuất phiếu xuất của đơn → "Đã bán" tăng; khách đánh giá sản phẩm sẽ có nhãn "Đã mua hàng".
+5. Chọn COD: chủ shop `/seller/orders` → Tiếp nhận (`CONFIRMED`) → Thủ kho trên WMS duyệt & xác nhận xuất phiếu xuất của đơn (`HOÀN THÀNH`, "Đã bán" tăng) → Chủ shop bấm Bàn giao GHTK (`DELIVERING`, sinh mã vận đơn) → Giao thành công (`COMPLETED`, thanh toán `PAID`) → khách đánh giá sản phẩm sẽ có nhãn "Đã mua hàng".
 
 ---
 

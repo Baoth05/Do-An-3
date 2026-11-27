@@ -7,30 +7,6 @@
  */
 import api from './api';
 
-// THÊM MỚI: Cài đặt bộ đánh chặn (Interceptor) để tự động bắt lỗi mạng và lỗi 503
-api.interceptors.response.use(
-  // Bỏ qua (không can thiệp) nếu phản hồi thành công, giữ nguyên logic cũ của bạn
-  undefined, 
-  (error) => {
-    // Xử lý lỗi từ máy chủ trả về
-    if (error.response) {
-      if (error.response.status === 503) {
-        console.error("🛑 [API Error]: Máy chủ Backend đang bảo trì hoặc tắt (503).");
-        return Promise.reject(new Error("Máy chủ hiện đang bảo trì hoặc mất kết nối (Lỗi 503). Vui lòng kiểm tra lại Backend hoặc thử lại sau!"));
-      }
-    } 
-    // Xử lý lỗi không có kết nối mạng (Network Error)
-    else if (error.request) {
-      console.error("🛑 [Network Error]: Không thể kết nối tới máy chủ.");
-      return Promise.reject(new Error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại đường truyền mạng hoặc xem Backend đã chạy chưa!"));
-    }
-    
-    // Các lỗi khác cứ trả về như bình thường để Component tự xử lý
-    return Promise.reject(error);
-  }
-);
-
-// BÊN DƯỚI LÀ TOÀN BỘ CODE API CŨ CỦA BẠN (GIỮ NGUYÊN KHÔNG ĐỔI)
 export const wmsCoreService = {
   // === HÀNG HÓA / SẢN PHẨM (HANG_HOA - Master Catalog) ===
   getProducts: () => api.get('/wms/products'),
@@ -105,4 +81,14 @@ export const wmsCoreService = {
   createShipper: (data) => api.post('/wms/shippers', data),
   updateShipper: (id, data) => api.put(`/wms/shippers/${id}`, data),
   deleteShipper: (id) => api.delete(`/wms/shippers/${id}`),
+
+  // === HỢP ĐỒNG CUNG ỨNG NỘI BỘ (KHO TỔNG -> GIAN HÀNG) ===
+  getSupplyContracts: () => api.get('/wms/supply-contracts'),
+  getSupplyContractById: (id) => api.get(`/wms/supply-contracts/${id}`),
+  warehouseManagerApproveSupplyContract: (id, note) =>
+    api.put(`/wms/supply-contracts/${id}/warehouse-approve`, { note }),
+  warehouseStaffDispatchSupplyContract: (id, shippingProvider) =>
+    api.put(`/wms/supply-contracts/${id}/dispatch`, { shippingProvider }),
+  rejectSupplyContract: (id, reason) =>
+    api.put(`/wms/supply-contracts/${id}/reject`, { reason }),
 };
